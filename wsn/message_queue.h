@@ -44,6 +44,6 @@ typedef struct {
 
 extern int MsgQueue_Push(MsgQueue_Typedef *p, unsigned char *data, unsigned char type);
 extern Msg_TypeDef *MsgQueue_Pop(MsgQueue_Typedef *p);
-extern void Message_Reset(Msg_TypeDef *msg);
+_attribute_ram_code_ int MsgQueue_Clean(MsgQueue_Typedef *p);
 
 #endif /*_MESSAGE_QUEUE_H_*/

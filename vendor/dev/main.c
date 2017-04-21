@@ -40,7 +40,7 @@ void main(void)
      //LogMsg("pallet start...\n", NULL, 0);
     while (1) {
         Pallet_MainLoop();
-        test++;
+        test +=1 ;
     }
 }
 

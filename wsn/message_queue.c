@@ -1,10 +1,8 @@
 #include "../common.h"
 #include "config.h"
 #include "message_queue.h"
-#include "pallet.h"
 
-extern PalletInfo_TypeDef pallet_info;
-_attribute_ram_code_ int MsgQueue_Init(MsgQueue_Typedef *p)
+_attribute_ram_code_ int MsgQueue_Clean(MsgQueue_Typedef *p)
 {
 	p->read = p->write = 0;
 	memset(p->msg, 0, sizeof(Msg_TypeDef)*MSG_BUF_LEN);

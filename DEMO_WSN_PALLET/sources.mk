@@ -20,6 +20,7 @@ wsn \
 vendor/dev \
 print \
 drivers/8267 \
+debug \
 common \
 boot/8267 \
 DEMO_WSN_ED/wsn \

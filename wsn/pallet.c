@@ -7,6 +7,8 @@
 
 #include "pallet.h"
 
+#include "../debug/debug_queue.h"
+
 PalletInfo_TypeDef pallet_info;
 static MsgQueue_Typedef msg_queue;
 
@@ -14,8 +16,30 @@ static unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
 static unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
 static unsigned char rx_ptr = 0;
 
-static int bug = 0;
-static int prestate = 0;
+
+#define DEBUG 1
+
+#if DEBUG
+typedef struct
+{
+	unsigned char prestate;
+	unsigned char curstate;
+	unsigned char msg_type;
+}debug_t;
+
+unsigned char pre;
+
+debug_t debug;
+Debug_Queue_Typedef DebugQ;
+void debug_enqueue(unsigned char type)
+{
+	debug.msg_type = type;
+	debug.curstate = pallet_info.state;
+	debug.prestate = pre;
+	DebugQueue_Push(&DebugQ, (unsigned char*)&debug, sizeof(debug_t));
+}
+
+#endif
 
 void Pallet_Init(void)
 {
@@ -47,7 +71,11 @@ _attribute_session_(".ram_code") void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
 
-    if (PALLET_STATE_IDLE == pallet_info.state) {
+#if DEBUG
+    pre = pallet_info.state;
+#endif
+    if (PALLET_STATE_IDLE == pallet_info.state)
+    {
         pallet_info.state = PALLET_STATE_GW_BCN_WAIT;
         RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
     }
@@ -85,7 +113,7 @@ _attribute_session_(".ram_code") void Run_Pallet_Statemachine(Msg_TypeDef *msg)
                 pallet_info.wakeup_tick = pallet_info.t0 + TIMESLOT_LENGTH*PALLET_ID*TickPerUs;
             }
 
-            Message_Reset(msg);
+            //Message_Reset(msg);
         }
     }
     else if (PALLET_STATE_GW_ACK_WAIT == pallet_info.state) {
@@ -135,8 +163,6 @@ _attribute_session_(".ram_code") void Run_Pallet_Statemachine(Msg_TypeDef *msg)
     }
     else if (PALLET_STATE_NODE_DATA_WAIT == pallet_info.state) {
         if (msg) {
-
-
             if (msg->type == PALLET_MSG_TYPE_ED_DATA)
             {
             	GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
@@ -187,6 +213,10 @@ _attribute_session_(".ram_code") void Run_Pallet_Statemachine(Msg_TypeDef *msg)
         GPIO_WriteBit(SUSPEND_SHOW_PIN, Bit_SET);
         pallet_info.state = PALLET_STATE_IDLE;
     }
+#if DEBUG
+    if(pre != pallet_info.state)
+    	debug_enqueue(msg->type );
+#endif
 }
 
 void Pallet_MainLoop(void)
