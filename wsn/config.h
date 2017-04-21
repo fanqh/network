@@ -28,7 +28,7 @@
 #define RX_BUF_NUM                      4
 #define RX_BUF_INVALID_FLG              0x01
 
-#define RF_CHANNEL             70
+#define RF_CHANNEL             60
 #define GW_ID                  0x01
 #define PALLET_ID              0x01
 #define NODE_ID                0x01

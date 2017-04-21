@@ -1,8 +1,9 @@
 #include "../common.h"
 #include "config.h"
 #include "message_queue.h"
+#include "pallet.h"
 
-
+extern PalletInfo_TypeDef pallet_info;
 _attribute_ram_code_ int MsgQueue_Init(MsgQueue_Typedef *p)
 {
 	p->read = p->write = 0;
@@ -25,8 +26,8 @@ _attribute_ram_code_ int MsgQueue_Push(MsgQueue_Typedef *p, unsigned char *data,
 		p->msg[p->write].data = data;
 		p->msg[p->write].type = type;
 		p->write = MsgQueue_Next(p->write);
+		//memcpy(p->msg[p->write].buff, &pallet_info, 17);
 
-		//p->msg[p->write].info =pallet_info;
 		return 1;
 	}
 	else
@@ -64,6 +65,8 @@ _attribute_ram_code_ static void reset_buf(unsigned char *p, int len)
 
 _attribute_ram_code_ void Message_Reset(Msg_TypeDef *msg)
 {
+
+#if 0
     assert(msg);
 
     //reset rx_packet
@@ -73,4 +76,5 @@ _attribute_ram_code_ void Message_Reset(Msg_TypeDef *msg)
     //reset msg
     msg->data == NULL;
     msg->type == MSG_TYPE_NONE;
+#endif
 }
