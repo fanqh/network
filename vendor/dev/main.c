@@ -25,7 +25,7 @@ static void SYS_Init(void)
 }
 
 int test = 0;
-
+extern void debug_enqueue(unsigned char type);
 void main(void)
 {
 
@@ -36,11 +36,11 @@ void main(void)
     Pallet_Init();
 
     WaitMs(1000);
-
      //LogMsg("pallet start...\n", NULL, 0);
     while (1) {
+
         Pallet_MainLoop();
-        test +=1 ;
+    	test ++;
     }
 }
 
