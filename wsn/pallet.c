@@ -78,11 +78,24 @@ void Pallet_Init(void)
 
 _attribute_session_(".ram_code") void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 {
-    unsigned int now;
+    unsigned int now, msg_time;
 
+#if DEBUG
     pre = pallet_info.state;
+//    if(msg!=NULL)
+//    	msg_time = ClockTime();
+//    else
+//    {
+//    	if(ClockTime()-msg_time > 1000000*TickPerUs)
+//    	{
+//    		RF_SetTxRxOff();
+//    		pallet_info.state = PALLET_STATE_IDLE;
+//    	}
+//    }
+#endif
     if (PALLET_STATE_IDLE == pallet_info.state)
     {
+    	RF_SetTxRxOff();
         pallet_info.state = PALLET_STATE_GW_BCN_WAIT;
         RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
     }

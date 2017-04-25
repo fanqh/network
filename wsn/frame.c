@@ -9,11 +9,14 @@ _attribute_session_(".ram_code") void Build_GatewayBeacon(unsigned char *pBuf, G
     //build the 802.15.4 mac data frame header
     *p++ = 0x41; //frame ctrl
     *p++ = 0x18;
+
     *p++ = ++(pInfo->dsn); //dsn
+
     *p++ = 0xaa; //dest PANID 
     *p++ = 0xbb;
     *p++ = 0xff; //dest address
     *p++ = 0xff;
+
     *p++ = FRMAE_TYPE_GATEWAY_BEACON;
     *p++ = pInfo->period_cnt & 0xff;
     *p++ = (pInfo->period_cnt >> 8) & 0xff;
@@ -21,6 +24,7 @@ _attribute_session_(".ram_code") void Build_GatewayBeacon(unsigned char *pBuf, G
     *p++ = (pInfo->period_cnt >> 24) & 0xff;
     *p++ = pInfo->gw_id;
     *p++ = pInfo->pallet_id;
+
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;
@@ -65,7 +69,7 @@ _attribute_session_(".ram_code") void Build_PalletBeacon(unsigned char *pBuf, Pa
     int len = 0;
 
     //build the 802.15.4 mac data frame header
-    *p++ = 0x41; //frame ctrl
+    *p++ = 0x41; //frame ctrl    LSB
     *p++ = 0x18;
     *p++ = ++(pInfo->dsn); //dsn
     *p++ = 0xaa; //dest PANID

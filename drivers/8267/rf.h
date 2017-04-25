@@ -44,8 +44,7 @@ typedef enum {
 typedef enum {
   RF_MODE_TX = 0,
   RF_MODE_RX = 1,
-  RF_MODE_AUTO=2,
-  RF_MODE_OFF = 3
+  RF_MODE_AUTO=2
 } RF_StatusTypeDef;
 /**
  *  @brief  Define RF Tx power level
@@ -62,28 +61,34 @@ typedef enum {
 	RF_POWER_m27P5dBm	= 8,
 	RF_POWER_m30dBm	= 9,
 	RF_POWER_m37dBm	= 10,
-	RF_POWER_OFF	= 11,
+	RF_POWER_OFF	= 11
 } RF_PowerTypeDef;
 
-//ble
+/**
+ *  ble
+ */
 #define		RF_BLE_PACKET_LENGTH_OK(p)		(p[0] == (p[13]&0x3f)+17)
 #define		RF_BLE_PACKET_CRC_OK(p)			((p[p[0]+3] & 0x51) == 0x40)
-//zigbee
-#define		RF_ZIGBEE_PACKET_LENGTH_OK(p)		(p[0] == p[12]+13)
+/**
+ *  zigbee
+ */
+#define		RF_ZIGBEE_PACKET_LENGTH_OK(p)   (p[0] == p[12]+13)
 #define		RF_ZIGBEE_PACKET_CRC_OK(p)	    ((p[p[0]+3] & 0x51) == 0x10)
 
 
 RF_ModeTypeDef   g_RFMode;
-/********************************************************************************
+/**
 *	@brief		This function should be invoked first,before the “RF_TrxStateSet”
 *				is invoked
 *
 *	@param[in]	OscSel   enum variable of external crystal RF_OSC_16M/RF_OSC_12M
 *	@param[in]	RF_Mode      enum variable of RF mode
-*	@return		'1' :set success; '0':parameters set error
+*	@return		1 :set success;
+*               0 :parameters set error
 */
 extern	int	 RF_Init(RF_OscSelTypeDef OscSel,RF_ModeTypeDef RF_Mode);
-/********************************************************************************
+
+/**
 *	@brief		This function serves to switch RF mode. After this function is
 *				invoked, the “RF_TrxStateSet” and “RF_BaseBandReset” should be
 *				invoked, as shown below:
@@ -93,31 +98,43 @@ extern	int	 RF_Init(RF_OscSelTypeDef OscSel,RF_ModeTypeDef RF_Mode);
 *		 		RF_BaseBandReset();
 *
 *	@param[in]	RF_Mode   Set working mode for RF module
-*	@return	 	'0' :set success; '-1':parameters set error
+*	@return	 	0 :set success;
+*              -1 :parameters set error
 */
 extern	int RF_ModeSet(RF_ModeTypeDef RF_Mode);
-/********************************************************************************
+
+/**
 *	@brief	 This function is used during RF mode switch to reset Baseband. 
-*	@return	 	none
+*   @param   none
+*	@return	 none
 */
 extern void RF_BaseBandReset (void);
-/********************************************************************************
+
+/**
 *	@brief	  	This function is to set Rf channel and state(rx/tx/auto),After
 *				this function is invoked and state is rx or tx,a 100us~150us
 *				delay is needed to lock PLL. Then it’s ready to carry out packet
 *				Rx/Tx operations.
 *
-*	@param[in]	RF_Status   set current status for RF module(tx/rx/auto),
-*						Note: When the “RF_Status” is set as auto mode, the functions
-*						“RF_StartStx”, “RF_StartStxToRx” and “RF_StartSrxToTx”
-*						can be used.
-*	@param[in]	RF_Status Unit is MHz.
-*						The frequency is set as (2400+ channel) MHz.(0~100)
-*						Note: It should be set as the same value for Rx and Tx
-*						terminal.
-*	@return	 	'0' :set success; '-1':parameters set error
+*	@param[in]	RF_Status - set current status for RF module(tx/rx/auto),
+*						  Note: When the “RF_Status” is set as auto mode, the functions
+*						  “RF_StartStx”, “RF_StartStxToRx” and “RF_StartSrxToTx”
+*						  can be used.
+*	@param[in]	RF_Status - Unit is MHz.
+*						  The frequency is set as (2400+ channel) MHz.(0~100)
+*						  Note: It should be set as the same value for Rx and Tx
+*						  terminal.
+*	@return	 	0 :set success; 
+*              -1 :parameters set error
 */
-extern  int  RF_TrxStateSet(RF_StatusTypeDef  RF_Status,signed char RF_Channel);
+extern  int  RF_TrxStateSet(RF_StatusTypeDef RF_Status, signed char RF_Channel);
+/********************************************************************************
+*   @brief      This function is to get the current state of the RF transceiver
+*
+*   @param[in]  None
+*   @return     RF_StatusTypeDef
+*/
+extern RF_StatusTypeDef RF_TrxStateGet(void);
 /********************************************************************************
 *	@brief	  	This function is to send packet 
 *
@@ -140,24 +157,27 @@ extern  int  RF_TrxStateSet(RF_StatusTypeDef  RF_Status,signed char RF_Channel);
 *	@return	 	none
 */
 extern  void RF_TxPkt (unsigned char* RF_TxAddr);
-/********************************************************************************
+
+/**
 *	@brief	  	Check if all packet data are sent. 
 *
-*	@return	 	0x00: Packet Tx is not finished yet. 
+*	@return	 	0x00: Packet Tx is not finished yet;
 *				0x02: Packet Tx is finished.
 */
 extern unsigned char  RF_TxFinish(void);
-/********************************************************************************
+
+/**
 *	@brief	  	This function serves to clear the Tx finish flag bit.
 *				After all packet data are sent, corresponding Tx finish flag bit
 *				will be set as 1.By reading this flag bit, it can check whether
 *				packet transmission is finished. After the check, it’s needed to
 *				manually clear this flag bit so as to avoid misjudgment.
-*
+*   @param      none
 *	@return	 	none
 */
 extern void RF_TxFinishClearFlag (void);
-/********************************************************************************
+
+/**
 *	@brief	  	This function is to select Tx power level. Parameter type is enum. 
 *
 *	@param[in]	RF_TxPowerLevel   select Tx power level
@@ -165,7 +185,8 @@ extern void RF_TxFinishClearFlag (void);
 *	@return	 	none
 */
 extern	void RF_PowerLevelSet(RF_PowerTypeDef RF_TxPowerLevel);
-/********************************************************************************
+
+/**
 *	@brief	  	This function is to set rx buffer
 *
 *	@param[out]	RF_RxAddr  	Pointer for Rx buffer in RAM(Generally it’s starting
@@ -183,15 +204,17 @@ extern	void RF_PowerLevelSet(RF_PowerTypeDef RF_TxPowerLevel);
 *	@return	 	none
 */
 extern void  RF_RxBufferSet(unsigned char *  RF_RxAddr, int Size, unsigned char  PingpongEn);
-/********************************************************************************
+
+/**
 *	@brief	  	This function is to get rx buffer result
 *
-*	@return	 	0:There are received RF data in buffer 0. 
-*				1:There are received RF data in buffer 1. 
+*	@return	 	0:There are received RF data in buffer 0;
+*				1:There are received RF data in buffer 1; 
 *				2:No RF data is received.
 */
 extern unsigned char RF_RxBufferRequest(void);
-/********************************************************************************
+
+/**
 *	@brief	  	This function serves to clear the flag bit for Rx buffer.
 *				After RF data are received, flag bits will be generated for
 *				buffer 0 and buffer 1.By reading corresponding flag bit, it can
@@ -205,7 +228,7 @@ extern unsigned char RF_RxBufferRequest(void);
 */
 extern void  RF_RxBufferClearFlag(unsigned char  RF_RxBufferIdx);
 
-/********************************************************************************
+/**
 *	@brief	  	This function serves to start STX mode of auto_mode.
 *				This mode will end after a packet is transmitted.
 *
@@ -214,9 +237,9 @@ extern void  RF_RxBufferClearFlag(unsigned char  RF_RxBufferIdx);
 *						  	  start STX mode and send packet.
 *	@return	 	none
 */
-
 extern void RF_StartStx  (unsigned char* RF_TxAddr,unsigned int RF_StartTick);
-/********************************************************************************
+
+/**
 *	@brief	  	This function serves to start Srx mode of auto_mode. In this mode,
 *				RF module stays in Rx status until a packet is received or it fails to receive packet when timeout expires. 
 *				Timeout duration is set by the parameter "RF_RxTimeoutUs". 
@@ -228,7 +251,8 @@ extern void RF_StartStx  (unsigned char* RF_TxAddr,unsigned int RF_StartTick);
 *	@return	 	none
 */
 extern void RF_StartSrx(unsigned int RF_StartTick,unsigned int RF_RxTimeoutUs);
-/********************************************************************************
+
+/**
 *	@brief	  	This function serves to start StxToRx mode of auto_mode.
 *				In this mode, a packet is sent first,RF module waits for 10us,
 *				stays in Rx status until data is received or timeout expires,
@@ -245,7 +269,8 @@ extern void RF_StartSrx(unsigned int RF_StartTick,unsigned int RF_RxTimeoutUs);
 *	@return	 	none
 */
 extern void RF_StartStxToRx  ( unsigned char* RF_TxAddr ,unsigned int RF_StartTick,unsigned short RF_RxTimeoutUs);
-/********************************************************************************
+
+/**
 *	@brief	  	This function serves to start SrxToTx mode of auto_mode.
 *				In this mode,RF module stays in Rx status until a packet is
 *				received or it fails to receive packetwhen timeout expires.
@@ -265,7 +290,8 @@ extern void RF_StartStxToRx  ( unsigned char* RF_TxAddr ,unsigned int RF_StartTi
 *	@return	 	none
 */
 extern void RF_StartSrxToTx  (unsigned char* RF_TxAddr  ,unsigned int RF_StartTick,unsigned int RF_RxTimeoutUs);
-/********************************************************************************
+
+/**
 *	@brief	  	Set index number of access_code channel for RF Tx terminal. 
 *
 *	@param[in]	RF_TxPipeIdx  	Optional range: 0~5
@@ -273,7 +299,8 @@ extern void RF_StartSrxToTx  (unsigned char* RF_TxAddr  ,unsigned int RF_StartTi
 *	@return	 	none
 */
 extern void RF_TxAccessCodeSelect (unsigned char RF_TxPipeIdx);
-/********************************************************************************
+
+/**
 *	@brief	  	this function is to set access code of 0/1 channel 
 *
 *	@param[in]	RF_PipeIdx  	Set index number for access_code channel (only 0 or 1)
@@ -286,7 +313,8 @@ extern void RF_TxAccessCodeSelect (unsigned char RF_TxPipeIdx);
 *	@return	 	none
 */
 extern void RF_AccessCodeSetting01 (unsigned char RF_PipeIdx,unsigned long long  RF_AccessCode);
-/********************************************************************************
+
+/**
 *	@brief	  	this function is to set access code of 2/3/4/5 channel 
 *
 *	@param[in]	RF_PipeIdx  	Set index number for access_code channel (only 2~5).
@@ -312,7 +340,8 @@ extern void RF_AccessCodeSetting01 (unsigned char RF_PipeIdx,unsigned long long 
 *	@return	 	none
 */
 extern void RF_AccessCodeSetting2345 (unsigned char  RF_PipeIdx,unsigned char  Prefix);
-/********************************************************************************
+
+/**
 *	@brief		this function is to enable/disable each access_code channel for
 *				RF Rx terminal.
 *
@@ -324,7 +353,8 @@ extern void RF_AccessCodeSetting2345 (unsigned char  RF_PipeIdx,unsigned char  P
 *	@return	 	none
 */
 extern void RF_RxAccessCodeEnable (unsigned char RF_RxPipeSel);
-/********************************************************************************
+
+/**
 *	@brief	  	this function is to Set byte length for access_code.
 *
 *	@param[in]	RF_AccessCodeLength  	Optional range: 3~5
@@ -333,7 +363,8 @@ extern void RF_RxAccessCodeEnable (unsigned char RF_RxPipeSel);
 *	@return	 	none
 */
 extern void RF_AccessCodeLengthSetting (unsigned char RF_AccessCodeLength);
-/********************************************************************************
+
+/**
 *	@brief	  	This function serves to switch to maxgain mode with better
 *				Rx performance,	and will only take effect if it’s invoked after
 *				the “RF_Init”.The “RF_Init” sets the mode as AGC mode by default.
@@ -344,17 +375,18 @@ extern void RF_AccessCodeLengthSetting (unsigned char RF_AccessCodeLength);
 *	@return	 	none
 */
 extern void RF_SetGainManualMax (void);
-/********************************************************************************
+
+/**
 *	@brief	  	This function serves to switch to AGC mode from maxgain mode,
 *				and will only take effect if it’s invoked after the “RF_Init”.
 *
-*	@param[in]	length  	Optional range: 3~5
-*							Note: The effect for 3-byte access_code is not good.
+*	@param[in]	none
+*							
 *
 *	@return	 	none
 */
 extern void RF_SetAgc (void);
-/********************************************************************************
+/**
 *	@brief	 This function is to update TP(two point),this value will affect
 *			 RF performance
 *			 it needs to use  before the function  "RF_TrxStateSet"
@@ -367,45 +399,65 @@ extern void RF_SetAgc (void);
 *							range: 2M/250K : 0x39(+/-)10   1M :0x19(+/-)10
 *							If you set a value outside the range, you will be set to fail.
 *
-*	@return	 	'0' :set success; '-1':set failed
+*	@return	 	0 :set success; 
+*              -1 :set failed
 */
 extern int RF_UpdateTpValue(RF_ModeTypeDef RF_Mode ,unsigned  char RF_TPLow,unsigned  char RF_TPHigh);
-/********************************************************************************
-*	@brief	 This function is to update cap value to affect RF performance
-*			 it needs to use after the function  "RF_Init"
+
+/**
+*	@brief	   This function is to update cap value to affect RF performance
+*			   it needs to use after the function  "RF_Init"
 *
-*	@param[in]	RF_Cap  	cap value : <4:0> is cap value(0x00 - 0x1f)
+*	@param[in] RF_Cap - cap value : <4:0> is cap value(0x00 - 0x1f)
 *
-*	@return	 	none
+*	@return	   none
 */
 extern void RF_UpdateCapValue(unsigned  char RF_Cap);
-/********************************************************************************
+
+/**
 *	@brief	  	This function is turn off tx and rx
-*
+*   @param      none
 *	@return	 	none
 */
 extern void RF_SetTxRxOff (void);
-/********************************************************************************
+
+/**
 *	@brief	  	This function is to obtain the RSSI value of the current channel
 *				Before using it, it is necessary to set the "RF_MODE_RX" by "RF_TrxStateSet"
 *
-*
+*   @param      none
 *	@return	 	RSSI value :  unit is dbm
 */
 extern signed char RF_GetRssi(void);
-/********************************************************************************
+
+/**
 *	@brief	  	This function is to start energy detect of the current channel for zigbee mode
 *				Before using it, it is necessary to set the "RF_MODE_RX" by "RF_TrxStateSet"
-*
+*   @param      none
 *	@return	 	none
 */
 extern void RF_EdDetect(void);
-/********************************************************************************
+
+/**
 *	@brief	  	This function is to stop energy detect and get energy detect value of
 *				the current channel for zigbee mode.
-*
+*   @param      none
 *	@return	 	ED:0x00~0xff
 *
 */
 extern unsigned char RF_StopEd(void);
+/**
+*	@brief	  	This function turns on power to the RF module
+*   @param      none
+*	@return	 	none
+*
+*/
+extern int  RF_PowerDown(void);
+/**
+*	@brief	  	This function turns off power to the RF module
+*   @param      none
+*	@return	 	none
+*
+*/
+extern int  RF_PowerOn(void);
 #endif
