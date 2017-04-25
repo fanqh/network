@@ -107,6 +107,11 @@ _attribute_session_(".ram_code") void Run_NodeStatemachine(Msg_TypeDef *msg)
                 node_info.state = NODE_STATE_SUSPEND;
                 node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
+            else
+            {
+                node_info.state = NODE_STATE_SUSPEND;
+                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+            }
             Message_Reset(msg);
         }
     }

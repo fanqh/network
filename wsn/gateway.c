@@ -50,7 +50,8 @@ _attribute_session_(".ram_code") void Run_Gateway_Statemachine(Msg_TypeDef *msg)
         gw_info.state = GW_STATE_PALLET_DATA_WAIT;
     }
     else if (GW_STATE_PALLET_DATA_WAIT == gw_info.state) {
-        if (msg) {
+        if (msg)
+        {
             if (msg->type == GW_MSG_TYPE_PALLET_DATA) {
                 //ToDo: process received data submitted by pallet
                 //save the dsn for subsequent ack
@@ -63,6 +64,11 @@ _attribute_session_(".ram_code") void Run_Gateway_Statemachine(Msg_TypeDef *msg)
             }
             else if (msg->type == GW_MSG_TYPE_INVALID_DATA) {
                 //Garbage packet
+                gw_info.state = GW_STATE_SUSPEND;
+                gw_info.wakeup_tick = gw_info.t0 + (TIMESLOT_LENGTH*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
+            }
+            else
+            {
                 gw_info.state = GW_STATE_SUSPEND;
                 gw_info.wakeup_tick = gw_info.t0 + (TIMESLOT_LENGTH*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
             }

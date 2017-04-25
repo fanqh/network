@@ -99,7 +99,11 @@ _attribute_session_(".ram_code") void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 				//check validity of timestamp
 				if ((unsigned int)(now - timestamp) > TIMESTAMP_INVALID_THRESHOLD*TickPerUs)
 				{
+					//pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
 					msg->type == MSG_TYPE_NONE;
+					//added by fanqh
+					//RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
+
 					return;
 				}
 				pallet_info.t0 = timestamp - ZB_TIMESTAMP_OFFSET*TickPerUs;
@@ -125,15 +129,19 @@ _attribute_session_(".ram_code") void Run_Pallet_Statemachine(Msg_TypeDef *msg)
         	}
         	else
         	{
-        		RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
+        		//pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
+        		//added by fanqh
+        		//RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
         	}
 
             //Message_Reset(msg);
         }
     }
     else if (PALLET_STATE_GW_ACK_WAIT == pallet_info.state) {
-        if (msg) {
-            if (msg->type == PALLET_MSG_TYPE_GW_ACK) {
+        if (msg)
+        {
+            if (msg->type == PALLET_MSG_TYPE_GW_ACK)
+            {
 
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
@@ -151,6 +159,7 @@ _attribute_session_(".ram_code") void Run_Pallet_Statemachine(Msg_TypeDef *msg)
             }
             else
             {
+            	//added by fanqh
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
                 pallet_info.wakeup_tick = pallet_info.t0 + TIMESLOT_LENGTH*PALLET_ID*TickPerUs;
@@ -305,5 +314,7 @@ _attribute_session_(".ram_code") void Pallet_RxTimeoutHandler(void)
     }
     else {
 
+    	//add by fanqh
+    	MsgQueue_Push(&msg_queue, NULL, PALLET_MSG_TYPE_INVALID_DATA);
     }
 }

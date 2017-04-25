@@ -31,7 +31,7 @@
 #define RF_CHANNEL             60
 #define GW_ID                  0x01
 #define PALLET_ID              0x01
-#define NODE_ID                0x01
+#define NODE_ID                0x02
 
 //#define DEBUG
 extern int my_printf(const char *format, ...);

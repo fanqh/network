@@ -13,6 +13,7 @@ RM := rm -rf
 -include vendor/end_dev/subdir.mk
 -include print/subdir.mk
 -include drivers/8267/subdir.mk
+-include debug/subdir.mk
 -include common/subdir.mk
 -include boot/8267/subdir.mk
 -include DEMO_WSN_ED/wsn/subdir.mk
