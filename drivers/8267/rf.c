@@ -231,7 +231,7 @@ const BSP_TblCmdSetTypeDef  TblRFZigbee250k[] = {
 	  0x0422, 0x1a, TCMD_UNDER_BOTH | TCMD_WRITE, // threshold
 	  0x0424, 0x52, TCMD_UNDER_BOTH | TCMD_WRITE, // number for sync: bit[6:4]
 	  0x0428, 0xe0, TCMD_UNDER_BOTH | TCMD_WRITE,
-	  0x042b, 0xf3, TCMD_UNDER_BOTH | TCMD_WRITE, // 8 symbol
+	  0x042b, 0xf5, TCMD_UNDER_BOTH | TCMD_WRITE, // 8 symbol
 	  0x042c, 0x88, TCMD_UNDER_BOTH | TCMD_WRITE, // maxiumum length 48-byte
 	
 	 // 0x043b, 0xac, TCMD_UNDER_BOTH | TCMD_WRITE,
@@ -561,7 +561,8 @@ static RF_StatusTypeDef RF_TRxState = 0xff;
 int  RF_TrxStateSet(RF_StatusTypeDef  RF_Status,signed char RF_Channel)
 {
     int  err = 0;
-
+    if(RF_Status != RF_MODE_TX)
+    	RF_SetTxRxOff();
 	if (RF_Status == RF_MODE_TX) {
 		RF_TRxState = RF_MODE_TX;
 		CLR_BIT_FLD(REG_RF_FUNCTION0_EN,FLD_RF_TX_MANUAL_EN|FLD_RF_RX_MANUAL_EN);

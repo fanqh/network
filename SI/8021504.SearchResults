@@ -1,0 +1,4 @@
+---- pallet_setup_timer Matches (3 in 1 files) ----
+Pallet.c (wsn):static ev_time_event_t *pallet_setup_timer = NULL;
+Pallet.c (wsn):    pallet_setup_timer = ev_on_timer(Pallet_SetupTimer_Callback, NULL, PALLET_SETUP_PERIOD);
+Pallet.c (wsn):    assert(pallet_setup_timer);

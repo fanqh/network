@@ -22,7 +22,6 @@
 #include "bsp.h"
 
 
-
 #define REG_RST0        REG_ADDR8(0x60)
 #define REG_RST1        REG_ADDR8(0x61)
 #define REG_RST2        REG_ADDR8(0x62)
@@ -175,15 +174,6 @@ void WaitMs(int Millisec)
     }
 }
 
-
-unsigned int time_elapsed( unsigned int sttk, unsigned int tm)
-{
-	unsigned int ctk = ClockTime();
-  if ( sttk > ctk)
-    return ( (ctk + (0xFFFFFFFF - sttk+1 ) ) >= tm);
-  return ((ctk - sttk ) >= tm);
-}
-
 int LoadTblCmdSet(const BSP_TblCmdSetTypeDef * Table, int Size)
 {
     int l=0;
@@ -271,6 +261,12 @@ void USB_LogInit(void)
 {
     WRITE_REG8(0x80013c, 0x40);
     WRITE_REG8(0x80013d, 0x09);
+}
+
+#define REG_RND_NUMBER          REG_ADDR16(0x448)
+unsigned short Rand(void)
+{
+    return (unsigned short)((REG_SYS_TIMER & 0xffff) ^ REG_RND_NUMBER);
 }
 
 

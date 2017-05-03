@@ -63,8 +63,10 @@ ev_time_event_t *ev_on_timer(ev_timer_callback_t cb, void *data, u32 t_us)
 
     assert(cb);
 
-    for (i = 0; i < LengthOfArray(timer_list); i++) {
-        if (timer_list[i].busy == 0) {
+    for (i = 0; i < LengthOfArray(timer_list); i++)
+    {
+        if (timer_list[i].busy == 0)
+        {
             timer_list[i].busy = 1;
             e = timer_list + i;
             break;
@@ -95,13 +97,16 @@ void ev_process_timer()
     u32 now = ClockTime();
     ev_time_event_t *te;
     for (te = timer_list; te < timer_list + LengthOfArray(timer_list); te++) {
-        if ((!is_timer_expired(te)) && ev_is_timer_expired(te, now)) {
+        if ((!is_timer_expired(te)) && ev_is_timer_expired(te, now))
+        {
             int t;
-            if ( te->cb < 0x100 || te->cb > 0x20000 ) {
+            if ( te->cb < 0x100 || te->cb > 0x20000 )
+            {
                 while(1);
             }
             t = te->cb(te->data);
-            if(t < 0){
+            if(t < 0)
+            {
                 ev_cancel_timer(te);        // delete timer
             }
             else if(0 == t) {

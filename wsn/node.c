@@ -17,9 +17,8 @@ static unsigned char rx_ptr = 0;
 void Node_Init(void)
 {
     memset(&node_info, 0, sizeof(NodeInfo_TypeDef));
-    node_info.pallet_id = PALLET_ID;
-    node_info.node_id = NODE_ID;
-    node_info.dsn = (NODE_ID + PALLET_ID) * 10;
+    node_info.mac_addr = NODE_MAC_ADDR;
+    node_info.dsn = node_info.mac_addr & 0xff;
         
     RF_RxBufferSet(rx_buf + rx_ptr*RX_BUF_LEN, RX_BUF_LEN, 0);
    
@@ -33,7 +32,7 @@ void Node_Init(void)
     GPIO_ResetBit(TIMING_SHOW_PIN);
 }
 
-_attribute_session_(".ram_code") void Run_NodeStatemachine(Msg_TypeDef *msg)
+_attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
     unsigned int timestamp;
@@ -49,7 +48,7 @@ _attribute_session_(".ram_code") void Run_NodeStatemachine(Msg_TypeDef *msg)
                 timestamp = FRAME_GET_TIMESTAMP(msg->data);
                 //check validity of timestamp
                 if ((unsigned int)(now - timestamp) > 6*1000*TickPerUs) {
-                    msg->type == MSG_TYPE_NONE;
+                   // msg->type == MSG_TYPE_NONE;
                     return;
                 }
                 node_info.t0 = timestamp - ZB_TIMESTAMP_OFFSET*TickPerUs;
@@ -63,10 +62,10 @@ _attribute_session_(".ram_code") void Run_NodeStatemachine(Msg_TypeDef *msg)
                 timestamp = FRAME_GET_TIMESTAMP(msg->data);
                 //check validity of timestamp
                 if ((unsigned int)(now - timestamp) > 6*1000*TickPerUs) {
-                    msg->type == MSG_TYPE_NONE;
+                   // msg->type == MSG_TYPE_NONE;
                     return;
                 }
-                unsigned char tmp_pallet_id = FRAME_GET_PALLET_ID(msg->data);
+                unsigned short tmp_pallet_id = FRAME_GET_SRC_ADDR(msg->data);
                 node_info.t0 = timestamp - (ZB_TIMESTAMP_OFFSET + tmp_pallet_id*TIMESLOT_LENGTH)*TickPerUs;
                 node_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
                 // if the PB is originated from the pallet this end device attaches to, determine
@@ -136,7 +135,7 @@ void Node_MainLoop(void)
 
 }
 
-_attribute_session_(".ram_code") void Node_RxIrqHandler(void)
+_attribute_ram_code_ void Node_RxIrqHandler(void)
 {
     unsigned char *rx_packet = rx_buf + rx_ptr*RX_BUF_LEN;
     rx_ptr = (rx_ptr + 1) % RX_BUF_NUM;
@@ -148,6 +147,26 @@ _attribute_session_(".ram_code") void Node_RxIrqHandler(void)
     }
     //receive a valid packet
     else {
+
+        //if it is pallet setup beacon frame, perform a random backoff and then require to associate
+        if (FRAME_IS_SETUP_PALLET_BEACON(rx_packet))
+        {
+            //memcpy(test_data+sizeof(test_data)-32, rx_packet, 32);
+            MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_SETUP_BCN);
+        }
+        //if it is pallet setup response frame, check whether the dst addr matches the local addr
+        if (FRAME_IS_SETUP_PALLET_RSP(rx_packet))
+        {
+            unsigned short dst_addr = FRAME_GET_DST_ADDR(rx_packet);
+            if (dst_addr == node_info.mac_addr)
+            {
+                MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_SETUP_RSP);
+            }
+            else
+            {
+                MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_INVALID_DATA);
+            }
+        }
         //if it is pallet ACK frame, check it and then go to suspend immediately
         if (FRAME_IS_ACK_TYPE(rx_packet) && (rx_packet[15] == node_info.dsn)) {
             MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_PALLET_ACK);
@@ -166,12 +185,99 @@ _attribute_session_(".ram_code") void Node_RxIrqHandler(void)
     }   
 }
 
-_attribute_session_(".ram_code") void Node_RxTimeoutHandler(void)
+_attribute_ram_code_ void Node_RxTimeoutHandler(void)
 {
-    if (NODE_STATE_PALLET_ACK_WAIT == node_info.state) {
+    if (NODE_STATE_PALLET_ACK_WAIT == node_info.state)
+    {
         MsgQueue_Push(&msg_queue, NULL, NODE_MSG_TYPE_PALLET_ACK_TIMEOUT);
     }
-    else {
+    else if (NODE_STATE_SETUP_PALLET_RSP_WAIT == node_info.state)
+    {
+        MsgQueue_Push(&msg_queue, NULL, NODE_MSG_TYPE_SETUP_RSP_TIMEOUT);
+    }
+    else
+    {
+    	//todo need add some code to tell application
+    }
+}
 
+_attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
+{
+    unsigned int now;
+
+    if (NODE_STATE_SETUP_IDLE == node_info.state) {
+    	RF_SetTxRxOff();
+        node_info.state = NODE_STATE_SETUP_BCN_WAIT;
+        RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on waiting for mesh setup beacon
+    }
+    else if (NODE_STATE_SETUP_BCN_WAIT == node_info.state) {
+        if (msg) {
+            if (NODE_MSG_TYPE_SETUP_BCN == msg->type) {
+                now = ClockTime();
+                node_info.state = NODE_STATE_SETUP_BACKOFF;
+                node_info.retry_times = 0;
+                node_info.wakeup_tick = now + ((Rand()+node_info.mac_addr) & BACKOFF_MAX_NUM)*BACKOFF_UNIT*TickPerUs;
+                node_info.pallet_id = FRAME_GET_SRC_ADDR(msg->data);
+            }
+            Message_Reset(msg);
+        }
+    }
+    else if (NODE_STATE_SETUP_BACKOFF == node_info.state) {
+        //turn off receiver and go to suspend
+        RF_SetTxRxOff();
+        // while((unsigned int)(ClockTime() - node_info.wakeup_tick) > BIT(30));
+        RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //turn off RX mode
+        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
+        node_info.state = NODE_STATE_SETUP_REQ_SEND;
+    }
+    else if (NODE_STATE_SETUP_REQ_SEND == node_info.state) {
+        if (node_info.retry_times < RETRY_MAX) {
+            now = ClockTime();
+            RF_StartStxToRx(tx_buf, now + RF_TX_WAIT*TickPerUs, RX_WAIT);
+            Build_NodeSetupReq(tx_buf, &node_info);
+            GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
+            //update state
+            node_info.state = NODE_STATE_SETUP_PALLET_RSP_WAIT;
+        }
+        else {
+            //blink led and stall
+            while (1) {
+                GPIO_SetBit(GPIOC_GP2);
+                WaitMs(20);
+                GPIO_ResetBit(GPIOC_GP2);
+                WaitMs(80);
+            }
+        }
+    }
+    else if (NODE_STATE_SETUP_PALLET_RSP_WAIT == node_info.state) {
+        if (msg) {
+            if (msg->type == NODE_MSG_TYPE_SETUP_RSP) {
+                GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
+                node_info.node_id = FRAME_GET_NODE_ID(msg->data);
+                node_info.state = NODE_STATE_IDLE;
+            }
+            else {
+                GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
+                now = ClockTime();
+                node_info.state = NODE_STATE_SETUP_BACKOFF;
+                node_info.wakeup_tick = now + ((Rand()+node_info.mac_addr) & BACKOFF_MAX_NUM)*BACKOFF_UNIT*TickPerUs;
+                node_info.retry_times++;
+            }
+
+            Message_Reset(msg);
+        }
+    }
+}
+
+void Node_SetupLoop(void)
+{
+    Msg_TypeDef* pMsg = NULL;
+
+    while (NODE_STATE_IDLE != node_info.state)
+    {
+        //pop a message from the message queue
+        pMsg = MsgQueue_Pop(&msg_queue);
+        //run state machine
+        Run_Node_Setup_Statemachine(pMsg);
     }
 }

@@ -3,10 +3,14 @@
 #include "../../wsn/pallet.h"
 #include "../../wsn/config.h"
 
-#define CHIP_ID    0x0101
+#define CHIP_ID                   0x0101
+#define PALLET_SETUP_TRIG_PIN     GPIOD_GP2
+#define LED_PIN                   GPIOC_GP3
 
 unsigned long firmwareVersion;
-extern int my_printf(const char *format, ...);
+
+volatile unsigned char PalletSetupTrig = 0;
+
 static void SYS_Init(void)
 {
     BSP_SysCtlTypeDef SysCtrl;
@@ -21,26 +25,40 @@ static void SYS_Init(void)
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
     USB_LogInit();
     USB_DpPullUpEn(1); //pull up DP pin of USB interface
-    WaitMs(1000);
+    // WaitMs(1000);
+
+    GPIO_SetGPIOEnable(LED_PIN, Bit_SET);
+    GPIO_ResetBit(LED_PIN);
+    GPIO_SetOutputEnable(LED_PIN, Bit_SET);
+
 }
 
-int test = 0;
-extern void debug_enqueue(unsigned char type);
 void main(void)
 {
-
-
     PM_WakeupInit();
     SYS_Init();
 
+    //config the setup trig GPIO pin
+    GPIO_SetGPIOEnable(PALLET_SETUP_TRIG_PIN, Bit_SET);    //set as gpio
+    GPIO_SetInputEnable(PALLET_SETUP_TRIG_PIN, Bit_SET);   //enable input
+    GPIO_PullSet(PALLET_SETUP_TRIG_PIN, PULL_UP_1M);
+    GPIO_SetInterrupt(PALLET_SETUP_TRIG_PIN, Bit_SET);
+    IRQ_EnableType(FLD_IRQ_GPIO_EN);
+    IRQ_Enable();
+
+    while(!PalletSetupTrig); //wait for pallet setup trig
+
     Pallet_Init();
-
+    Pallet_SetupLoop();
+    GPIO_SetBit(LED_PIN);
     WaitMs(1000);
-     //LogMsg("pallet start...\n", NULL, 0);
+    GPIO_ResetBit(LED_PIN);
+    Pallet_SetupLoop2();
+    GPIO_SetBit(LED_PIN);
+    //while(1);
+    
     while (1) {
-
         Pallet_MainLoop();
-    	test ++;
     }
 }
 

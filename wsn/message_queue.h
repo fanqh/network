@@ -8,24 +8,36 @@ enum {
     MSG_TYPE_NONE = 0,
 
     //gateway message type
-    GW_MSG_TYPE_INVALID_DATA, //1
-    GW_MSG_TYPE_PALLET_DATA,  //2
-    GW_MSG_TYPE_PALLET_DATA_TIMEOUT, //3
+    GW_MSG_TYPE_INVALID_DATA,
+    GW_MSG_TYPE_PALLET_DATA,
+    GW_MSG_TYPE_PALLET_DATA_TIMEOUT,
+
+    GW_MSG_TYPE_SETUP_REQ,
     
     //pallet message type
-    PALLET_MSG_TYPE_INVALID_DATA,//4
-    PALLET_MSG_TYPE_GW_BCN, //5
-    PALLET_MSG_TYPE_GW_ACK, //6
-    PALLET_MSG_TYPE_GW_ACK_TIMEOUT, //7
-    PALLET_MSG_TYPE_ED_DATA,  //8
-    PALLET_MSG_TYPE_ED_DATA_TIMEOUT,  //9
+    PALLET_MSG_TYPE_INVALID_DATA,
+    PALLET_MSG_TYPE_GW_BCN,
+    PALLET_MSG_TYPE_GW_ACK,
+    PALLET_MSG_TYPE_GW_ACK_TIMEOUT,
+    PALLET_MSG_TYPE_ED_DATA,
+    PALLET_MSG_TYPE_ED_DATA_TIMEOUT,
+
+    PALLET_MSG_TYPE_SETUP_REQ,
+
+    PALLET_MSG_TYPE_SETUP_GW_BCN,
+    PALLET_MSG_TYPE_SETUP_GW_RSP,
+    PALLET_MSG_TYPE_SETUP_GW_RSP_TIMEOUT,
 
     //end device message type
-    NODE_MSG_TYPE_INVALID_DATA,//10
-    NODE_MSG_TYPE_GW_BCN,//11
+    NODE_MSG_TYPE_INVALID_DATA,
+    NODE_MSG_TYPE_GW_BCN,
     NODE_MSG_TYPE_PALLET_BCN,
     NODE_MSG_TYPE_PALLET_ACK,
     NODE_MSG_TYPE_PALLET_ACK_TIMEOUT,
+
+    NODE_MSG_TYPE_SETUP_BCN,
+    NODE_MSG_TYPE_SETUP_RSP,
+    NODE_MSG_TYPE_SETUP_RSP_TIMEOUT,
 };
 
 typedef struct {
@@ -45,5 +57,6 @@ typedef struct {
 extern int MsgQueue_Push(MsgQueue_Typedef *p, unsigned char *data, unsigned char type);
 extern Msg_TypeDef *MsgQueue_Pop(MsgQueue_Typedef *p);
 _attribute_ram_code_ int MsgQueue_Clean(MsgQueue_Typedef *p);
+_attribute_ram_code_ void Message_Reset(Msg_TypeDef *msg);
 
 #endif /*_MESSAGE_QUEUE_H_*/

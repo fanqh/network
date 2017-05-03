@@ -19,6 +19,7 @@ local.properties
 *.bin
 *.o
 *lst
+*.mk
 
 # External tool builders
 .externalToolBuilders/

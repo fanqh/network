@@ -64,7 +64,7 @@ _attribute_ram_code_ static void reset_buf(unsigned char *p, int len)
 _attribute_ram_code_ void Message_Reset(Msg_TypeDef *msg)
 {
 
-#if 0
+#if 1
     assert(msg);
 
     //reset rx_packet
@@ -72,7 +72,7 @@ _attribute_ram_code_ void Message_Reset(Msg_TypeDef *msg)
         reset_buf(msg->data, RX_BUF_LEN);
     }
     //reset msg
-    msg->data == NULL;
-    msg->type == MSG_TYPE_NONE;
+    //msg->data == NULL;
+    //msg->type == MSG_TYPE_NONE;
 #endif
 }

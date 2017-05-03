@@ -282,6 +282,10 @@ extern void LogMsg(char *Str, unsigned char *Content, int Len);
  */
 extern void USB_LogInit(void);
 
-unsigned int time_elapsed( unsigned int sttk, unsigned int tm);
+/**
+ * @brief This function generates a rand number between 0 to 0xffff.
+ * @return none
+ */
+extern unsigned short Rand(void);
 
 #endif /* BSP_H */

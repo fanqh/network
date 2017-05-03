@@ -3,6 +3,7 @@
 #include "../../wsn/node.h"
 
 #define CHIP_ID    0x0101
+#define LED_PIN    GPIOC_GP3
 
 unsigned long firmwareVersion=8;
 
@@ -20,7 +21,11 @@ static void SYS_Init(void)
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
     USB_LogInit();
     USB_DpPullUpEn(1); //pull up DP pin of USB interface
-    WaitMs(1000);
+    // WaitMs(1000);
+
+    GPIO_SetGPIOEnable(LED_PIN, Bit_SET);
+    GPIO_ResetBit(LED_PIN);
+    GPIO_SetOutputEnable(LED_PIN, Bit_SET);
 }
 
 void main(void)
@@ -29,8 +34,11 @@ void main(void)
     SYS_Init();
 
     Node_Init();
+    //mesh network setup
+    Node_SetupLoop();
+    GPIO_SetBit(LED_PIN);
 
-    WaitMs(1000);
+    //WaitMs(1000);
 
     // LogMsg("end device start...\n", NULL, 0);
 
