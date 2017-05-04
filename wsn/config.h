@@ -27,8 +27,8 @@
 #define PALLET_ID              0x01
 #define NODE_ID                0x01
 
-#define NODE_MAC_ADDR          0xff02
-#define PALLET_MAC_ADDR        0xee01
+#define NODE_MAC_ADDR          0xff01
+#define PALLET_MAC_ADDR        0xee02
 #define GW_MAC_ADDR            0xdd01
 
 #define BACKOFF_UNIT           5000 //unit: us

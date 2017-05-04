@@ -19,25 +19,25 @@
 #define FRMAE_TYPE_SETUP_PALLET_REQ        0x09
 #define FRMAE_TYPE_SETUP_GW_RSP            0x0a
 
-//frame parse definitions
+//frame parse definitions  GateWay Beacon
 #define FRAME_GET_TIMESTAMP(p)             ( p[8] | (p[9]<<8) | (p[10]<<16) | (p[11]<<24) )
-#define FRAME_GET_PERIOD_CNT(p)            ( p[21] | (p[22]<<8) | (p[23]<<16) | (p[24]<<24) )
-#define FRAME_GET_PALLET_ID(p)             ( p[25] )
+#define FRAME_GET_PERIOD_CNT(p)            ( p[23] | (p[24]<<8) | (p[25]<<16) | (p[26]<<24) )
+#define FRAME_GET_PALLET_ID(p)             ( p[27] )
 #define FRAME_GET_DST_ADDR(p)              ( p[18] | (p[19]<<8) )
 #define FRAME_GET_SRC_ADDR(p)              ( p[20] | (p[21]<<8) )
 #define FRAME_GET_INCOME_DSN(p)            ( p[15] )
 
 
 #define FRAME_GET_NODE_ID(p)               ( p[23] )
-#define FRAME_GET_PALLET_ID(p)             ( p[23] )
+//#define FRAME_GET_PALLET_ID(p)             ( p[23] )
 
 #define FRAME_GET_PALLET_NODE_NUM(p)       ( p[23] )
 
-#define FRAME_IS_GATEWAY_BEACON(p)         (( p[20] == FRMAE_TYPE_GATEWAY_BEACON) && (p[12] == 16))
+#define FRAME_IS_GATEWAY_BEACON(p)         (( p[22] == FRMAE_TYPE_GATEWAY_BEACON) )
 #define FRAME_IS_PALLET_DATA(p)            ( p[22] == FRMAE_TYPE_PALLET_DATA)
 #define FRAME_IS_ACK_TYPE(p)               ( p[13] == 0x02)
 #define FRAME_IS_NODE_DATA(p)              ( p[22] == FRMAE_TYPE_NODE_DATA)
-#define FRAME_IS_PALLET_BEACON(p)          ( p[20] == FRMAE_TYPE_PALLET_BEACON)
+#define FRAME_IS_PALLET_BEACON(p)          ( p[22] == FRMAE_TYPE_PALLET_BEACON)
 #define FRAME_IS_LENGTH_OK(p)              ( p[0] == p[12]+13)
 #define FRAME_IS_CRC_OK(p)                 ((p[p[0]+3] & 0x51) == 0x10)
 

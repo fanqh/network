@@ -1,5 +1,6 @@
 #include "../common.h"
 #include "frame.h"
+#include "config.h"
 
 _attribute_ram_code_ void Build_GatewayBeacon(unsigned char *pBuf, GWInfo_TypeDef *pInfo)
 {
@@ -8,12 +9,16 @@ _attribute_ram_code_ void Build_GatewayBeacon(unsigned char *pBuf, GWInfo_TypeDe
 
     //build the 802.15.4 mac data frame header
     *p++ = 0x41; //frame ctrl
-    *p++ = 0x18;
+    *p++ = 0x98;
     *p++ = ++(pInfo->dsn); //dsn
     *p++ = 0xaa; //dest PANID 
     *p++ = 0xbb;
     *p++ = 0xff; //dest address
     *p++ = 0xff;
+
+    *p++ = (unsigned char)(GW_ID&0xff); //src address
+    *p++ = (unsigned char)(GW_ID>>8);
+
     *p++ = FRMAE_TYPE_GATEWAY_BEACON;
     *p++ = pInfo->period_cnt & 0xff;
     *p++ = (pInfo->period_cnt >> 8) & 0xff;
@@ -66,12 +71,16 @@ _attribute_ram_code_ void Build_PalletBeacon(unsigned char *pBuf, PalletInfo_Typ
 
     //build the 802.15.4 mac data frame header
     *p++ = 0x41; //frame ctrl
-    *p++ = 0x18;
+    *p++ = 0x98;
     *p++ = ++(pInfo->dsn); //dsn
     *p++ = 0xaa; //dest PANID
     *p++ = 0xbb;
     *p++ = 0xff; //dest address
     *p++ = 0xff;
+
+    *p++ = pInfo->pallet_id & 0xff; //src address
+    *p++ = 0;
+
     *p++ = FRMAE_TYPE_PALLET_BEACON;
     *p++ = pInfo->period_cnt & 0xff;
     *p++ = (pInfo->period_cnt >> 8) & 0xff;
