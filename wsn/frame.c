@@ -50,9 +50,9 @@ _attribute_ram_code_ void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeD
     *p++ = pInfo->pallet_id; //src address
     *p++ = 0;
     *p++ = FRMAE_TYPE_PALLET_DATA;
-    *p++ = pInfo->period_cnt & 0xff;
-    *p++ = (pInfo->period_cnt >> 8) & 0xff;
-    *p++ = (pInfo->period_cnt >> 16) & 0xff;
+    *p++ = pInfo->pNodeData->node_id;
+    *p++ = (pInfo->pNodeData->temperature) & 0xff;
+    *p++ = (pInfo->pNodeData->temperature >> 8) & 0xff;
     *p++ = (pInfo->period_cnt >> 24) & 0xff;
     *p++ = pInfo->gw_id;
     *p++ = pInfo->pallet_id;
@@ -148,8 +148,8 @@ _attribute_ram_code_ void Build_NodeSetupReq(unsigned char *pBuf, NodeInfo_TypeD
     *p++ = ++(pInfo->dsn); //dsn
     *p++ = 0xaa; //dest PANID
     *p++ = 0xbb;
-    *p++ = pInfo->pallet_id & 0xff; //dest address
-    *p++ = pInfo->pallet_id >> 8;
+    *p++ = pInfo->pallet_mac & 0xff; //dest address
+    *p++ = pInfo->pallet_mac >> 8;
     *p++ = pInfo->mac_addr & 0xff; //src address
     *p++ = pInfo->mac_addr >> 8;
     *p++ = FRMAE_TYPE_SETUP_NODE_REQ;

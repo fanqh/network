@@ -38,5 +38,6 @@ extern void Gateway_Init(void);
 extern void Gateway_MainLoop(void);
 extern void Gateway_RxIrqHandler(void);
 extern void Gateway_RxTimeoutHandler(void);
+void Gateway_SetupLoop(void);
 
 #endif /*_GATE_WAY_H_*/

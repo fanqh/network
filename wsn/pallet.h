@@ -29,6 +29,12 @@ typedef struct {
     unsigned char node_data[NODE_DATA_LEN];
 } NodeEntry_Typedef;
 
+typedef struct
+{
+	unsigned char node_id;	
+	unsigned short temperature;
+}NodeDataWaitSend_Typdedef;
+
 typedef struct {
     unsigned int t0; //the moment starting to send the beacon 
     unsigned int wakeup_tick; //the moment wakeup
@@ -44,11 +50,14 @@ typedef struct {
     unsigned char state; //current state of device
     unsigned char retry_times; //retry times
     unsigned char node_table_len;
+	NodeDataWaitSend_Typdedef *pNodeData;
 } PalletInfo_TypeDef;
 
 extern void Pallet_Init(void);
 extern void Pallet_MainLoop(void);
 extern void Pallet_RxIrqHandler(void);
 extern void Pallet_RxTimeoutHandler(void);
+void Pallet_SetupLoop(void);
+void Pallet_SetupLoop2(void);
 
 #endif /*_PALLET_H_*/

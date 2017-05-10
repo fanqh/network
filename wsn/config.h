@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define TIMESLOT_LENGTH        5000 //the duration(in us) of each timeslot
+#define TIMESLOT_LENGTH        5000 //the duration(in us) of each timeslot   GB + G/Pn
 #define PALLET_NUM             6 //the number of pallets attached to each gateway
 #define NODE_NUM               3 //the number of end devices attached to each pallet
 
@@ -24,11 +24,15 @@
 
 #define RF_CHANNEL             70
 #define GW_ID                  0x01
-#define PALLET_ID              0x01
 #define NODE_ID                0x01
 
+//需要做对应修改
+#define PALLET_ID              0x01  //由gateway分配
+#define PALLET_MAC_ADDR        0xee01
+
 #define NODE_MAC_ADDR          0xff01
-#define PALLET_MAC_ADDR        0xee02
+
+
 #define GW_MAC_ADDR            0xdd01
 
 #define BACKOFF_UNIT           5000 //unit: us
@@ -38,5 +42,14 @@
 
 #define PALLET_SETUP_PERIOD    (2000*1000) //us
 #define GW_SETUP_PERIOD        (2000*1000) //us
+
+
+#define CHIP_ID                   0x0201
+#define GW_SETUP_TRIG_PIN         GPIOD_GP2
+#define LED_PIN                   GPIOC_GP3
+
+#define DEBUG_PIN         		  GPIOB_GP7
+
+#define FLASH_DEVICE_INFOR_ADDR   (15*4*1024)
 
 #endif

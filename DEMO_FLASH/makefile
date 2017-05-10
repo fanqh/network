@@ -9,10 +9,8 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir.mk
--include wsn/subdir.mk
--include vendor/dev/subdir.mk
+-include vendor/internal_flash_read_write_demo/subdir.mk
 -include print/subdir.mk
--include interface/subdir.mk
 -include drivers/8267/subdir.mk
 -include debug/subdir.mk
 -include common/subdir.mk
@@ -28,10 +26,10 @@ RM := rm -rf
 
 # Add inputs and outputs from these tool invocations to the build variables 
 LST += \
-pallet.lst \
+SensorMesh_20170418.lst \
 
 FLASH_IMAGE += \
-pallet.bin \
+SensorMesh_20170418.bin \
 
 SIZEDUMMY += \
 sizedummy \
@@ -48,15 +46,15 @@ SensorMesh_20170418.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-pallet.lst: SensorMesh_20170418.elf
+SensorMesh_20170418.lst: SensorMesh_20170418.elf
 	@echo 'Invoking: TC32 Create Extended Listing'
-	tc32-elf-objdump -x -D -l -S SensorMesh_20170418.elf  >"pallet.lst"
+	tc32-elf-objdump -x -D -l -S SensorMesh_20170418.elf  >"SensorMesh_20170418.lst"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-pallet.bin: SensorMesh_20170418.elf
+SensorMesh_20170418.bin: SensorMesh_20170418.elf
 	@echo 'Create Flash image (binary format)'
-	tc32-elf-objcopy -O binary SensorMesh_20170418.elf  "pallet.bin"
+	tc32-elf-objcopy -O binary SensorMesh_20170418.elf  "SensorMesh_20170418.bin"
 	@echo 'Finished building: $@'
 	@echo ' '
 

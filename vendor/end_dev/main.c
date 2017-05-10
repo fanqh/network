@@ -1,6 +1,7 @@
 #include "../../drivers.h"
 #include "../../common.h"
 #include "../../wsn/node.h"
+#include "../../wsn/config.h"
 
 #define CHIP_ID    0x0101
 #define LED_PIN    GPIOC_GP3
@@ -28,6 +29,8 @@ static void SYS_Init(void)
     GPIO_SetOutputEnable(LED_PIN, Bit_SET);
 }
 
+int test = 0;
+
 void main(void)
 {
     PM_WakeupInit();
@@ -37,12 +40,14 @@ void main(void)
     //mesh network setup
     Node_SetupLoop();
     GPIO_SetBit(LED_PIN);
+    GPIO_ResetBit(TIMING_SHOW_PIN);
 
     //WaitMs(1000);
 
     // LogMsg("end device start...\n", NULL, 0);
 
     while (1) {
+    	test++;
         Node_MainLoop();
     }
 }

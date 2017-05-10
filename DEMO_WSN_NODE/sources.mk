@@ -19,6 +19,7 @@ SUBDIRS := \
 wsn \
 vendor/end_dev \
 print \
+interface \
 drivers/8267 \
 debug \
 common \

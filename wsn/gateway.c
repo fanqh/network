@@ -1,11 +1,13 @@
 #include "../common.h"
 #include "../drivers.h"
 
+
 #include "config.h"
 #include "frame.h"
 #include "message_queue.h"
 
 #include "gateway.h"
+#include "../interface/pc_interface.h"
 
 #define PALLET_TABLE_MAX_LEN 3
 
@@ -19,10 +21,30 @@ static unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
 static unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
 static unsigned char rx_ptr = 0;
 
+
+extern unsigned char SetupInitFlag;
+extern volatile unsigned char GatewaySetupTrig;
+
+
+typedef struct
+{
+	unsigned short gateway_mac;
+	unsigned char rst;
+	unsigned long master_period;
+}gateway_infor_t;
+gateway_infor_t device_infor;
 void Gateway_Init(void)
 {
+
+	FLASH_PageRead(FLASH_DEVICE_INFOR_ADDR, sizeof(gateway_infor_t), (unsigned char*)&device_infor);
+	if(device_infor.gateway_mac == 0xffff)
+		device_infor.gateway_mac = PALLET_MAC_ADDR;
+
+	if(device_infor.master_period==0xffff)
+		device_infor.master_period = TIMESLOT_LENGTH;
+
     memset(&gw_info, 0, sizeof(GWInfo_TypeDef));
-    gw_info.mac_addr = GW_MAC_ADDR;
+    gw_info.mac_addr = device_infor.gateway_mac;
     gw_info.dsn = gw_info.mac_addr & 0xff;
 
     RF_RxBufferSet(rx_buf + rx_ptr*RX_BUF_LEN, RX_BUF_LEN, 0);
@@ -38,7 +60,21 @@ void Gateway_Init(void)
     GPIO_ResetBit(TIMING_SHOW_PIN);
 }
 
-_attribute_session_(".ram_code") void Run_Gateway_Statemachine(Msg_TypeDef *msg)
+
+typedef struct
+{
+	unsigned char flag;
+	unsigned char dsn;
+	unsigned char pallet_id;
+	unsigned char node_id;
+	unsigned short temperature;
+}NodeDataInfor_Typedef;
+NodeDataInfor_Typedef node_data;
+
+unsigned char tt[64];
+
+unsigned char upload[5] = {0x68,0,0,0,0};
+_attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
 
@@ -56,25 +92,34 @@ _attribute_session_(".ram_code") void Run_Gateway_Statemachine(Msg_TypeDef *msg)
     }
     else if (GW_STATE_PALLET_DATA_WAIT == gw_info.state) {
         if (msg) {
+
+        	gw_info.wakeup_tick = gw_info.t0 + (device_infor.master_period*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
             if (msg->type == GW_MSG_TYPE_PALLET_DATA) {
                 //ToDo: process received data submitted by pallet
                 //save the dsn for subsequent ack
                 gw_info.ack_dsn = msg->data[15];
+
+                memcpy(tt, msg->data, 64);
+                node_data.flag = 1;
+                node_data.dsn = gw_info.ack_dsn;
+                node_data.pallet_id = FRAME_GET_PAYLOAD_PALLET_ID(msg->data);
+                node_data.node_id = FRAME_GET_PAYLOAD_NODE_ID(msg->data);
+                node_data.temperature = FRAME_GET_NODE_PAYLOAD(msg->data);
                 gw_info.state = GW_STATE_SEND_PALLET_ACK;
             }
             else if (msg->type == GW_MSG_TYPE_PALLET_DATA_TIMEOUT) {
                 gw_info.state = GW_STATE_SUSPEND;
-                gw_info.wakeup_tick = gw_info.t0 + (TIMESLOT_LENGTH*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
+                //gw_info.wakeup_tick = gw_info.t0 + (device_infor.master_period*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
             }
             else if (msg->type == GW_MSG_TYPE_INVALID_DATA) {
                 //Garbage packet
                 gw_info.state = GW_STATE_SUSPEND;
-                gw_info.wakeup_tick = gw_info.t0 + (TIMESLOT_LENGTH*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
+                //gw_info.wakeup_tick = gw_info.t0 + (device_infor.master_period*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
             }
             else
             {
                 gw_info.state = GW_STATE_SUSPEND;
-                gw_info.wakeup_tick = gw_info.t0 + (TIMESLOT_LENGTH*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
+                //gw_info.wakeup_tick = gw_info.t0 + (device_infor.master_period*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
             }
 
             Message_Reset(msg);
@@ -87,11 +132,25 @@ _attribute_session_(".ram_code") void Run_Gateway_Statemachine(Msg_TypeDef *msg)
         WaitUs(WAIT_ACK_DONE); //wait for tx done
 
         gw_info.state = GW_STATE_SUSPEND;
-        gw_info.wakeup_tick = gw_info.t0 + (TIMESLOT_LENGTH*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
+        //gw_info.wakeup_tick = gw_info.t0 + (device_infor.master_period*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
     }
     else if (GW_STATE_SUSPEND == gw_info.state) {
+
+    	if(node_data.flag != 0)
+    	{
+    		memcpy(&upload[1], &node_data.pallet_id,4);
+    		node_data.flag = 0;
+
+    		ResuBuf_Write(upload, 5);
+    	}
+
+    	//GPIO_WriteBit(DEBUG_PIN, Bit_RESET);
         //turn off receiver and go to suspend
         // while((unsigned int)(ClockTime() - gw_info.wakeup_tick) > BIT(30));
+
+    	if(ClockTime()>=gw_info.wakeup_tick)
+    		gw_info.state = GW_STATE_SEND_GW_BCN;
+
         PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, gw_info.wakeup_tick);
         gw_info.state = GW_STATE_SEND_GW_BCN;
     }
@@ -106,7 +165,7 @@ void Gateway_MainLoop(void)
     Run_Gateway_Statemachine(pMsg);
 }
 
-_attribute_session_(".ram_code") void Gateway_RxIrqHandler(void)
+_attribute_ram_code_ void Gateway_RxIrqHandler(void)
 {
     //set next rx_buf
     unsigned char *rx_packet = rx_buf + rx_ptr*RX_BUF_LEN;
@@ -130,7 +189,7 @@ _attribute_session_(".ram_code") void Gateway_RxIrqHandler(void)
     }
 }
 
-_attribute_session_(".ram_code") void Gateway_RxTimeoutHandler(void)
+_attribute_ram_code_ void Gateway_RxTimeoutHandler(void)
 {
     if (GW_STATE_PALLET_DATA_WAIT == gw_info.state) {
         MsgQueue_Push(&msg_queue, NULL, GW_MSG_TYPE_PALLET_DATA_TIMEOUT);
@@ -142,12 +201,19 @@ _attribute_session_(".ram_code") void Gateway_RxTimeoutHandler(void)
 
 int Gateway_SetupTimer_Callback(void *data)
 {
+	SetupInitFlag = 0;
+	GatewaySetupTrig = 0;
+
 	gw_info.state = GW_STATE_SEND_GW_BCN;
 	RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //frequency 2425
+
+    GPIO_SetBit(LED_PIN);
+    WaitMs(1000);
+    ev_unon_timer(&gateway_setup_timer);
     return -1;
 }
 
-_attribute_session_(".ram_code") void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
+_attribute_ram_code_ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
     int i = 0;
@@ -204,7 +270,7 @@ void Gateway_SetupLoop(void)
     gateway_setup_timer = ev_on_timer(Gateway_SetupTimer_Callback, NULL, GW_SETUP_PERIOD);
     assert(gateway_setup_timer);
 
-    while (GW_STATE_SEND_GW_BCN != gw_info.state) {
+    while ((GW_STATE_SETUP_IDLE == gw_info.state) || (GW_STATE_SETUP_PALLET_REQ_WAIT == gw_info.state)) {
         ev_process_timer();
 
         //pop a message from the message queue

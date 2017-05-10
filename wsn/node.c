@@ -14,11 +14,32 @@ static unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
 static unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
 static unsigned char rx_ptr = 0;
 
+
+typedef struct
+{
+	unsigned short node_mac;
+	unsigned char pallet_id;
+	unsigned long master_period;
+	unsigned char rst;
+}device_infor_t;
+device_infor_t device_infor;
 void Node_Init(void)
 {
+
+
+	FLASH_PageRead(FLASH_DEVICE_INFOR_ADDR, sizeof(device_infor_t), (unsigned char*)&device_infor);
+	if((device_infor.pallet_id == 0xff) || (device_infor.node_mac == 0xffff))
+	{
+		device_infor.pallet_id = 0x01;
+		device_infor.node_mac = 0xff01;
+	}
+	if(device_infor.master_period==0xffffffff)
+		device_infor.master_period = TIMESLOT_LENGTH;
+
     memset(&node_info, 0, sizeof(NodeInfo_TypeDef));
-    node_info.mac_addr = NODE_MAC_ADDR;
+    node_info.mac_addr = device_infor.node_mac;
     node_info.dsn = node_info.mac_addr & 0xff;
+    node_info.pallet_id = device_infor.pallet_id; //应该由gate分配
         
     RF_RxBufferSet(rx_buf + rx_ptr*RX_BUF_LEN, RX_BUF_LEN, 0);
    
@@ -31,6 +52,9 @@ void Node_Init(void)
     GPIO_SetGPIOEnable(TIMING_SHOW_PIN, Bit_SET);
     GPIO_ResetBit(TIMING_SHOW_PIN);
 }
+
+
+unsigned char aa[64], a;
 
 _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 {
@@ -55,7 +79,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                 node_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
 
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*node_info.pallet_id - DEV_RX_MARGIN)*TickPerUs;
             }
             else if (NODE_MSG_TYPE_PALLET_BCN == msg->type) {
                 now = ClockTime();
@@ -66,10 +90,12 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                     return;
                 }
                 unsigned short tmp_pallet_id = FRAME_GET_SRC_ADDR(msg->data);
-                node_info.t0 = timestamp - (ZB_TIMESTAMP_OFFSET + tmp_pallet_id*TIMESLOT_LENGTH)*TickPerUs;
+                node_info.t0 = timestamp - (ZB_TIMESTAMP_OFFSET + tmp_pallet_id*device_infor.master_period)*TickPerUs;
                 node_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
                 // if the PB is originated from the pallet this end device attaches to, determine
                 // whether it is this end device's opportunity
+                memcpy(aa, msg->data,64);
+                while(1);
                 if ((node_info.period_cnt % NODE_NUM) == (node_info.node_id % NODE_NUM)) {
                     if (tmp_pallet_id == node_info.pallet_id) {
                         GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
@@ -83,7 +109,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                     }
                 }
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
 
             Message_Reset(msg);
@@ -91,26 +117,32 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
     }
     else if (NODE_STATE_PALLET_ACK_WAIT == node_info.state) {
         if (msg) {
+            GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
+            node_info.state = NODE_STATE_SUSPEND;
+            node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+
+#if 0
             if (msg->type == NODE_MSG_TYPE_PALLET_ACK) {
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
             else if (msg->type == NODE_MSG_TYPE_PALLET_ACK_TIMEOUT) {
-                GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
+                //GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
             else if (msg->type == NODE_MSG_TYPE_INVALID_DATA) {
-                GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
+                //GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
             else
             {
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
+#endif
             Message_Reset(msg);
         }
     }
@@ -217,7 +249,9 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
                 node_info.state = NODE_STATE_SETUP_BACKOFF;
                 node_info.retry_times = 0;
                 node_info.wakeup_tick = now + ((Rand()+node_info.mac_addr) & BACKOFF_MAX_NUM)*BACKOFF_UNIT*TickPerUs;
-                node_info.pallet_id = FRAME_GET_SRC_ADDR(msg->data);
+                node_info.pallet_mac = FRAME_GET_SRC_ADDR(msg->data);
+                //TODO  pallet ID 应该由gateway 分配，现在是固定值，因为此时还没有和gateway关联
+                //node_info.pallet_id = PALLET_ID;
             }
             Message_Reset(msg);
         }

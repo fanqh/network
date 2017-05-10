@@ -27,6 +27,24 @@
 #define FRAME_GET_SRC_ADDR(p)              ( p[20] | (p[21]<<8) )
 #define FRAME_GET_INCOME_DSN(p)            ( p[15] )
 
+// parse frame from node data
+#define FRAME_GET_SRC_NODE_ID(p)            (p[20])
+#define FRAME_GET_NODE_PAYLOAD(p)            (p[23] | p[24]<<8)
+
+//pare frame from pallet data
+#define FRAME_GET_PAYLOAD_PALLET_ID(p)            (p[20])
+#define FRAME_GET_PAYLOAD_NODE_ID(p)            (p[23])
+#define FRAME_GET_PAYLOAD_TMP(p)            (p[24] | (p[25]<<8))
+
+
+
+//frame of pallet setup beacon
+//#define FRAME_GET_SRC_PALLET_ID(p)              ( p[22] )
+//#define FRAME_GET_DST_ADDR_NODE_REQ(p)              ( p[20] | (p[21]<<8) )
+
+
+
+#define FRAME_GET_PALLET_ID_FROM_GATEWAY_SETUP(p)             ( p[23] )
 
 #define FRAME_GET_NODE_ID(p)               ( p[23] )
 //#define FRAME_GET_PALLET_ID(p)             ( p[23] )

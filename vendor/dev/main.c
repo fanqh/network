@@ -32,19 +32,34 @@ static void SYS_Init(void)
     GPIO_SetOutputEnable(LED_PIN, Bit_SET);
 
 }
-
-void main(void)
+static void Board_Init(void)
 {
-    PM_WakeupInit();
-    SYS_Init();
-
+	//LED Pin
+    GPIO_SetGPIOEnable(LED_PIN, Bit_SET);
+    GPIO_ResetBit(LED_PIN);
+    GPIO_SetOutputEnable(LED_PIN, Bit_SET);
     //config the setup trig GPIO pin
     GPIO_SetGPIOEnable(PALLET_SETUP_TRIG_PIN, Bit_SET);    //set as gpio
     GPIO_SetInputEnable(PALLET_SETUP_TRIG_PIN, Bit_SET);   //enable input
     GPIO_PullSet(PALLET_SETUP_TRIG_PIN, PULL_UP_1M);
     GPIO_SetInterrupt(PALLET_SETUP_TRIG_PIN, Bit_SET);
     IRQ_EnableType(FLD_IRQ_GPIO_EN);
+    //for debug Pin
+	GPIO_SetGPIOEnable(DEBUG_PIN, Bit_SET);
+    GPIO_ResetBit(DEBUG_PIN);
+    GPIO_SetOutputEnable(DEBUG_PIN, Bit_SET);
+}
+
+void main(void)
+{
+    PM_WakeupInit();
+    SYS_Init();
+
+    Board_Init();
     IRQ_Enable();
+
+
+
 
     while(!PalletSetupTrig); //wait for pallet setup trig
 
@@ -55,6 +70,7 @@ void main(void)
     GPIO_ResetBit(LED_PIN);
     Pallet_SetupLoop2();
     GPIO_SetBit(LED_PIN);
+    GPIO_ResetBit(TIMING_SHOW_PIN);
     //while(1);
     
     while (1) {
