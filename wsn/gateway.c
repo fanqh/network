@@ -67,13 +67,13 @@ typedef struct
 	unsigned char dsn;
 	unsigned char pallet_id;
 	unsigned char node_id;
-	unsigned short temperature;
+	unsigned int temperature;
 }NodeDataInfor_Typedef;
 NodeDataInfor_Typedef node_data;
 
 unsigned char tt[64];
 
-unsigned char upload[5] = {0x68,0,0,0,0};
+unsigned char upload[7] = {0x68,0,0,0,0,0,0};
 _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
@@ -104,7 +104,7 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
                 node_data.dsn = gw_info.ack_dsn;
                 node_data.pallet_id = FRAME_GET_PAYLOAD_PALLET_ID(msg->data);
                 node_data.node_id = FRAME_GET_PAYLOAD_NODE_ID(msg->data);
-                node_data.temperature = FRAME_GET_NODE_PAYLOAD(msg->data);
+                node_data.temperature = FRAME_GET_PAYLOAD_TMP(msg->data);
                 gw_info.state = GW_STATE_SEND_PALLET_ACK;
             }
             else if (msg->type == GW_MSG_TYPE_PALLET_DATA_TIMEOUT) {
@@ -138,10 +138,10 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
 
     	if(node_data.flag != 0)
     	{
-    		memcpy(&upload[1], &node_data.pallet_id,4);
+    		memcpy(&upload[1], &node_data.pallet_id,6);
     		node_data.flag = 0;
 
-    		ResuBuf_Write(upload, 5);
+    		ResuBuf_Write(upload, 7);
     	}
 
     	//GPIO_WriteBit(DEBUG_PIN, Bit_RESET);

@@ -32,7 +32,7 @@ static void SYS_Init(void)
 
 volatile int test = 0;
 unsigned char SetupInitFlag = 0;
-
+#define TMP102A_ADDRESS 0x90
 
 void Board_Init(void)
 {
@@ -47,6 +47,9 @@ void Board_Init(void)
     GPIO_SetGPIOEnable(DEBUG_PIN, Bit_SET);
     GPIO_ResetBit(DEBUG_PIN);
     GPIO_SetOutputEnable(DEBUG_PIN, Bit_SET);
+
+    //I2C_PinSelect(I2C_PIN_GPIOB);
+    //I2C_Init(TMP102A_ADDRESS, 64);
 }
 
 void Buff_Inface_Init(void)

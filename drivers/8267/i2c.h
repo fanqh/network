@@ -88,4 +88,6 @@ extern void I2C_Write(unsigned char *Addr, int AddrLen, unsigned char *Buf, int 
  */
 extern void I2C_Read(unsigned char *Addr, int AddrLen, unsigned char *Buf, int Len);
 
+void I2C_read_bytes(unsigned char addr, unsigned char *pData, int dataSize);
+
 #endif 

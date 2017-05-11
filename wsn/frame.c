@@ -53,8 +53,8 @@ _attribute_ram_code_ void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeD
     *p++ = pInfo->pNodeData->node_id;
     *p++ = (pInfo->pNodeData->temperature) & 0xff;
     *p++ = (pInfo->pNodeData->temperature >> 8) & 0xff;
-    *p++ = (pInfo->period_cnt >> 24) & 0xff;
-    *p++ = pInfo->gw_id;
+    *p++ = (pInfo->pNodeData->temperature >> 16) & 0xff;
+    *p++ = (pInfo->pNodeData->temperature >> 24) & 0xff;
     *p++ = pInfo->pallet_id;
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
@@ -111,10 +111,10 @@ _attribute_ram_code_ void Build_NodeData(unsigned char *pBuf, NodeInfo_TypeDef *
     *p++ = pInfo->node_id; //src address
     *p++ = 0;
     *p++ = FRMAE_TYPE_NODE_DATA;
-    *p++ = pInfo->period_cnt & 0xff;
-    *p++ = (pInfo->period_cnt >> 8) & 0xff;
-    *p++ = (pInfo->period_cnt >> 16) & 0xff;
-    *p++ = (pInfo->period_cnt >> 24) & 0xff;
+    *p++ = pInfo->tmp & 0xff;
+    *p++ = (pInfo->tmp >> 8) & 0xff;
+    *p++ = (pInfo->tmp >> 16) & 0xff;
+    *p++ = (pInfo->tmp >> 24) & 0xff;
     *p++ = pInfo->pallet_id;
     *p++ = pInfo->node_id;
     len = p - (&pBuf[5]);

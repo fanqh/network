@@ -7,6 +7,9 @@
 #define LED_PIN    GPIOC_GP3
 
 unsigned long firmwareVersion=8;
+#define TMP102A_ADDRESS 0x90
+
+extern NodeInfo_TypeDef node_info;
 
 static void SYS_Init(void)
 {
@@ -31,8 +34,25 @@ static void SYS_Init(void)
 
 int test = 0;
 
+
+unsigned int Get_Temperature(void)
+{
+	unsigned int temperature;
+	unsigned short tmp, tt, a1;
+	I2C_read_bytes(0, (unsigned char *)&tmp, 2);
+	tt = ((tmp>>8) | (tmp<<8));
+
+	a1 = tt>>4;
+	temperature = a1 * 625;
+
+	return temperature;
+}
+
+
+unsigned int yy;
 void main(void)
 {
+
     PM_WakeupInit();
     SYS_Init();
 
@@ -42,12 +62,21 @@ void main(void)
     GPIO_SetBit(LED_PIN);
     GPIO_ResetBit(TIMING_SHOW_PIN);
 
+    I2C_PinSelect(I2C_PIN_GPIOB);
+    I2C_Init(TMP102A_ADDRESS, 64);
+    //I2C_read_bytes(0, (unsigned char *)&t, 2);
+
     //WaitMs(1000);
 
     // LogMsg("end device start...\n", NULL, 0);
 
     while (1) {
-    	test++;
+    	if((ClockTime() - test) >5000*200*TickPerUs)
+    	{
+    		test = ClockTime();
+    		node_info.tmp = Get_Temperature();
+    	}
+    	//test++;
         Node_MainLoop();
     }
 }

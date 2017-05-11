@@ -291,3 +291,41 @@ void I2C_Read(unsigned char *Addr, int AddrLen, unsigned char * pbuf, int len)
         addr++;
     }
 }
+
+
+void I2C_read_bytes(unsigned char addr, unsigned char *pData, int dataSize)
+{
+	unsigned char ret = 0;
+	/****write address that maybe readed in,frame include:start + id + addr_H + addr_L + stop***/
+	WRITE_REG8(0x800001, READ_REG8(0x800001) & 0xfe);
+
+	WRITE_REG8(0x800005, addr);
+	WRITE_REG8(0x800007, 0x35); //lanuch start /id/05    start
+
+	while(READ_REG8(0x800002) & 0x01);
+
+	//WaitMs(5);
+
+	/***read data from the address***/
+	WRITE_REG8(0x800001, READ_REG8(0x800001) | 0x01); //slave_id | 0x01,.i.e read data. R:High  W:Low
+	WRITE_REG8(0x800007, 0x11); //start/id
+	while(READ_REG8(0x800002) & 0x01);
+
+
+    for (int i = 0; i < dataSize; ++i)
+    {
+      //read data
+      if(i < (dataSize - 1))
+        WRITE_REG8(0x800007, 0x48); //Read with acknowledged
+      else
+        WRITE_REG8(0x800007, 0xc8); //last byte must not be acknowledged
+      while(READ_REG8(0x800002) & 0x01);
+      pData[i] = READ_REG8(0x800006);
+    }
+	//termiante
+	WRITE_REG8(0x800007, 0x20); //launch stop cycle
+	while(READ_REG8(0x800002) & 0x02);
+
+	return ret;
+
+}

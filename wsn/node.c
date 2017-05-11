@@ -7,7 +7,7 @@
 
 #include "node.h"
 
-static NodeInfo_TypeDef node_info;
+NodeInfo_TypeDef node_info;
 static MsgQueue_Typedef msg_queue;
 
 static unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
@@ -23,6 +23,9 @@ typedef struct
 	unsigned char rst;
 }device_infor_t;
 device_infor_t device_infor;
+
+
+extern unsigned int Get_Temperature(void);
 void Node_Init(void)
 {
 
@@ -55,6 +58,7 @@ void Node_Init(void)
 
 
 unsigned char aa[64], a;
+unsigned int ttt;
 
 _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 {
@@ -94,7 +98,6 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                 node_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
                 // if the PB is originated from the pallet this end device attaches to, determine
                 // whether it is this end device's opportunity
-                memcpy(aa, msg->data,64);
                 if ((node_info.period_cnt % NODE_NUM) == (node_info.node_id % NODE_NUM)) {
                     if (tmp_pallet_id == node_info.pallet_id) {
                         GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
@@ -148,6 +151,8 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
     else if (NODE_STATE_SUSPEND == node_info.state) {
         //turn off receiver and go to suspend
         RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mode
+
+        //ttt =node_info.tmp = Get_Temperature();
         // while((unsigned int)(ClockTime() - node_info.wakeup_tick) > BIT(30));
         PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
         node_info.state = NODE_STATE_IDLE;
@@ -179,10 +184,12 @@ _attribute_ram_code_ void Node_RxIrqHandler(void)
     //receive a valid packet
     else {
 
+    	memcpy(aa, rx_packet, 60);
+    	aa[63]++;
         //if it is pallet setup beacon frame, perform a random backoff and then require to associate
         if (FRAME_IS_SETUP_PALLET_BEACON(rx_packet))
         {
-            //memcpy(test_data+sizeof(test_data)-32, rx_packet, 32);
+
             MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_SETUP_BCN);
         }
         //if it is pallet setup response frame, check whether the dst addr matches the local addr

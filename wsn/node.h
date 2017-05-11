@@ -26,6 +26,7 @@ typedef struct {
     unsigned char ack_dsn; //sequence number of incoming packet
     unsigned char state; //current state of device
     unsigned char retry_times; //retry times
+    unsigned int tmp;
 } NodeInfo_TypeDef;
 
 extern void Node_Init(void);

@@ -29,12 +29,12 @@
 
 // parse frame from node data
 #define FRAME_GET_SRC_NODE_ID(p)            (p[20])
-#define FRAME_GET_NODE_PAYLOAD(p)            (p[23] | p[24]<<8)
+#define FRAME_GET_NODE_PAYLOAD(p)            (p[23] | p[24]<<8 | p[25]<<16  | p[26]<<24 )
 
 //pare frame from pallet data
 #define FRAME_GET_PAYLOAD_PALLET_ID(p)            (p[20])
 #define FRAME_GET_PAYLOAD_NODE_ID(p)            (p[23])
-#define FRAME_GET_PAYLOAD_TMP(p)            (p[24] | (p[25]<<8))
+#define FRAME_GET_PAYLOAD_TMP(p)            ( p[24] | (p[25]<<8) | (p[26]<<16) | (p[27]<<24) )
 
 
 

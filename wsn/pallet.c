@@ -104,13 +104,17 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
 
+#if DEBUG
+    pre = pallet_info.state;
+#endif
     if (PALLET_STATE_IDLE == pallet_info.state) {
         pallet_info.state = PALLET_STATE_GW_BCN_WAIT;
         RF_SetTxRxOff();
         RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
     }
     else if (PALLET_STATE_GW_BCN_WAIT == pallet_info.state) {
-        if (msg && (msg->type == PALLET_MSG_TYPE_GW_BCN)) { //receive a valid GB
+        if (msg && (msg->type == PALLET_MSG_TYPE_GW_BCN))
+        { //receive a valid GB
             now = ClockTime();
 
             unsigned int timestamp = FRAME_GET_TIMESTAMP(msg->data);
