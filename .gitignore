@@ -20,6 +20,8 @@ local.properties
 *.o
 *lst
 *.mk
+SI/
+
 
 # External tool builders
 .externalToolBuilders/

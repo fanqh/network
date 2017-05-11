@@ -151,8 +151,8 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
     	if(ClockTime()>=gw_info.wakeup_tick)
     		gw_info.state = GW_STATE_SEND_GW_BCN;
 
-        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, gw_info.wakeup_tick);
-        gw_info.state = GW_STATE_SEND_GW_BCN;
+//        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, gw_info.wakeup_tick);
+//        gw_info.state = GW_STATE_SEND_GW_BCN;
     }
 }
 

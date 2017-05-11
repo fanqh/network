@@ -62,7 +62,6 @@ NodeDataWaitSend_Typdedef node_data;
 device_infor_t device_infor;
 void Pallet_Init(void)
 {
-	device_infor_t device_infor;
 
 	FLASH_PageRead(FLASH_DEVICE_INFOR_ADDR, sizeof(device_infor_t), (unsigned char*)&device_infor);
 	if(device_infor.pallet_mac == 0xffff)

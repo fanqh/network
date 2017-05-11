@@ -95,7 +95,6 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                 // if the PB is originated from the pallet this end device attaches to, determine
                 // whether it is this end device's opportunity
                 memcpy(aa, msg->data,64);
-                while(1);
                 if ((node_info.period_cnt % NODE_NUM) == (node_info.node_id % NODE_NUM)) {
                     if (tmp_pallet_id == node_info.pallet_id) {
                         GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
