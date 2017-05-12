@@ -29,7 +29,7 @@
 
 unsigned char  emi_var[5];
 unsigned char  emi_tx[16]  __attribute__ ((aligned (4))) = {0xc,0x00,0x00,0x00,0x00,0x20,0xaa,0xbb};
-int 		   state0,state1,state2,state3;
+//int 		   state0,state1,state2,state3;
 unsigned char  depth=1;
 
 
@@ -150,10 +150,10 @@ void RF_EmiCarrierDataTest(RF_PowerTypeDef PowerLevel,signed char RF_Channel)
 
 	WRITE_REG8(0x80050e,depth); // this size must small than the beacon_packet dma send length
 
-	state0 = STATE0;
-	state1 = STATE1;
-	state2 = STATE2;
-	state3 = STATE3;
+//	state0 = STATE0;
+//	state1 = STATE1;
+//	state2 = STATE2;
+//	state3 = STATE3;
 	emi_tx[0] = depth*16-4;
 	WRITE_REG8(0x80050f, 0x80);  // must fix to 0x80
 	WRITE_REG8(0x800402, 0x21);	//preamble length=1

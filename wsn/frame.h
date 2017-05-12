@@ -5,6 +5,14 @@
 #include "pallet.h"
 #include "node.h"
 
+
+typedef struct
+{
+	unsigned char updata;
+	unsigned int temperature;
+}NodeDataWaitSend_Typdedef;
+
+
 //frame type definitions
 #define FRMAE_TYPE_GATEWAY_BEACON          0x01
 #define FRMAE_TYPE_PALLET_DATA             0x02
@@ -33,8 +41,8 @@
 
 //pare frame from pallet data
 #define FRAME_GET_PAYLOAD_PALLET_ID(p)            (p[20])
-#define FRAME_GET_PAYLOAD_NODE_ID(p)            (p[23])
-#define FRAME_GET_PAYLOAD_TMP(p)            ( p[24] | (p[25]<<8) | (p[26]<<16) | (p[27]<<24) )
+//#define FRAME_GET_PAYLOAD_NODE_ID(p)            (p[23])
+#define FRAME_GET_Point_PAYLOAD_TMP(p)            (p+23)
 
 
 
@@ -68,7 +76,9 @@
 
 //frame pack functions
 extern void Build_GatewayBeacon(unsigned char *pBuf, GWInfo_TypeDef *pInfo);
-extern void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeDef *pInfo);
+//extern void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeDef *pInfo);
+void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeDef *pInfo, NodeDataWaitSend_Typdedef* pnode);
+
 extern void Build_PalletBeacon(unsigned char *pBuf, PalletInfo_TypeDef *pInfo);
 extern void Build_NodeData(unsigned char *pBuf, NodeInfo_TypeDef *pInfo);
 extern void Build_NodeSetupReq(unsigned char *pBuf, NodeInfo_TypeDef *pInfo);

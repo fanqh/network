@@ -16,11 +16,11 @@ enum {
     PALLET_STATE_IDLE,//7
     PALLET_STATE_GW_BCN_WAIT,//8
     PALLET_STATE_GW_ACK_WAIT,//9
-    PALLET_STATE_SUSPEND_BEFORE_PB,//10
-    PALLET_STATE_SEND_PB,
-    PALLET_STATE_NODE_DATA_WAIT,
-    PALLET_STATE_SEND_NODE_ACK,
-    PALLET_STATE_SUSPEND_BEFORE_GB,
+    PALLET_STATE_SUSPEND_BEFORE_PB,//a
+    PALLET_STATE_SEND_PB,//b
+    PALLET_STATE_NODE_DATA_WAIT,//c
+    PALLET_STATE_SEND_NODE_ACK,//d
+    PALLET_STATE_SUSPEND_BEFORE_GB,//e
 };
 
 typedef struct {
@@ -29,11 +29,6 @@ typedef struct {
     unsigned char node_data[NODE_DATA_LEN];
 } NodeEntry_Typedef;
 
-typedef struct
-{
-	unsigned char node_id;	
-	unsigned int temperature;
-}NodeDataWaitSend_Typdedef;
 
 typedef struct {
     unsigned int t0; //the moment starting to send the beacon 
@@ -50,7 +45,7 @@ typedef struct {
     unsigned char state; //current state of device
     unsigned char retry_times; //retry times
     unsigned char node_table_len;
-	NodeDataWaitSend_Typdedef *pNodeData;
+	//NodeDataWaitSend_Typdedef *pNodeData;
 } PalletInfo_TypeDef;
 
 extern void Pallet_Init(void);

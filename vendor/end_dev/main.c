@@ -39,7 +39,11 @@ unsigned int Get_Temperature(void)
 {
 	unsigned int temperature;
 	unsigned short tmp, tt, a1;
+
 	I2C_read_bytes(0, (unsigned char *)&tmp, 2);
+
+	if(tmp == 0xffff)
+		return 0;
 	tt = ((tmp>>8) | (tmp<<8));
 
 	a1 = tt>>4;
@@ -64,13 +68,14 @@ void main(void)
 
     I2C_PinSelect(I2C_PIN_GPIOB);
     I2C_Init(TMP102A_ADDRESS, 64);
-    //I2C_read_bytes(0, (unsigned char *)&t, 2);
+    yy = Get_Temperature();;
 
     //WaitMs(1000);
 
     // LogMsg("end device start...\n", NULL, 0);
 
     while (1) {
+
     	if((ClockTime() - test) >5000*200*TickPerUs)
     	{
     		test = ClockTime();

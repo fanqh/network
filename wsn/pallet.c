@@ -39,7 +39,7 @@ unsigned char pre = 0;
 debug_t debug;
 Debug_Queue_Typedef DebugQ;
 
-int tet;
+//int tet;
 void debug_enqueue(unsigned char type)
 {
 	debug.msg_type = type;
@@ -58,7 +58,7 @@ typedef struct
 	unsigned char rst;
 }device_infor_t;
 
-NodeDataWaitSend_Typdedef node_data;
+NodeDataWaitSend_Typdedef node_data[3];
 device_infor_t device_infor;
 void Pallet_Init(void)
 {
@@ -73,7 +73,7 @@ void Pallet_Init(void)
     memset(&pallet_info, 0, sizeof(PalletInfo_TypeDef));
     pallet_info.mac_addr = device_infor.pallet_mac;
     pallet_info.dsn = pallet_info.mac_addr & 0xff;
-	pallet_info.pNodeData = &node_data;
+	//pallet_info.pNodeData = node_data;
 	
 
     //set rx buffer
@@ -100,6 +100,8 @@ void Pallet_Init(void)
 #endif
 }
 
+
+unsigned int bug_time;
 _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
@@ -111,8 +113,19 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
         pallet_info.state = PALLET_STATE_GW_BCN_WAIT;
         RF_SetTxRxOff();
         RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
+
+        GPIO_SetBit(DEBUG_PIN);
+
+        bug_time = ClockTime();
     }
     else if (PALLET_STATE_GW_BCN_WAIT == pallet_info.state) {
+
+    	if(ClockTime() - bug_time  >= device_infor.master_period *5)
+    	{
+    		bug_time = ClockTime();
+            RF_SetTxRxOff();
+            RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
+    	}
         if (msg && (msg->type == PALLET_MSG_TYPE_GW_BCN))
         { //receive a valid GB
             now = ClockTime();
@@ -126,11 +139,16 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
             pallet_info.t0 = timestamp - ZB_TIMESTAMP_OFFSET*TickPerUs;
             pallet_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
             if ((pallet_info.period_cnt % PALLET_NUM) == (pallet_info.pallet_id % PALLET_NUM)) {
+
+				unsigned char i;
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 RF_SetTxRxOff();
                 RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); 
                 RF_StartStxToRx(tx_buf , now + RF_TX_WAIT*TickPerUs, ACK_WAIT);
-                Build_PalletData(tx_buf, &pallet_info);
+                Build_PalletData(tx_buf, &pallet_info, node_data);
+
+				//for(i=0; i<3; i++)
+				//	node_data[i].updata = 0;
                 //update state
                 pallet_info.state = PALLET_STATE_GW_ACK_WAIT;
             }
@@ -140,6 +158,9 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
             }
 
             Message_Reset(msg);
+            MsgQueue_Clean(&msg_queue);
+
+            GPIO_SetBit(DEBUG_PIN);
         }
     }
     else if (PALLET_STATE_GW_ACK_WAIT == pallet_info.state) {
@@ -195,12 +216,15 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
         if (msg) {
             if (msg->type == PALLET_MSG_TYPE_ED_DATA)
             {
+            	unsigned char node_id;
             	GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 //ToDo: process received data submitted by end device
                 //save the dsn for subsequent ack
                 pallet_info.ack_dsn = msg->data[15];
-				node_data.node_id = FRAME_GET_SRC_NODE_ID(msg->data);
-				node_data.temperature = FRAME_GET_NODE_PAYLOAD(msg->data);
+				node_id = FRAME_GET_SRC_NODE_ID(msg->data);
+
+				node_data[(node_id-1)%NODE_NUM].updata = 1;
+				node_data[(node_id-1)%NODE_NUM].temperature = FRAME_GET_NODE_PAYLOAD(msg->data);
                 pallet_info.state = PALLET_STATE_SEND_NODE_ACK;
             }
             else if (msg->type == PALLET_MSG_TYPE_ED_DATA_TIMEOUT) {

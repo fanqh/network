@@ -48,6 +48,9 @@ void Board_Init(void)
     GPIO_ResetBit(DEBUG_PIN);
     GPIO_SetOutputEnable(DEBUG_PIN, Bit_SET);
 
+#ifdef PA_MODE
+    PA_Control_Pin_Init();
+#endif
     //I2C_PinSelect(I2C_PIN_GPIOB);
     //I2C_Init(TMP102A_ADDRESS, 64);
 }
@@ -57,7 +60,6 @@ void Buff_Inface_Init(void)
 	ParaBuf_Init((unsigned short)commandBuff,commandBuffSize,commandBuffCnt);
 	ResuBuf_Init((unsigned short)resultBuff,resultBuffSize,resultBuffCnt);
 }
-unsigned char send[32] = {0x68, 1, 1, 0x12, 0x34};
 void main(void)
 {
     PM_WakeupInit();
@@ -96,7 +98,7 @@ void main(void)
 			test ++;
 			Gateway_MainLoop();
     	}
-    	#endif
+#endif
     }
 
 }

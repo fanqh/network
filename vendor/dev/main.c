@@ -74,6 +74,7 @@ void main(void)
     //while(1);
     
     while (1) {
+		firmwareVersion++;
         Pallet_MainLoop();
     }
 }

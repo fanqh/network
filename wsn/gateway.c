@@ -52,7 +52,12 @@ void Gateway_Init(void)
    
     //enable irq
     IRQ_EnableType(FLD_IRQ_ZB_RT_EN);
+#if PA_MODE
+    IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT | FLD_RF_IRQ_TX);
+#else
     IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT);
+#endif
+
     IRQ_Enable();
 
     //config gpio showing timing
@@ -66,14 +71,13 @@ typedef struct
 	unsigned char flag;
 	unsigned char dsn;
 	unsigned char pallet_id;
-	unsigned char node_id;
-	unsigned int temperature;
-}NodeDataInfor_Typedef;
-NodeDataInfor_Typedef node_data;
+	NodeDataWaitSend_Typdedef ndata[3];
+
+}WaitForUpload_Typedef;
+WaitForUpload_Typedef DataToSend;
 
 unsigned char tt[64];
 
-unsigned char upload[7] = {0x68,0,0,0,0,0,0};
 _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
@@ -100,11 +104,11 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
                 gw_info.ack_dsn = msg->data[15];
 
                 memcpy(tt, msg->data, 64);
-                node_data.flag = 1;
-                node_data.dsn = gw_info.ack_dsn;
-                node_data.pallet_id = FRAME_GET_PAYLOAD_PALLET_ID(msg->data);
-                node_data.node_id = FRAME_GET_PAYLOAD_NODE_ID(msg->data);
-                node_data.temperature = FRAME_GET_PAYLOAD_TMP(msg->data);
+                DataToSend.flag = 1;
+                DataToSend.dsn = gw_info.ack_dsn;
+                DataToSend.pallet_id = FRAME_GET_PAYLOAD_PALLET_ID(msg->data);
+
+                memcpy(DataToSend.ndata, FRAME_GET_Point_PAYLOAD_TMP(msg->data), sizeof(NodeDataWaitSend_Typdedef)*3);
                 gw_info.state = GW_STATE_SEND_PALLET_ACK;
             }
             else if (msg->type == GW_MSG_TYPE_PALLET_DATA_TIMEOUT) {
@@ -136,12 +140,12 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
     }
     else if (GW_STATE_SUSPEND == gw_info.state) {
 
-    	if(node_data.flag != 0)
+    	if(DataToSend.flag != 0)
     	{
-    		memcpy(&upload[1], &node_data.pallet_id,6);
-    		node_data.flag = 0;
 
-    		ResuBuf_Write(upload, 7);
+
+    		ResuBuf_Write((unsigned char*)&DataToSend, sizeof(WaitForUpload_Typedef));
+    		DataToSend.flag = 0;
     	}
 
     	//GPIO_WriteBit(DEBUG_PIN, Bit_RESET);

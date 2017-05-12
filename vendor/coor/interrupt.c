@@ -29,10 +29,17 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
             if (RfIrqSrc & FLD_RF_IRQ_RX_TIMEOUT) {
                 Gateway_RxTimeoutHandler();
             }
+#if PA_MODE
+            if(RfIrqSrc & FLD_RF_IRQ_TX)
+            {
+            	Pa_Mode_Switch(PA_RX_MODE);
+            }
+#endif
 
             IRQ_RfIrqSrcClr();
         }
     }
+
     
     IRQ_SrcClr();
 }

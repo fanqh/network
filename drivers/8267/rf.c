@@ -21,6 +21,7 @@
  *******************************************************************************************************/
 #include "bsp.h"
 #include "rf.h"
+#include "../../vendor/coor/pa.h"
 
 
 
@@ -564,6 +565,9 @@ int  RF_TrxStateSet(RF_StatusTypeDef  RF_Status,signed char RF_Channel)
     if(RF_Status != RF_MODE_TX)
     	RF_SetTxRxOff();
 	if (RF_Status == RF_MODE_TX) {
+#if PA_MODE
+		Pa_Mode_Switch(PA_TX_MODE);
+#endif
 		RF_TRxState = RF_MODE_TX;
 		CLR_BIT_FLD(REG_RF_FUNCTION0_EN,FLD_RF_TX_MANUAL_EN|FLD_RF_RX_MANUAL_EN);
 		REG_RF_TX_CHANNEL = 2400 + RF_Channel;
@@ -571,6 +575,10 @@ int  RF_TrxStateSet(RF_StatusTypeDef  RF_Status,signed char RF_Channel)
 		CLR_BIT_FLD(REG_RF_RX_MODE,FLD_RF_RX_ENABLE);
 	}
 	else if (RF_Status == RF_MODE_RX) {
+
+#if PA_MODE
+		Pa_Mode_Switch(PA_RX_MODE);
+#endif
 		RF_TRxState = RF_MODE_RX;
 		CLR_BIT_FLD(REG_RF_FUNCTION0_EN,FLD_RF_TX_MANUAL_EN|FLD_RF_RX_MANUAL_EN);
 		REG_RF_TX_CHANNEL =  2400 + RF_Channel;
@@ -655,6 +663,9 @@ void RF_TxPkt (unsigned char* RF_TxAddr)
 */
 void RF_StartStx  (unsigned char* RF_TxAddr,unsigned int RF_StartTick)
 {
+#if PA_MODE
+		Pa_Mode_Switch(PA_TX_MODE);
+#endif
 
 	SET_BIT_FLD(REG_RF_FUNCTION1_EN,FLD_RF_CMD_SCHEDULE_EN);// Enable cmd_schedule mode
 	REG_RF_CMD_START_TICK = RF_StartTick;// Setting schedule trigger time
@@ -675,6 +686,9 @@ void RF_StartStx  (unsigned char* RF_TxAddr,unsigned int RF_StartTick)
 */
 void RF_StartSrx(unsigned int RF_StartTick,unsigned int RF_RxTimeoutUs)
 {
+#if PA_MODE
+		Pa_Mode_Switch(PA_RX_MODE);
+#endif
 	REG_RF_RX_FIRST_TIMEOUT_US = RF_RxTimeoutUs-1;// first timeout
 	REG_RF_CMD_START_TICK = RF_StartTick;		// Setting schedule trigger time
 	SET_BIT_FLD(REG_RF_FUNCTION1_EN,FLD_RF_CMD_SCHEDULE_EN);
@@ -699,6 +713,9 @@ void RF_StartSrx(unsigned int RF_StartTick,unsigned int RF_RxTimeoutUs)
 */
 void RF_StartStxToRx  ( unsigned char* RF_TxAddr ,unsigned int RF_StartTick,unsigned short RF_RxTimeoutUs)
 {
+#if PA_MODE
+		Pa_Mode_Switch(PA_TX_MODE);
+#endif
 	REG_RF_RX_TIMEOUT_US = RF_RxTimeoutUs-1;
 	REG_RF_CMD_START_TICK = RF_StartTick;// Setting schedule trigger time
 	SET_BIT_FLD(REG_RF_FUNCTION1_EN,FLD_RF_CMD_SCHEDULE_EN);
@@ -728,6 +745,9 @@ void RF_StartStxToRx  ( unsigned char* RF_TxAddr ,unsigned int RF_StartTick,unsi
 */
 void RF_StartSrxToTx  (unsigned char* RF_TxAddr  ,unsigned int RF_StartTick,unsigned int RF_RxTimeoutUs)
 {
+#if PA_MODE
+		Pa_Mode_Switch(PA_RX_MODE);
+#endif
 	REG_RF_RX_FIRST_TIMEOUT_US = RF_RxTimeoutUs-1;// first timeout
 	REG_RF_CMD_START_TICK = RF_StartTick;		// Setting schedule trigger time
 	SET_BIT_FLD(REG_RF_FUNCTION1_EN,FLD_RF_CMD_SCHEDULE_EN);

@@ -34,7 +34,7 @@ _attribute_ram_code_ void Build_GatewayBeacon(unsigned char *pBuf, GWInfo_TypeDe
     pBuf[4] = len + 2;
 }
 
-_attribute_ram_code_ void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeDef *pInfo)
+_attribute_ram_code_ void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeDef *pInfo, NodeDataWaitSend_Typdedef* pnode)
 {
     unsigned char *p = &pBuf[5];
     int len = 0;
@@ -50,12 +50,25 @@ _attribute_ram_code_ void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeD
     *p++ = pInfo->pallet_id; //src address
     *p++ = 0;
     *p++ = FRMAE_TYPE_PALLET_DATA;
-    *p++ = pInfo->pNodeData->node_id;
-    *p++ = (pInfo->pNodeData->temperature) & 0xff;
-    *p++ = (pInfo->pNodeData->temperature >> 8) & 0xff;
-    *p++ = (pInfo->pNodeData->temperature >> 16) & 0xff;
-    *p++ = (pInfo->pNodeData->temperature >> 24) & 0xff;
-    *p++ = pInfo->pallet_id;
+
+	*p++ = pnode[0].updata;
+    *p++ = (pnode[0].temperature) & 0xff;
+    *p++ = (pnode[0].temperature >> 8) & 0xff;
+    *p++ = (pnode[0].temperature >> 16) & 0xff;
+    *p++ = (pnode[0].temperature >> 24) & 0xff;
+
+    *p++ = pnode[1].updata;
+    *p++ = (pnode[1].temperature) & 0xff;
+    *p++ = (pnode[1].temperature >> 8) & 0xff;
+    *p++ = (pnode[1].temperature >> 16) & 0xff;
+    *p++ = (pnode[1].temperature >> 24) & 0xff;
+
+	*p++ = pnode[2].updata;
+    *p++ = (pnode[2].temperature) & 0xff;
+    *p++ = (pnode[2].temperature >> 8) & 0xff;
+    *p++ = (pnode[2].temperature >> 16) & 0xff;
+    *p++ = (pnode[2].temperature >> 24) & 0xff;
+
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;

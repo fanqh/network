@@ -5,11 +5,13 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
 ../vendor/coor/interrupt.c \
-../vendor/coor/main.c 
+../vendor/coor/main.c \
+../vendor/coor/pa.c 
 
 OBJS += \
 ./vendor/coor/interrupt.o \
-./vendor/coor/main.o 
+./vendor/coor/main.o \
+./vendor/coor/pa.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes
