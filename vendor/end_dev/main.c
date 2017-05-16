@@ -67,7 +67,7 @@ void main(void)
     GPIO_ResetBit(TIMING_SHOW_PIN);
 
     I2C_PinSelect(I2C_PIN_GPIOB);
-    I2C_Init(TMP102A_ADDRESS, 64);
+    I2C_Init(TMP102A_ADDRESS, 4);
     yy = Get_Temperature();;
 
     //WaitMs(1000);
@@ -76,11 +76,11 @@ void main(void)
 
     while (1) {
 
-    	if((ClockTime() - test) >5000*100*TickPerUs)
-    	{
-    		test = ClockTime();
-    		node_info.tmp = Get_Temperature();
-    	}
+//    	if((ClockTime() - test) >5000*200*TickPerUs)
+//    	{
+//    		test = ClockTime();
+//    		node_info.tmp = Get_Temperature();
+//    	}
     	//test++;
         Node_MainLoop();
     }

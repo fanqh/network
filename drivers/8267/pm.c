@@ -283,9 +283,8 @@ void PM_GPIOSet(Pin_TypeDef pin, int pol, int en)    //only surport from suspend
 __attribute__((section(".ram_code"))) int PM_LowPwrEnter(int DeepSleep, int WakeupSrc, unsigned long WakeupTick)
 {
 
-	while(ClockTime()<WakeupTick);
-	return 0;
-#if 0
+
+#if 1
     int system_tick_enable = WakeupSrc & WAKEUP_SRC_TIMER;
     unsigned int span = (unsigned int)(WakeupTick - ClockTime());
     unsigned char qdec_wakeup_en = 0;
@@ -408,6 +407,9 @@ __attribute__((section(".ram_code"))) int PM_LowPwrEnter(int DeepSleep, int Wake
 
     REG_PM_IRQ_EN = r; //restore the irq
     return anareg44;
+#else
+	while(ClockTime()<WakeupTick);
+	return 0;
 
 #endif
 }

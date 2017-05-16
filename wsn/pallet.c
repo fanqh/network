@@ -21,7 +21,7 @@ static unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4)))
 static unsigned char rx_ptr = 0;
 
 
-#define DEBUG 1
+//#define DEBUG 1
 
 #if DEBUG
 
@@ -241,7 +241,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
                 pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
                 pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD*PALLET_NUM - DEV_RX_MARGIN)*TickPerUs;
             	//todo ��������յ��������ݣ������˳�rx mode
-            	state_error ++;
+            	//state_error ++;
             }
             
             Message_Reset(msg);

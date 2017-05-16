@@ -95,8 +95,10 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                 node_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
                 // if the PB is originated from the pallet this end device attaches to, determine
                 // whether it is this end device's opportunity
-                if ((node_info.period_cnt % NODE_NUM) == (node_info.node_id % NODE_NUM)) {
-                    if (tmp_pallet_id == node_info.pallet_id) {
+                if ((node_info.period_cnt % NODE_NUM) == (node_info.node_id % NODE_NUM))
+                {
+                    if (tmp_pallet_id == node_info.pallet_id)
+                    {
                         GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                         RF_SetTxRxOff();
                         RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); 
@@ -149,7 +151,8 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
         //turn off receiver and go to suspend
         RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mode
 
-        //ttt =node_info.tmp = Get_Temperature();
+        if(node_info.wakeup_tick - ClockTime() >100*TickPerUs)
+        	node_info.tmp = Get_Temperature();
         // while((unsigned int)(ClockTime() - node_info.wakeup_tick) > BIT(30));
         PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
         node_info.state = NODE_STATE_IDLE;

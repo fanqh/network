@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define TIMESLOT_LENGTH        5000 //the duration(in us) of each timeslot   GB + G/Pn
+#define TIMESLOT_LENGTH        20000 //the duration(in us) of each timeslot   GB + G/Pn
 #define PALLET_NUM             6 //the number of pallets attached to each gateway
 #define NODE_NUM               3 //the number of end devices attached to each pallet
 #define MASTER_PERIOD		   TIMESLOT_LENGTH*PALLET_NUM
