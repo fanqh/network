@@ -58,9 +58,6 @@ void main(void)
     Board_Init();
     IRQ_Enable();
 
-
-
-
     while(!PalletSetupTrig); //wait for pallet setup trig
 
     Pallet_Init();
@@ -71,7 +68,6 @@ void main(void)
     Pallet_SetupLoop2();
     GPIO_SetBit(LED_PIN);
     GPIO_ResetBit(TIMING_SHOW_PIN);
-    //while(1);
     
     while (1) {
 		firmwareVersion++;

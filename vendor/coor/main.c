@@ -67,20 +67,9 @@ void main(void)
     Board_Init();
     Buff_Inface_Init();
     IRQ_Enable();
-//    while(!GatewaySetupTrig); //wait for gateway setup trig
-//
-//    Gateway_Init();
-//    Gateway_SetupLoop();
-
     // LogMsg("gateway start...\n", NULL, 0);
     while (1)
     {
-//    	send[3]++;
-//    	send[1] =  (++send[1])%2;
-//    	if(send[1]==0)
-//    		send[2] = (++send[2])%3;
-//    	WaitMs(1000);
-//    	ResuBuf_Write(send, 5);
 #if 1
     	if(GatewaySetupTrig != 0)
     	{

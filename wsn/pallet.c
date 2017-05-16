@@ -54,7 +54,6 @@ typedef struct
 {
 	unsigned short pallet_mac;
 	unsigned char pallet_id;
-	unsigned long master_period;
 	unsigned char rst;
 }device_infor_t;
 
@@ -67,8 +66,6 @@ void Pallet_Init(void)
 	if(device_infor.pallet_mac == 0xffff)
 		device_infor.pallet_mac = PALLET_MAC_ADDR;
 
-	if(device_infor.master_period ==0xffffffff)
-		device_infor.master_period = TIMESLOT_LENGTH;
 
     memset(&pallet_info, 0, sizeof(PalletInfo_TypeDef));
     pallet_info.mac_addr = device_infor.pallet_mac;
@@ -118,9 +115,10 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 
         bug_time = ClockTime();
     }
-    else if (PALLET_STATE_GW_BCN_WAIT == pallet_info.state) {
-
-    	if(ClockTime() - bug_time  >= device_infor.master_period *5)
+    else if (PALLET_STATE_GW_BCN_WAIT == pallet_info.state)
+    {
+    	//for debug
+    	if(ClockTime() - bug_time  >= MASTER_PERIOD *5)
     	{
     		bug_time = ClockTime();
             RF_SetTxRxOff();
@@ -147,14 +145,14 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
                 RF_StartStxToRx(tx_buf , now + RF_TX_WAIT*TickPerUs, ACK_WAIT);
                 Build_PalletData(tx_buf, &pallet_info, node_data);
 
-				//for(i=0; i<3; i++)
-				//	node_data[i].updata = 0;
+				for(i=0; i<3; i++)
+					node_data[i].updata = 0;
                 //update state
                 pallet_info.state = PALLET_STATE_GW_ACK_WAIT;
             }
             else {
                 pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
-                pallet_info.wakeup_tick = pallet_info.t0 + device_infor.master_period*pallet_info.pallet_id*TickPerUs;
+                pallet_info.wakeup_tick = pallet_info.t0 + MASTER_PERIOD*pallet_info.pallet_id*TickPerUs;
             }
 
             Message_Reset(msg);
@@ -167,30 +165,30 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
         if (msg)
         {
             pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
-            pallet_info.wakeup_tick = pallet_info.t0 + device_infor.master_period*pallet_info.pallet_id*TickPerUs;
+            pallet_info.wakeup_tick = pallet_info.t0 + MASTER_PERIOD*pallet_info.pallet_id*TickPerUs;
             if (msg->type == PALLET_MSG_TYPE_GW_ACK)
             {
 
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
 //                pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
-//                pallet_info.wakeup_tick = pallet_info.t0 + device_infor.master_period*PALLET_ID*TickPerUs;
+//                pallet_info.wakeup_tick = pallet_info.t0 + MASTER_PERIOD*PALLET_ID*TickPerUs;
             }
             else if (msg->type == PALLET_MSG_TYPE_GW_ACK_TIMEOUT) {
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
 //                pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
-//                pallet_info.wakeup_tick = pallet_info.t0 + device_infor.master_period*PALLET_ID*TickPerUs;
+//                pallet_info.wakeup_tick = pallet_info.t0 + MASTER_PERIOD*PALLET_ID*TickPerUs;
             }
             else if (msg->type == PALLET_MSG_TYPE_INVALID_DATA) {
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
 //                pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
-//                pallet_info.wakeup_tick = pallet_info.t0 + device_infor.master_period*PALLET_ID*TickPerUs;
+//                pallet_info.wakeup_tick = pallet_info.t0 + MASTER_PERIOD*PALLET_ID*TickPerUs;
             }
             else
             {
             	//added by fanqh
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
 //                pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
-//                pallet_info.wakeup_tick = pallet_info.t0 + device_infor.master_period*PALLET_ID*TickPerUs;
+//                pallet_info.wakeup_tick = pallet_info.t0 + MASTER_PERIOD*PALLET_ID*TickPerUs;
             }
 
             Message_Reset(msg);
@@ -230,18 +228,18 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
             else if (msg->type == PALLET_MSG_TYPE_ED_DATA_TIMEOUT) {
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));   
                 pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
-                pallet_info.wakeup_tick = pallet_info.t0 + (device_infor.master_period*PALLET_NUM - DEV_RX_MARGIN)*TickPerUs;
+                pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD*PALLET_NUM - DEV_RX_MARGIN)*TickPerUs;
             }
             else if (msg->type == PALLET_MSG_TYPE_INVALID_DATA) {
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
-                pallet_info.wakeup_tick = pallet_info.t0 + (device_infor.master_period*PALLET_NUM - DEV_RX_MARGIN)*TickPerUs;
+                pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD*PALLET_NUM - DEV_RX_MARGIN)*TickPerUs;
             }
             else
             {
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
-                pallet_info.wakeup_tick = pallet_info.t0 + (device_infor.master_period*PALLET_NUM - DEV_RX_MARGIN)*TickPerUs;
+                pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD*PALLET_NUM - DEV_RX_MARGIN)*TickPerUs;
             	//todo ��������յ��������ݣ������˳�rx mode
             	state_error ++;
             }
@@ -256,7 +254,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
         WaitUs(WAIT_ACK_DONE); //wait for tx done
 
         pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
-        pallet_info.wakeup_tick = pallet_info.t0 + (device_infor.master_period*PALLET_NUM - DEV_RX_MARGIN)*TickPerUs;
+        pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD*PALLET_NUM - DEV_RX_MARGIN)*TickPerUs;
     }
     else if (PALLET_STATE_SUSPEND_BEFORE_GB == pallet_info.state) {
         //turn off receiver and go to suspend

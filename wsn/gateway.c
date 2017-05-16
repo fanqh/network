@@ -40,9 +40,6 @@ void Gateway_Init(void)
 	if(device_infor.gateway_mac == 0xffff)
 		device_infor.gateway_mac = PALLET_MAC_ADDR;
 
-	if(device_infor.master_period==0xffff)
-		device_infor.master_period = TIMESLOT_LENGTH;
-
     memset(&gw_info, 0, sizeof(GWInfo_TypeDef));
     gw_info.mac_addr = device_infor.gateway_mac;
     gw_info.dsn = gw_info.mac_addr & 0xff;
@@ -97,7 +94,7 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
     else if (GW_STATE_PALLET_DATA_WAIT == gw_info.state) {
         if (msg) {
 
-        	gw_info.wakeup_tick = gw_info.t0 + (device_infor.master_period*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
+        	gw_info.wakeup_tick = gw_info.t0 + (MASTER_PERIOD*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
             if (msg->type == GW_MSG_TYPE_PALLET_DATA) {
                 //ToDo: process received data submitted by pallet
                 //save the dsn for subsequent ack
@@ -113,17 +110,17 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
             }
             else if (msg->type == GW_MSG_TYPE_PALLET_DATA_TIMEOUT) {
                 gw_info.state = GW_STATE_SUSPEND;
-                //gw_info.wakeup_tick = gw_info.t0 + (device_infor.master_period*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
+                //gw_info.wakeup_tick = gw_info.t0 + (MASTER_PERIOD*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
             }
             else if (msg->type == GW_MSG_TYPE_INVALID_DATA) {
                 //Garbage packet
                 gw_info.state = GW_STATE_SUSPEND;
-                //gw_info.wakeup_tick = gw_info.t0 + (device_infor.master_period*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
+                //gw_info.wakeup_tick = gw_info.t0 + (MASTER_PERIOD*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
             }
             else
             {
                 gw_info.state = GW_STATE_SUSPEND;
-                //gw_info.wakeup_tick = gw_info.t0 + (device_infor.master_period*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
+                //gw_info.wakeup_tick = gw_info.t0 + (MASTER_PERIOD*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
             }
 
             Message_Reset(msg);
@@ -136,7 +133,7 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
         WaitUs(WAIT_ACK_DONE); //wait for tx done
 
         gw_info.state = GW_STATE_SUSPEND;
-        //gw_info.wakeup_tick = gw_info.t0 + (device_infor.master_period*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
+        //gw_info.wakeup_tick = gw_info.t0 + (MASTER_PERIOD*PALLET_NUM - RF_TX_WAIT)*TickPerUs;
     }
     else if (GW_STATE_SUSPEND == gw_info.state) {
 

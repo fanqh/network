@@ -76,7 +76,7 @@ void main(void)
 
     while (1) {
 
-    	if((ClockTime() - test) >5000*200*TickPerUs)
+    	if((ClockTime() - test) >5000*100*TickPerUs)
     	{
     		test = ClockTime();
     		node_info.tmp = Get_Temperature();

@@ -19,7 +19,6 @@ typedef struct
 {
 	unsigned short node_mac;
 	unsigned char pallet_id;
-	unsigned long master_period;
 	unsigned char rst;
 }device_infor_t;
 device_infor_t device_infor;
@@ -36,8 +35,6 @@ void Node_Init(void)
 		device_infor.pallet_id = 0x01;
 		device_infor.node_mac = 0xff01;
 	}
-	if(device_infor.master_period==0xffffffff)
-		device_infor.master_period = TIMESLOT_LENGTH;
 
     memset(&node_info, 0, sizeof(NodeInfo_TypeDef));
     node_info.mac_addr = device_infor.node_mac;
@@ -83,7 +80,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                 node_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
 
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*node_info.pallet_id - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*node_info.pallet_id - DEV_RX_MARGIN)*TickPerUs;
             }
             else if (NODE_MSG_TYPE_PALLET_BCN == msg->type) {
                 now = ClockTime();
@@ -94,7 +91,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                     return;
                 }
                 unsigned short tmp_pallet_id = FRAME_GET_SRC_ADDR(msg->data);
-                node_info.t0 = timestamp - (ZB_TIMESTAMP_OFFSET + tmp_pallet_id*device_infor.master_period)*TickPerUs;
+                node_info.t0 = timestamp - (ZB_TIMESTAMP_OFFSET + tmp_pallet_id*MASTER_PERIOD)*TickPerUs;
                 node_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
                 // if the PB is originated from the pallet this end device attaches to, determine
                 // whether it is this end device's opportunity
@@ -111,7 +108,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                     }
                 }
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
 
             Message_Reset(msg);
@@ -121,28 +118,28 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
         if (msg) {
             GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
             node_info.state = NODE_STATE_SUSPEND;
-            node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+            node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
 
 #if 0
             if (msg->type == NODE_MSG_TYPE_PALLET_ACK) {
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
             else if (msg->type == NODE_MSG_TYPE_PALLET_ACK_TIMEOUT) {
                 //GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
             else if (msg->type == NODE_MSG_TYPE_INVALID_DATA) {
                 //GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
             else
             {
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (device_infor.master_period*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
 #endif
             Message_Reset(msg);
