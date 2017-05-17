@@ -54,7 +54,7 @@ void Node_Init(void)
 }
 
 
-unsigned char aa[64], a;
+unsigned char aa[8][32], a,j;
 unsigned int ttt;
 
 _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
@@ -65,10 +65,14 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
     if (NODE_STATE_IDLE == node_info.state) {
         node_info.state = NODE_STATE_BCN_WAIT;
         RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
+        //GPIO_WriteBit(DEBUG_PIN, !GPIO_ReadOutputBit(DEBUG_PIN));
     }
-    else if (NODE_STATE_BCN_WAIT == node_info.state) {
-        if (msg) {
-            if (NODE_MSG_TYPE_GW_BCN == msg->type) {
+    else if (NODE_STATE_BCN_WAIT == node_info.state)
+    {
+        if (msg)
+        {
+            if (NODE_MSG_TYPE_GW_BCN == msg->type)
+            {
                 now = ClockTime();
                 timestamp = FRAME_GET_TIMESTAMP(msg->data);
                 //check validity of timestamp
@@ -81,8 +85,11 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 
                 node_info.state = NODE_STATE_SUSPEND;
                 node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id - DEV_RX_MARGIN)*TickPerUs;
+                //node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH - DEV_RX_MARGIN)*TickPerUs;
             }
-            else if (NODE_MSG_TYPE_PALLET_BCN == msg->type) {
+            else
+            if (NODE_MSG_TYPE_PALLET_BCN == msg->type)
+            {
                 now = ClockTime();
                 timestamp = FRAME_GET_TIMESTAMP(msg->data);
                 //check validity of timestamp
@@ -110,7 +117,8 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                     }
                 }
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                //node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+NODE_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH - DEV_RX_MARGIN)*TickPerUs;
             }
 
             Message_Reset(msg);
@@ -118,30 +126,30 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
     }
     else if (NODE_STATE_PALLET_ACK_WAIT == node_info.state) {
         if (msg) {
-            GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
-            node_info.state = NODE_STATE_SUSPEND;
-            node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+            //GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
+            //node_info.state = NODE_STATE_SUSPEND;
+            //node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
 
-#if 0
+#if 1
             if (msg->type == NODE_MSG_TYPE_PALLET_ACK) {
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+NODE_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
             else if (msg->type == NODE_MSG_TYPE_PALLET_ACK_TIMEOUT) {
                 //GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+NODE_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
             else if (msg->type == NODE_MSG_TYPE_INVALID_DATA) {
                 //GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+NODE_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
             else
             {
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+NODE_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
 #endif
             Message_Reset(msg);
@@ -153,8 +161,8 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 
         if(node_info.wakeup_tick - ClockTime() >100*TickPerUs)
         	node_info.tmp = Get_Temperature();
-        // while((unsigned int)(ClockTime() - node_info.wakeup_tick) > BIT(30));
-        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
+         while((unsigned int)(ClockTime() - node_info.wakeup_tick) > BIT(30));
+        //PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
         node_info.state = NODE_STATE_IDLE;
     }
 }
@@ -183,9 +191,11 @@ _attribute_ram_code_ void Node_RxIrqHandler(void)
     }
     //receive a valid packet
     else {
+    	aa[j][31] =ttt++;
+    	memcpy(aa[j++], rx_packet, 31);
+    	if(j>=8)
+    		j = 0;
 
-    	memcpy(aa, rx_packet, 60);
-    	aa[63]++;
         //if it is pallet setup beacon frame, perform a random backoff and then require to associate
         if (FRAME_IS_SETUP_PALLET_BEACON(rx_packet))
         {
@@ -257,7 +267,7 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
                 node_info.wakeup_tick = now + ((Rand()+node_info.mac_addr) & BACKOFF_MAX_NUM)*BACKOFF_UNIT*TickPerUs;
                 node_info.pallet_mac = FRAME_GET_SRC_ADDR(msg->data);
                 //TODO  pallet ID 应该由gateway 分配，现在是固定值，因为此时还没有和gateway关联
-                node_info.pallet_id = PALLET_ID;
+                //node_info.pallet_id = PALLET_ID;
             }
             Message_Reset(msg);
         }
@@ -275,7 +285,7 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
             now = ClockTime();
             RF_StartStxToRx(tx_buf, now + RF_TX_WAIT*TickPerUs, RX_WAIT);
             Build_NodeSetupReq(tx_buf, &node_info);
-            GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
+            //GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
             //update state
             node_info.state = NODE_STATE_SETUP_PALLET_RSP_WAIT;
         }
@@ -292,13 +302,13 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
     else if (NODE_STATE_SETUP_PALLET_RSP_WAIT == node_info.state) {
         if (msg) {
             if (msg->type == NODE_MSG_TYPE_SETUP_RSP) {
-                GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
-                //node_info.node_id = FRAME_GET_NODE_ID(msg->data);
-                node_info.pallet_id = PALLET_ID;
+               // GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
+                node_info.node_id = FRAME_GET_NODE_ID(msg->data);
+                //node_info.pallet_id = PALLET_ID;
                 node_info.state = NODE_STATE_IDLE;
             }
             else {
-                GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
+               // GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 now = ClockTime();
                 node_info.state = NODE_STATE_SETUP_BACKOFF;
                 node_info.wakeup_tick = now + ((Rand()+node_info.mac_addr) & BACKOFF_MAX_NUM)*BACKOFF_UNIT*TickPerUs;

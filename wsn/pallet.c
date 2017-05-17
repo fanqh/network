@@ -114,7 +114,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
         RF_SetTxRxOff();
         RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
 
-        GPIO_WriteBit(DEBUG_PIN, !GPIO_ReadOutputBit(DEBUG_PIN));
+       // GPIO_WriteBit(DEBUG_PIN, !GPIO_ReadOutputBit(DEBUG_PIN));
     }
     else if (PALLET_STATE_GW_BCN_WAIT == pallet_info.state)
     {
@@ -218,10 +218,10 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 
 				node_data[(node_id-1)%NODE_NUM].updata = 1;
 				node_data[(node_id-1)%NODE_NUM].temperature = FRAME_GET_NODE_PAYLOAD(msg->data);
-                //pallet_info.state = PALLET_STATE_SEND_NODE_ACK;
+                pallet_info.state = PALLET_STATE_SEND_NODE_ACK;
 
-		        pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
-		        pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+//		        pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
+//		        pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
             }
             else if (msg->type == PALLET_MSG_TYPE_ED_DATA_TIMEOUT) {
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
@@ -258,7 +258,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
         //turn off receiver and go to suspend
         RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mode
         //while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
-        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick-TickPerUs);
+        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
         pallet_info.state = PALLET_STATE_IDLE;
     }
 #if DEBUG
@@ -500,7 +500,7 @@ _attribute_ram_code_  void Run_Pallet_Setup_Statemachine2(Msg_TypeDef *msg)
         if (msg) {
             if (msg->type == PALLET_MSG_TYPE_SETUP_GW_RSP) {
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
-                pallet_info.pallet_id = FRAME_GET_PALLET_ID_FROM_GATEWAY_SETUP(msg->data);
+                pallet_info.pallet_id = 1;//FRAME_GET_PALLET_ID_FROM_GATEWAY_SETUP(msg->data);
                 pallet_info.state = PALLET_STATE_IDLE;
             }
             else {

@@ -12,9 +12,9 @@
 
 #define RF_TX_WAIT                      15 //in us
 #define TX_ACK_WAIT                     3 //in us
-#define WAIT_ACK_DONE                   1600 //in us
+#define WAIT_ACK_DONE                   (1600*2) //in us
 #define DEV_RX_MARGIN                   20 //in us
-#define RX_WAIT                         1600 //in us
+#define RX_WAIT                         (1600) //in us
 #define ACK_WAIT                        1800 //in us
 #define TIMESTAMP_INVALID_THRESHOLD     6000 //in us
 #define ZB_TIMESTAMP_OFFSET             341 //(6byte preamble + 0x95 pll settle time)in us

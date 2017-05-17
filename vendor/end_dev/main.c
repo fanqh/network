@@ -30,6 +30,10 @@ static void SYS_Init(void)
     GPIO_SetGPIOEnable(LED_PIN, Bit_SET);
     GPIO_ResetBit(LED_PIN);
     GPIO_SetOutputEnable(LED_PIN, Bit_SET);
+
+    GPIO_SetGPIOEnable(DEBUG_PIN, Bit_SET);
+    GPIO_ResetBit(DEBUG_PIN);
+    GPIO_SetOutputEnable(DEBUG_PIN, Bit_SET);
 }
 
 int test = 0;
