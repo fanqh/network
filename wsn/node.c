@@ -80,7 +80,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                 node_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
 
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*node_info.pallet_id - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id - DEV_RX_MARGIN)*TickPerUs;
             }
             else if (NODE_MSG_TYPE_PALLET_BCN == msg->type) {
                 now = ClockTime();
@@ -91,7 +91,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                     return;
                 }
                 unsigned short tmp_pallet_id = FRAME_GET_SRC_ADDR(msg->data);
-                node_info.t0 = timestamp - (ZB_TIMESTAMP_OFFSET + tmp_pallet_id*MASTER_PERIOD)*TickPerUs;
+                node_info.t0 = timestamp - (ZB_TIMESTAMP_OFFSET + tmp_pallet_id*TIMESLOT_LENGTH)*TickPerUs;
                 node_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
                 // if the PB is originated from the pallet this end device attaches to, determine
                 // whether it is this end device's opportunity
@@ -110,7 +110,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                     }
                 }
                 node_info.state = NODE_STATE_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
             }
 
             Message_Reset(msg);
@@ -120,7 +120,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
         if (msg) {
             GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
             node_info.state = NODE_STATE_SUSPEND;
-            node_info.wakeup_tick = node_info.t0 + (MASTER_PERIOD*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
+            node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+PALLET_NUM) - DEV_RX_MARGIN)*TickPerUs;
 
 #if 0
             if (msg->type == NODE_MSG_TYPE_PALLET_ACK) {

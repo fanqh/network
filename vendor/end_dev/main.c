@@ -68,7 +68,6 @@ void main(void)
 
     I2C_PinSelect(I2C_PIN_GPIOB);
     I2C_Init(TMP102A_ADDRESS, 4);
-    yy = Get_Temperature();;
 
     //WaitMs(1000);
 

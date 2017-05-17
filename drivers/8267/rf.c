@@ -562,7 +562,7 @@ static RF_StatusTypeDef RF_TRxState = 0xff;
 int  RF_TrxStateSet(RF_StatusTypeDef  RF_Status,signed char RF_Channel)
 {
     int  err = 0;
-    //if(RF_Status != RF_MODE_TX)
+    if(RF_Status != RF_MODE_TX)
     	RF_SetTxRxOff();
 	if (RF_Status == RF_MODE_TX) {
 #if PA_MODE
