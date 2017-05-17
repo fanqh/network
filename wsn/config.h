@@ -29,7 +29,7 @@
 #define NODE_ID                0x01
 
 //需要做对应修改
-#define PALLET_ID              0x01  //由gateway分配
+#define PALLET_ID              0x02  //由gateway分配
 #define PALLET_MAC_ADDR        0xee01
 
 #define NODE_MAC_ADDR          0xff01
@@ -50,7 +50,7 @@
 #define GW_SETUP_TRIG_PIN         GPIOD_GP2
 #define LED_PIN                   GPIOC_GP3
 
-#define DEBUG_PIN         		  GPIOB_GP7
+#define DEBUG_PIN         		  GPIOB_GP5
 
 #define FLASH_DEVICE_INFOR_ADDR   (15*4*1024)
 

@@ -257,7 +257,7 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
                 node_info.wakeup_tick = now + ((Rand()+node_info.mac_addr) & BACKOFF_MAX_NUM)*BACKOFF_UNIT*TickPerUs;
                 node_info.pallet_mac = FRAME_GET_SRC_ADDR(msg->data);
                 //TODO  pallet ID 应该由gateway 分配，现在是固定值，因为此时还没有和gateway关联
-                //node_info.pallet_id = PALLET_ID;
+                node_info.pallet_id = PALLET_ID;
             }
             Message_Reset(msg);
         }
@@ -293,7 +293,8 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
         if (msg) {
             if (msg->type == NODE_MSG_TYPE_SETUP_RSP) {
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
-                node_info.node_id = FRAME_GET_NODE_ID(msg->data);
+                //node_info.node_id = FRAME_GET_NODE_ID(msg->data);
+                node_info.pallet_id = PALLET_ID;
                 node_info.state = NODE_STATE_IDLE;
             }
             else {

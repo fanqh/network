@@ -68,7 +68,7 @@ void main(void)
     Pallet_SetupLoop2();
     GPIO_SetBit(LED_PIN);
     GPIO_ResetBit(TIMING_SHOW_PIN);
-    
+
     while (1) {
 		firmwareVersion++;
         Pallet_MainLoop();

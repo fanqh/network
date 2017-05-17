@@ -408,7 +408,7 @@ __attribute__((section(".ram_code"))) int PM_LowPwrEnter(int DeepSleep, int Wake
     REG_PM_IRQ_EN = r; //restore the irq
     return anareg44;
 #else
-	while(ClockTime()<WakeupTick);
+	while(ClockTime()- WakeupTick >=BIT(31));
 	return 0;
 
 #endif
