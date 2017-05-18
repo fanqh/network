@@ -67,6 +67,8 @@ void main(void)
     Board_Init();
     Buff_Inface_Init();
     IRQ_Enable();
+
+    SetChipId(0x5326);
     // LogMsg("gateway start...\n", NULL, 0);
     while (1)
     {
