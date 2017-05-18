@@ -68,10 +68,14 @@ void Pallet_Init(void)
 	FLASH_PageRead(FLASH_DEVICE_INFOR_ADDR, sizeof(device_infor_t), (unsigned char*)&device_infor);
 	if(device_infor.pallet_mac == 0xffff)
 		device_infor.pallet_mac = PALLET_MAC_ADDR;
+	if(device_infor.pallet_id == 0xffff)
+		device_infor.pallet_id = 1;
 
 
     memset(&pallet_info, 0, sizeof(PalletInfo_TypeDef));
     pallet_info.mac_addr = device_infor.pallet_mac;
+    pallet_info.pallet_id = device_infor.pallet_id;
+
     pallet_info.dsn = pallet_info.mac_addr & 0xff;
 
     pallet_info.gw_id = 1;
@@ -512,7 +516,7 @@ _attribute_ram_code_  void Run_Pallet_Setup_Statemachine2(Msg_TypeDef *msg)
         if (msg) {
             if (msg->type == PALLET_MSG_TYPE_SETUP_GW_RSP) {
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
-                pallet_info.pallet_id = FRAME_GET_PALLET_ID_FROM_GATEWAY_SETUP(msg->data);
+                pallet_info.pallet_id = device_infor.pallet_id;//FRAME_GET_PALLET_ID_FROM_GATEWAY_SETUP(msg->data);
                 pallet_info.state = PALLET_STATE_IDLE;
             }
             else {
