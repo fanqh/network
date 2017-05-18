@@ -53,6 +53,7 @@
 #define DEBUG_PIN         		  GPIOB_GP5
 
 #define FLASH_DEVICE_INFOR_ADDR   (15*4*1024)
+#define SUPEND 1
 
 
 #endif

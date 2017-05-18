@@ -117,7 +117,6 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                 }
                 node_info.state = NODE_STATE_SUSPEND;
                 node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*(node_info.pallet_id+NODE_NUM) - DEV_RX_MARGIN)*TickPerUs;
-                //node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH - DEV_RX_MARGIN)*TickPerUs;
             }
 
             Message_Reset(msg);
@@ -160,8 +159,12 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 
         if(node_info.wakeup_tick - ClockTime() >1000*TickPerUs)
         	node_info.tmp = Get_Temperature();
-         while((unsigned int)(ClockTime() - node_info.wakeup_tick) > BIT(30));
-        //PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
+#ifdef SUPEND
+        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
+#else
+        while((unsigned int)(ClockTime() - node_info.wakeup_tick) > BIT(30));
+#endif
+
         node_info.state = NODE_STATE_IDLE;
     }
 }

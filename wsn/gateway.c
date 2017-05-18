@@ -147,13 +147,13 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
 
     	//GPIO_WriteBit(DEBUG_PIN, Bit_RESET);
         //turn off receiver and go to suspend
-         while((unsigned int)(ClockTime() - gw_info.wakeup_tick) > BIT(30));
-
-    	//if(ClockTime()>=gw_info.wakeup_tick)
-    		gw_info.state = GW_STATE_SEND_GW_BCN;
-
+//#if SUPEND
 //        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, gw_info.wakeup_tick);
 //        gw_info.state = GW_STATE_SEND_GW_BCN;
+//#else
+         while((unsigned int)(ClockTime() - gw_info.wakeup_tick) > BIT(30));
+    	 gw_info.state = GW_STATE_SEND_GW_BCN;
+//#endif
     }
 }
 

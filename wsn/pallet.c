@@ -147,8 +147,10 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
                 RF_StartStxToRx(tx_buf , now + RF_TX_WAIT*TickPerUs, ACK_WAIT);
                 Build_PalletData(tx_buf, &pallet_info, node_data);
 
-				for(i=0; i<3; i++)
-					node_data[i].updata = 0;
+//				for(i=0; i<3; i++)
+//					node_data[i].updata = 0;
+
+				memset(&node_data, 0, sizeof(NodeDataWaitSend_Typdedef)*3 );
                 //update state
                 pallet_info.state = PALLET_STATE_GW_ACK_WAIT;
             }
@@ -198,8 +200,12 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
     else if (PALLET_STATE_SUSPEND_BEFORE_PB == pallet_info.state) {
         //turn off receiver and go to suspend
         RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mode
-        // while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
+        //
+#ifdef SUPEND
         PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
+#else
+        while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
+#endif
         pallet_info.state = PALLET_STATE_SEND_PB;
     }
     else if (PALLET_STATE_SEND_PB == pallet_info.state) {
@@ -273,8 +279,12 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
     else if (PALLET_STATE_SUSPEND_BEFORE_GB == pallet_info.state) {
         //turn off receiver and go to suspend
         RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mode
+
+#ifdef SUPEND
+        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
+#else
         while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
-        //PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
+#endif
         pallet_info.state = PALLET_STATE_IDLE;
     }
 #if DEBUG
