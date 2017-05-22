@@ -1,0 +1,1 @@
+1. 20170518 此版本代码，pallet 端palletID 是固定的，node端，palletID也是固定的，node ID可以分配。

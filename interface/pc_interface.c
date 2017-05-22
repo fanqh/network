@@ -57,9 +57,6 @@ void ResuBuf_Init(unsigned short BufAddr, unsigned char BufSize, unsigned char B
     WRITE_REG8(RESU_BUF_RPTR, 0);
 }
 
-unsigned long aaa;
-
-unsigned char ss[4];
 
 unsigned int ResuBuf_Write(unsigned char *pSrcBuf, unsigned char len)
 {
@@ -74,15 +71,10 @@ unsigned int ResuBuf_Write(unsigned char *pSrcBuf, unsigned char len)
         unsigned short BufAddr = READ_REG16(RESU_BUF_ADDR);
         unsigned char BufSize = READ_REG8(RESU_BUF_SIZE);
         unsigned long WriteAddr = IO_BASE_ADDR + BufAddr + BufSize*wptr;
-        aaa =WriteAddr;
 
-
-        if(aaa<=8)
-        	aaa = 0;
         int i = 0;
 	    for (i=0; i<len; i++) {
 	    	WRITE_REG8(WriteAddr+i, pSrcBuf[i]);
-	    	ss[i] = pSrcBuf[i];
 
 	    }
         //adjust wptr

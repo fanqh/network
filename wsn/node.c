@@ -10,9 +10,9 @@
 NodeInfo_TypeDef node_info;
 static MsgQueue_Typedef msg_queue;
 
-static unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
-static unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
-static unsigned char rx_ptr = 0;
+static volatile unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
+static volatile unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
+static volatile unsigned char rx_ptr = 0;
 
 
 typedef struct
@@ -54,8 +54,8 @@ void Node_Init(void)
 }
 
 
-unsigned char aa[8][32], a,j;
-unsigned int ttt;
+//unsigned char aa[8][32], a,j;
+//unsigned int ttt, dd;
 
 _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 {
@@ -64,6 +64,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 
     if (NODE_STATE_IDLE == node_info.state) {
         node_info.state = NODE_STATE_BCN_WAIT;
+        RF_SetTxRxOff();
         RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
         //GPIO_WriteBit(DEBUG_PIN, !GPIO_ReadOutputBit(DEBUG_PIN));
     }
@@ -85,7 +86,6 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 
                 node_info.state = NODE_STATE_SUSPEND;
                 node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id - DEV_RX_MARGIN)*TickPerUs;
-                //node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH - DEV_RX_MARGIN)*TickPerUs;
             }
             else if (NODE_MSG_TYPE_PALLET_BCN == msg->type)
             {
@@ -156,6 +156,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
     else if (NODE_STATE_SUSPEND == node_info.state) {
         //turn off receiver and go to suspend
         RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mode
+    	//RF_SetTxRxOff();
 
         if(node_info.wakeup_tick - ClockTime() >1000*TickPerUs)
         	node_info.tmp = Get_Temperature();
@@ -176,6 +177,7 @@ void Node_MainLoop(void)
     pMsg = MsgQueue_Pop(&msg_queue);
     //run state machine
     Run_NodeStatemachine(pMsg);
+    //Message_Reset(pMsg);
 
     //collect sensor data
 
@@ -187,16 +189,17 @@ _attribute_ram_code_ void Node_RxIrqHandler(void)
     rx_ptr = (rx_ptr + 1) % RX_BUF_NUM;
     RF_RxBufferSet(rx_buf + rx_ptr*RX_BUF_LEN, RX_BUF_LEN, 0);
 
+
     if ((rx_packet[13] == 0) || (!FRAME_IS_CRC_OK(rx_packet)) || (!FRAME_IS_LENGTH_OK(rx_packet))) {
         // Garbage packet
         MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_INVALID_DATA);
     }
     //receive a valid packet
     else {
-    	aa[j][31] =ttt++;
-    	memcpy(aa[j++], rx_packet, 31);
-    	if(j>=8)
-    		j = 0;
+//    	aa[j][31] =ttt++;
+//    	memcpy(aa[j++], rx_packet, 31);
+//    	if(j>=8)
+//    		j = 0;
 
         //if it is pallet setup beacon frame, perform a random backoff and then require to associate
         if (FRAME_IS_SETUP_PALLET_BEACON(rx_packet))

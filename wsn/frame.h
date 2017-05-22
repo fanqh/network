@@ -59,11 +59,11 @@ typedef struct
 
 #define FRAME_GET_PALLET_NODE_NUM(p)       ( p[23] )
 
-#define FRAME_IS_GATEWAY_BEACON(p)         (( p[22] == FRMAE_TYPE_GATEWAY_BEACON) )
-#define FRAME_IS_PALLET_DATA(p)            ( p[22] == FRMAE_TYPE_PALLET_DATA)
+#define FRAME_IS_GATEWAY_BEACON(p)         (( p[22] == FRMAE_TYPE_GATEWAY_BEACON)&&(p[16]==0xaa)&&(p[17]==0xbb) )
+#define FRAME_IS_PALLET_DATA(p)            ( (p[22] == FRMAE_TYPE_PALLET_DATA)&&(p[16]==0xaa)&&(p[17]==0xbb))
 #define FRAME_IS_ACK_TYPE(p)               ( p[13] == 0x02)
-#define FRAME_IS_NODE_DATA(p)              ( p[22] == FRMAE_TYPE_NODE_DATA)
-#define FRAME_IS_PALLET_BEACON(p)          ( p[22] == FRMAE_TYPE_PALLET_BEACON)
+#define FRAME_IS_NODE_DATA(p)              ( (p[22] == FRMAE_TYPE_NODE_DATA)&&(p[16]==0xaa)&&(p[17]==0xbb))
+#define FRAME_IS_PALLET_BEACON(p)          ( (p[22] == FRMAE_TYPE_PALLET_BEACON)&&(p[16]==0xaa)&&(p[17]==0xbb))
 #define FRAME_IS_LENGTH_OK(p)              ( p[0] == p[12]+13)
 #define FRAME_IS_CRC_OK(p)                 ((p[p[0]+3] & 0x51) == 0x10)
 

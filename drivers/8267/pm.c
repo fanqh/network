@@ -280,13 +280,19 @@ void PM_GPIOSet(Pin_TypeDef pin, int pol, int en)    //only surport from suspend
  *              32k Timer is set as a wakeup source 
  * @return sources that wake the MCU up from low power mode
  */
+
+unsigned long d_wake = 0;
+unsigned int d_timenow = 0;
+unsigned int span;
 __attribute__((section(".ram_code"))) int PM_LowPwrEnter(int DeepSleep, int WakeupSrc, unsigned long WakeupTick)
 {
+	d_timenow = ClockTime();
+	d_wake = WakeupTick;
 
-
+	//d_span = d_wake -d_timenow;
 #if 1
     int system_tick_enable = WakeupSrc & WAKEUP_SRC_TIMER;
-    unsigned int span = (unsigned int)(WakeupTick - ClockTime());
+    span = (unsigned int)(WakeupTick - ClockTime());
     unsigned char qdec_wakeup_en = 0;
     unsigned int tick_cur_32k;
     unsigned int tick_cur;

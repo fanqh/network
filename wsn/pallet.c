@@ -10,25 +10,20 @@
 
 #define NODE_TABLE_MAX_LEN   6
 
-static PalletInfo_TypeDef pallet_info;
+PalletInfo_TypeDef pallet_info;
 static MsgQueue_Typedef msg_queue;
 
 static NodeEntry_Typedef node_table[NODE_TABLE_MAX_LEN];
 static ev_time_event_t *pallet_setup_timer = NULL;
 
-static unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
-static unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
-static unsigned char rx_ptr = 0;
+static volatile unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
+static volatile unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
+static volatile unsigned char rx_ptr = 0;
 
 
-//#define DEBUG 1
-
-
-unsigned char test_buff[64];
+#define DEBUG 1
 
 #if DEBUG
-
-static int state_error = 0;
 typedef struct
 {
 	unsigned char msg_type;
@@ -36,12 +31,10 @@ typedef struct
 	unsigned char curstate;
 
 }debug_t;
-
+static int state_error = 0;
 unsigned char pre = 0;
-
 debug_t debug;
 Debug_Queue_Typedef DebugQ;
-
 //int tet;
 void debug_enqueue(unsigned char type)
 {
@@ -89,10 +82,6 @@ void Pallet_Init(void)
     IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT);
     IRQ_Enable();
 
-    //config gpio showing timing
-    GPIO_SetGPIOEnable(TIMING_SHOW_PIN, Bit_SET);
-    GPIO_ResetBit(TIMING_SHOW_PIN);
-
 #if 0
     //DEBUG_SHOW_PIN
     GPIO_SetGPIOEnable(DEBUG_SHOW_PIN, Bit_SET);
@@ -107,7 +96,7 @@ void Pallet_Init(void)
 }
 
 
-unsigned int bug_time, ee, count[8];
+//unsigned int bug_time, ee, count[8];
 _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now, j;
@@ -119,7 +108,6 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
         pallet_info.state = PALLET_STATE_GW_BCN_WAIT;
         RF_SetTxRxOff();
         RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
-
        // GPIO_WriteBit(DEBUG_PIN, !GPIO_ReadOutputBit(DEBUG_PIN));
     }
     else if (PALLET_STATE_GW_BCN_WAIT == pallet_info.state)
@@ -146,9 +134,6 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
                 RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL);
                 RF_StartStxToRx(tx_buf , now + RF_TX_WAIT*TickPerUs, ACK_WAIT);
                 Build_PalletData(tx_buf, &pallet_info, node_data);
-
-//				for(i=0; i<3; i++)
-//					node_data[i].updata = 0;
 
 				memset(&node_data, 0, sizeof(NodeDataWaitSend_Typdedef)*3 );
                 //update state
@@ -200,7 +185,6 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
     else if (PALLET_STATE_SUSPEND_BEFORE_PB == pallet_info.state) {
         //turn off receiver and go to suspend
         RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mode
-        //
 #ifdef SUPEND
         PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
 #else
@@ -211,7 +195,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
     else if (PALLET_STATE_SEND_PB == pallet_info.state) {
         now = ClockTime();
         GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
-        RF_SetTxRxOff();
+        //RF_SetTxRxOff();
         RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //switch to auto mode
         RF_StartStxToRx(tx_buf , now + RF_TX_WAIT*TickPerUs, ACK_WAIT);
         Build_PalletBeacon(tx_buf, &pallet_info);
@@ -252,7 +236,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
                 GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
                 pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
                 pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
-            	//todo ��������յ��������ݣ������˳�rx mode
+            	//todo should retry to receive data within time
             	//state_error ++;
             }
 
@@ -261,24 +245,26 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
     }
     else if (PALLET_STATE_SEND_NODE_ACK == pallet_info.state) {
 
-    	unsigned short timeout = 0;
+    	//unsigned short timeout = 0;
         //send ack
         Build_Ack(tx_buf, pallet_info.ack_dsn);
         RF_StartStx(tx_buf, ClockTime() + TX_ACK_WAIT*TickPerUs);
         WaitUs(WAIT_ACK_DONE); //wait for tx done
 
-        while(!(IRQ_RfIrqSrcGet()&FLD_RF_IRQ_TX) && timeout<=WAIT_ACK_DONE)
-        {
-        	timeout ++;
-        	WaitUs(1);
-        }
-
+//        while(!(IRQ_RfIrqSrcGet()&FLD_RF_IRQ_TX) && (timeout<=WAIT_ACK_DONE))
+//        {
+//        	timeout ++;
+//        	WaitUs(1);
+//        }
+//        if(timeout>=WAIT_ACK_DONE)
+//        	RF_SetTxRxOff();
         pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
         pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
     }
     else if (PALLET_STATE_SUSPEND_BEFORE_GB == pallet_info.state) {
         //turn off receiver and go to suspend
         RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mode
+    	//RF_SetTxRxOff();
 
 #ifdef SUPEND
         PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
@@ -306,17 +292,19 @@ void Pallet_MainLoop(void)
     pMsg = MsgQueue_Pop(&msg_queue);
     //run state machine
     Run_Pallet_Statemachine(pMsg);
-
+    //Message_Reset(pMsg);
     //collect sensor data
 }
-
-unsigned char pack[4][32];
+#if DEBUG
+	static unsigned char pack[4][32];
+	static unsigned char dj;
+#endif
 _attribute_ram_code_ void Pallet_RxIrqHandler(void)
 {
-	int i;
     unsigned char *rx_packet = rx_buf + rx_ptr*RX_BUF_LEN;
     rx_ptr = (rx_ptr + 1) % RX_BUF_NUM;
     RF_RxBufferSet(rx_buf + rx_ptr*RX_BUF_LEN, RX_BUF_LEN, 0);
+
 
     if ((rx_packet[13] == 0) || (!FRAME_IS_CRC_OK(rx_packet)) || (!FRAME_IS_LENGTH_OK(rx_packet))) {
         // Garbage packet
@@ -325,10 +313,11 @@ _attribute_ram_code_ void Pallet_RxIrqHandler(void)
     //receive a valid packet
     else
 	{
-    	if(i>=4)
-    		i = 0;
-
-    	memcpy(pack[i], rx_packet, 32);
+#if DEBUG
+    	if(dj>=4)
+    		dj = 0;
+    	memcpy(pack[dj], rx_packet, 32);
+#endif
         //if it is coor ACK frame, check it and then go to suspend immediately
         if (FRAME_IS_ACK_TYPE(rx_packet) && (rx_packet[15] == pallet_info.dsn))
 		{
@@ -418,8 +407,6 @@ _attribute_ram_code_ void Run_Pallet_Setup_Statemachine(Msg_TypeDef *msg)
         {
             if (msg->type == PALLET_MSG_TYPE_SETUP_REQ)
             {
-
-
             	dest_mac = FRAME_GET_DST_ADDR(msg->data);
             	if(dest_mac == pallet_info.mac_addr)
             	{

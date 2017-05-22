@@ -52,27 +52,28 @@ _attribute_ram_code_ Msg_TypeDef *MsgQueue_Pop(MsgQueue_Typedef *p)
     return ret;
 }
 
-_attribute_ram_code_ static void reset_buf(unsigned char *p, int len)
-{
-    assert(p);
-
-    while (len--) {
-        *p++ = 0;
-    } 
-}
+//_attribute_ram_code_ static void reset_buf(unsigned char *p, int len)
+//{
+//    assert(p);
+//
+//    while (len--) {
+//        *p++ = 0;
+//    }
+//}
 
 _attribute_ram_code_ void Message_Reset(Msg_TypeDef *msg)
 {
 
 #if 1
-    assert(msg);
+    //assert(msg);
 
     //reset rx_packet
-    if (msg->data) {
-        reset_buf(msg->data, RX_BUF_LEN);
+    if(msg!= NULL)
+    {
+    	if((msg->data)!=NULL)
+    		memset(msg->data,0, RX_BUF_LEN);
+    	//msg->type == MSG_TYPE_NONE;
     }
-    //reset msg
-    //msg->data == NULL;
-    //msg->type == MSG_TYPE_NONE;
+
 #endif
 }
