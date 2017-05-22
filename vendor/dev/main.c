@@ -91,13 +91,6 @@ void main(void)
 
     t = ClockTime();
     while (1) {
-//    	if(ClockTimeExceed(t, 300*1000))
-//    	{
-//    		t = ClockTime();
-//    		GPIO_WriteBit(LED2_BLUE, !GPIO_ReadOutputBit(LED2_BLUE));
-//    	}
-//    	if(PalletSetupTrig)
-//    		LogMsg("s:", &pallet_info.state, 1);
 #ifndef BUG
          Pallet_MainLoop();
 #else

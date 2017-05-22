@@ -135,6 +135,9 @@ static const BSP_TblCmdSetTypeDef tbl_cpu_wakeup_init[] = {
 
     // 0x01, 0xce,  TCMD_UNDER_BOTH | TCMD_WAREG, //open capacitor for external 32K xtal
     0x01, 0x4e,  TCMD_UNDER_BOTH | TCMD_WAREG,
+#if 0 //根据BLE 驱动加上去的，但是貌似没什么用
+    0x05b5, 0x0c,		TCMD_UNDER_BOTH | TCMD_WRITE,
+#endif
 };
 
 __attribute__((section(".ram_code"))) static unsigned int PM_Get32kTick()
