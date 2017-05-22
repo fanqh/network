@@ -281,18 +281,15 @@ void PM_GPIOSet(Pin_TypeDef pin, int pol, int en)    //only surport from suspend
  * @return sources that wake the MCU up from low power mode
  */
 
-unsigned long d_wake = 0;
-unsigned int d_timenow = 0;
-unsigned int span;
 __attribute__((section(".ram_code"))) int PM_LowPwrEnter(int DeepSleep, int WakeupSrc, unsigned long WakeupTick)
 {
-	d_timenow = ClockTime();
-	d_wake = WakeupTick;
-
-	//d_span = d_wake -d_timenow;
 #if 1
+
+	 unsigned char r = REG_PM_IRQ_EN; //irq disable
+	 REG_PM_IRQ_EN = 0;
+
     int system_tick_enable = WakeupSrc & WAKEUP_SRC_TIMER;
-    span = (unsigned int)(WakeupTick - ClockTime());
+    unsigned int span = (unsigned int)(WakeupTick - ClockTime());
     unsigned char qdec_wakeup_en = 0;
     unsigned int tick_cur_32k;
     unsigned int tick_cur;
@@ -314,8 +311,8 @@ __attribute__((section(".ram_code"))) int PM_LowPwrEnter(int DeepSleep, int Wake
         }
     } 
 
-    unsigned char r = REG_PM_IRQ_EN; //irq disable
-    REG_PM_IRQ_EN = 0;
+//    unsigned char r = REG_PM_IRQ_EN; //irq disable
+//    REG_PM_IRQ_EN = 0;
 
     /******set wakeup source ******/
     WriteAnalogReg(ANA_REG_PM_WAKEUP_SOURCE, (WakeupSrc & 0xff));

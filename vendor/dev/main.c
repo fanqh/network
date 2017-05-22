@@ -23,7 +23,6 @@ static void SYS_Init(void)
     SysClockInit(SYS_CLK_HS_DIV, 6);
     USB_LogInit();
     USB_DpPullUpEn(1); //pull up DP pin of USB interface
-    // WaitMs(1000);
 
 }
 static void Board_Init(void)
@@ -39,51 +38,54 @@ static void Board_Init(void)
     GPIO_ResetBit(TIMING_SHOW_PIN);
     GPIO_SetOutputEnable(TIMING_SHOW_PIN, Bit_SET);
 
-//	GPIO_SetGPIOEnable(DEBUG1_PIN, Bit_SET);
-//    GPIO_ResetBit(DEBUG1_PIN);
-//    GPIO_SetOutputEnable(DEBUG1_PIN, Bit_SET);
+	GPIO_SetGPIOEnable(DEBUG1_PIN, Bit_SET);
+    GPIO_ResetBit(DEBUG1_PIN);
+    GPIO_SetOutputEnable(DEBUG1_PIN, Bit_SET);
 
 	//LED Pin
-//    GPIO_SetGPIOEnable(LED1_GREEN, Bit_SET);
-//    GPIO_ResetBit(LED1_GREEN);
-//    GPIO_SetOutputEnable(LED1_GREEN, Bit_SET);
-//
+    GPIO_SetGPIOEnable(LED1_GREEN, Bit_SET);
+    GPIO_ResetBit(LED1_GREEN);
+    GPIO_SetOutputEnable(LED1_GREEN, Bit_SET);
+
 	GPIO_SetGPIOEnable(LED2_BLUE, Bit_SET);
     GPIO_ResetBit(LED2_BLUE);
     GPIO_SetOutputEnable(LED2_BLUE, Bit_SET);
-//
-//	GPIO_SetGPIOEnable(LED3_RED, Bit_SET);
-//    GPIO_ResetBit(LED3_RED);
-//    GPIO_SetOutputEnable(LED3_RED, Bit_SET);
-//
-//    //for debug Pin
-//	GPIO_SetGPIOEnable(LED4_WHITE, Bit_SET);
-//    GPIO_ResetBit(LED4_WHITE);
-//    GPIO_SetOutputEnable(LED4_WHITE, Bit_SET);
+    //GPIO_SetBit(LED2_BLUE);
+
+	GPIO_SetGPIOEnable(LED3_RED, Bit_SET);
+    GPIO_ResetBit(LED3_RED);
+    GPIO_SetOutputEnable(LED3_RED, Bit_SET);
+
+    //for debug Pin
+	GPIO_SetGPIOEnable(LED4_WHITE, Bit_SET);
+    GPIO_ResetBit(LED4_WHITE);
+    GPIO_SetOutputEnable(LED4_WHITE, Bit_SET);
 }
 
+//#define BUG
 void main(void)
 {
 	static unsigned int t;
 
-
+	PM_WakeupInit();
     SYS_Init();
+    WaitMs(3000);
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
-    PM_WakeupInit();
 
     Board_Init();
-//    IRQ_Enable();
-//    while(!PalletSetupTrig); //wait for pallet setup trig
-//
-//    Pallet_Init();
-//    Pallet_SetupLoop();
-//    GPIO_SetBit(LED1_GREEN);
-//    WaitMs(1000);
-//    GPIO_ResetBit(LED1_GREEN);
-//    Pallet_SetupLoop2();
-//    GPIO_SetBit(LED1_GREEN);
-//    GPIO_ResetBit(TIMING_SHOW_PIN);
+    IRQ_Enable();
+#ifndef BUG
+    while(!PalletSetupTrig); //wait for pallet setup trig
 
+    Pallet_Init();
+    Pallet_SetupLoop();
+    GPIO_SetBit(LED1_GREEN);
+    WaitMs(1000);
+    GPIO_ResetBit(LED1_GREEN);
+    Pallet_SetupLoop2();
+    GPIO_SetBit(LED1_GREEN);
+    GPIO_ResetBit(TIMING_SHOW_PIN);
+#endif
 
     t = ClockTime();
     while (1) {
@@ -94,9 +96,12 @@ void main(void)
 //    	}
 //    	if(PalletSetupTrig)
 //    		LogMsg("s:", &pallet_info.state, 1);
-//         Pallet_MainLoop();
-    	 PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, ClockTime()+100*1000*TickPerUs);
+#ifndef BUG
+         Pallet_MainLoop();
+#else
+    	 PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, ClockTime()+50*1000*TickPerUs);
     	 GPIO_WriteBit(LED2_BLUE, !GPIO_ReadOutputBit(LED2_BLUE));
+#endif
     }
 }
 

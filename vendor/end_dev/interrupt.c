@@ -8,7 +8,7 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
     u32 IrqSrc = IRQ_SrcGet();
     u16 RfIrqSrc = IRQ_RfIrqSrcGet();
 
-    GPIO_WriteBit(LED4_WHITE, !GPIO_ReadOutputBit(LED4_WHITE));
+    GPIO_WriteBit(LED2_BLUE, !GPIO_ReadOutputBit(LED2_BLUE));
     if (IrqSrc & FLD_IRQ_ZB_RT_EN) {
         if (RfIrqSrc) {
             if (RfIrqSrc & FLD_RF_IRQ_RX) {

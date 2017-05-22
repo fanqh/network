@@ -251,13 +251,6 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
         RF_StartStx(tx_buf, ClockTime() + TX_ACK_WAIT*TickPerUs);
         WaitUs(WAIT_ACK_DONE); //wait for tx done
 
-//        while(!(IRQ_RfIrqSrcGet()&FLD_RF_IRQ_TX) && (timeout<=WAIT_ACK_DONE))
-//        {
-//        	timeout ++;
-//        	WaitUs(1);
-//        }
-//        if(timeout>=WAIT_ACK_DONE)
-//        	RF_SetTxRxOff();
         pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
         pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
     }

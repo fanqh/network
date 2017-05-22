@@ -22,7 +22,7 @@ static void SYS_Init(void)
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
     USB_LogInit();
     USB_DpPullUpEn(1); //pull up DP pin of USB interface
-    // WaitMs(1000);
+
     GPIO_SetGPIOEnable(DEBUG1_PIN, Bit_SET);
     GPIO_ResetBit(DEBUG1_PIN);
     GPIO_SetOutputEnable(DEBUG1_PIN, Bit_SET);
@@ -35,9 +35,9 @@ static void SYS_Init(void)
     GPIO_ResetBit(LED1_GREEN);
     GPIO_SetOutputEnable(LED1_GREEN, Bit_SET);
 
-    GPIO_SetGPIOEnable(LED2_BLUE, Bit_SET);
-    GPIO_ResetBit(LED2_BLUE);
-    GPIO_SetOutputEnable(LED2_BLUE, Bit_SET);
+//    GPIO_SetGPIOEnable(LED2_BLUE, Bit_SET);
+//    GPIO_ResetBit(LED2_BLUE);
+//    GPIO_SetOutputEnable(LED2_BLUE, Bit_SET);
 
     GPIO_SetGPIOEnable(LED3_RED, Bit_SET);
     GPIO_ResetBit(LED3_RED);
@@ -69,8 +69,11 @@ unsigned int Get_Temperature(void)
 void main(void)
 {
 	static unsigned int t;
-    PM_WakeupInit();
+
+	PM_WakeupInit();
     SYS_Init();
+
+    WaitMs(3000);
 
     Node_Init();
     //mesh network setup
@@ -78,7 +81,7 @@ void main(void)
     GPIO_SetBit(LED1_GREEN);
     GPIO_ResetBit(TIMING_SHOW_PIN);
 
-    I2C_PinSelect(I2C_PIN_GPIOB);
+    I2C_PinSelect(I2C_PIN_GPIOA);
     I2C_Init(TMP102A_ADDRESS, 4);
 
     //WaitMs(1000);
@@ -86,11 +89,11 @@ void main(void)
     // LogMsg("end device start...\n", NULL, 0);
     t = ClockTime();
     while (1) {
-    	if(ClockTimeExceed(t, 300*1000))
-    	{
-    		t = ClockTime();
-    		GPIO_WriteBit(LED2_BLUE, !GPIO_ReadOutputBit(LED2_BLUE));
-    	}
+//    	if(ClockTimeExceed(t, 300*1000))
+//    	{
+//    		t = ClockTime();
+//    		GPIO_WriteBit(LED2_BLUE, !GPIO_ReadOutputBit(LED2_BLUE));
+//    	}
         Node_MainLoop();
     }
 }
