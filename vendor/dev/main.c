@@ -69,7 +69,9 @@ void main(void)
 
 	PM_WakeupInit();
     SYS_Init();
+#ifdef BUG
     WaitMs(3000);
+#endif
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
 
     Board_Init();

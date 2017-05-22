@@ -31,6 +31,7 @@ typedef struct {
 
 
 typedef struct {
+	unsigned char state; //current state of device
     unsigned int t0; //the moment starting to send the beacon 
     unsigned int wakeup_tick; //the moment wakeup
     unsigned int period_cnt; //the overall period count
@@ -42,9 +43,10 @@ typedef struct {
     unsigned char node_id; //assigned id for the current remote node
     unsigned char dsn; //sequence number of outgoing packet
     unsigned char ack_dsn; //sequence number of incoming packet
-    unsigned char state; //current state of device
     unsigned char retry_times; //retry times
     unsigned char node_table_len;
+    unsigned char syc_flag;
+    unsigned int win_start;
 	//NodeDataWaitSend_Typdedef *pNodeData;
 } PalletInfo_TypeDef;
 
