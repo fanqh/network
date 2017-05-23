@@ -160,6 +160,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 
         if(node_info.wakeup_tick - ClockTime() >1000*TickPerUs)
         	node_info.tmp = Get_Temperature();
+        WaitMs(5);
 #ifdef SUPEND
         PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
 #else
@@ -282,6 +283,8 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
         RF_SetTxRxOff();
         // while((unsigned int)(ClockTime() - node_info.wakeup_tick) > BIT(30));
         RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //turn off RX mode
+
+        WaitMs(5);
         PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
         node_info.state = NODE_STATE_SETUP_REQ_SEND;
     }

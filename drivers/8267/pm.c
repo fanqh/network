@@ -291,12 +291,15 @@ __attribute__((section(".ram_code"))) int PM_LowPwrEnter(int DeepSleep, int Wake
 	 unsigned char r = REG_PM_IRQ_EN; //irq disable
 	 REG_PM_IRQ_EN = 0;
 
+
+     WaitMs(5);
     int system_tick_enable = WakeupSrc & WAKEUP_SRC_TIMER;
     unsigned int span = (unsigned int)(WakeupTick - ClockTime());
     unsigned char qdec_wakeup_en = 0;
     unsigned int tick_cur_32k;
     unsigned int tick_cur;
     unsigned short cali_32k_cnt = REG_PM_SYSTIMER_32K_CAL_CNT;
+
 
     if (system_tick_enable) {
         if (span > PM_SLEEP_DURATION_MAX) {

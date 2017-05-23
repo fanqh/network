@@ -73,7 +73,7 @@ void main(void)
 	PM_WakeupInit();
     SYS_Init();
 
-    WaitMs(3000);
+//    WaitMs(3000);
 
     Node_Init();
     //mesh network setup
@@ -83,9 +83,6 @@ void main(void)
 
     I2C_PinSelect(I2C_PIN_GPIOA);
     I2C_Init(TMP102A_ADDRESS, 4);
-
-    //WaitMs(1000);
-
     // LogMsg("end device start...\n", NULL, 0);
     t = ClockTime();
     while (1) {
