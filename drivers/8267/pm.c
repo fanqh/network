@@ -290,9 +290,6 @@ __attribute__((section(".ram_code"))) int PM_LowPwrEnter(int DeepSleep, int Wake
 
 	 unsigned char r = REG_PM_IRQ_EN; //irq disable
 	 REG_PM_IRQ_EN = 0;
-
-
-     WaitMs(5);
     int system_tick_enable = WakeupSrc & WAKEUP_SRC_TIMER;
     unsigned int span = (unsigned int)(WakeupTick - ClockTime());
     unsigned char qdec_wakeup_en = 0;
@@ -406,7 +403,7 @@ __attribute__((section(".ram_code"))) int PM_LowPwrEnter(int DeepSleep, int Wake
     /******system clock has to be on******/
     REG_PM_CLOCK_SEL = reg66; //restore system clock
     REG_PM_SYSTIMER_TICK = tick_cur; //recover system tick
-    REG_PM_SYSTIMER_CTRL = 0x90; //auto mode and enable 32K rc calibration
+    REG_PM_SYSTIMER_CTRL = 0x92; //auto mode and enable 32K rc calibration
     REG_PM_SYSTIMER_TRIG = 0x01; //enable system timer
 
     unsigned char anareg44 = ReadAnalogReg(ANA_REG_PM_WAKEUP_STATUS);

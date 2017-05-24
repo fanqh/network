@@ -155,12 +155,11 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
     }
     else if (NODE_STATE_SUSPEND == node_info.state) {
         //turn off receiver and go to suspend
-        RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mode
-    	//RF_SetTxRxOff();
+        //RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mode
+    	RF_SetTxRxOff();
 
         if(node_info.wakeup_tick - ClockTime() >1000*TickPerUs)
         	node_info.tmp = Get_Temperature();
-        WaitMs(5);
 #ifdef SUPEND
         PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
 #else

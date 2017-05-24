@@ -184,8 +184,8 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
     }
     else if (PALLET_STATE_SUSPEND_BEFORE_PB == pallet_info.state) {
         //turn off receiver and go to suspend
-        RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mod
-
+        //RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mod
+    	RF_SetTxRxOff();
 #ifdef SUPEND
         PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
 #else
@@ -257,8 +257,8 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
     }
     else if (PALLET_STATE_SUSPEND_BEFORE_GB == pallet_info.state) {
         //turn off receiver and go to suspend
-        RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mode
-    	//RF_SetTxRxOff();
+        //RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mode
+    	RF_SetTxRxOff();
 
 #ifdef SUPEND
         PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
