@@ -97,9 +97,18 @@ void Pallet_Init(void)
 
 
 //unsigned int bug_time, ee, count[8];
+
+unsigned int pre_suspend_time = 0;
+unsigned char allow_suspend_flag = 1;
 _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now, j;
+
+    if(allow_suspend_flag==0)
+    {
+		if(ClockTime() - (pre_suspend_time + 5000*TickPerUs)<=BIT(31))
+			allow_suspend_flag = 1;
+    }
 
 #if DEBUG
     pre = pallet_info.state;
@@ -187,7 +196,16 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
         //RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mod
     	RF_SetTxRxOff();
 #ifdef SUPEND
-        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
+    	pre_suspend_time = ClockTime();
+    	if(allow_suspend_flag==1)
+    	{
+    		allow_suspend_flag = 0;
+    		PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
+    	}
+    	else
+    	{
+    		while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
+    	}
 #else
         while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
 #endif
@@ -261,7 +279,16 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
     	RF_SetTxRxOff();
 
 #ifdef SUPEND
-        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
+    	pre_suspend_time = ClockTime();
+    	if(allow_suspend_flag==1)
+    	{
+    		allow_suspend_flag = 0;
+    		PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
+    	}
+    	else
+    	{
+    		while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
+    	}
 #else
         while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
 #endif
