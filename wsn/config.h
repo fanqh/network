@@ -37,7 +37,7 @@
 #define BACKOFF_UNIT           5000 //unit: us
 #define BACKOFF_MAX_NUM        0x3f //maximum number of backoff unit
 
-#define RETRY_MAX              0x03 //maximum times of retry
+#define RETRY_MAX              0x0a //maximum times of retry
 
 #define PALLET_SETUP_PERIOD    (2000*1000) //us
 #define GW_SETUP_PERIOD        (2000*1000) //us

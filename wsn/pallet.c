@@ -93,14 +93,6 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
 
-#ifdef SUPEND
-    if(allow_suspend_flag==0)
-    {
-		if(ClockTime() - (pre_suspend_time + 5000*TickPerUs)<=BIT(31))
-			allow_suspend_flag = 1;
-    }
-#endif
-
 	#if DEBUG
 		pre = pallet_info.state;
 	#endif
@@ -173,16 +165,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
         //RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mod
     	RF_SetTxRxOff();
 	#ifdef SUPEND
-    	pre_suspend_time = ClockTime();
-    	if(allow_suspend_flag==1)
-    	{
-    		allow_suspend_flag = 0;
-    		PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
-    	}
-    	else
-    	{
-    		while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
-    	}
+    	PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
 	#else
         while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
 	#endif
@@ -241,6 +224,12 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
         }
     break;
     case PALLET_STATE_SEND_NODE_ACK:
+        Build_Ack(tx_buf, pallet_info.ack_dsn);
+        RF_StartStx(tx_buf, ClockTime() + TX_ACK_WAIT*TickPerUs);
+        WaitUs(WAIT_ACK_DONE); //wait for tx done
+
+        pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
+        pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
     break;
     case PALLET_STATE_SUSPEND_BEFORE_GB:
         //RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //turn off RX mode

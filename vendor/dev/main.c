@@ -69,14 +69,10 @@ void main(void)
 
 	PM_WakeupInit();
     SYS_Init();
-#ifdef BUG
-    WaitMs(3000);
-#endif
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
 
     Board_Init();
     IRQ_Enable();
-#ifndef BUG
     while(!PalletSetupTrig); //wait for pallet setup trig
 
     Pallet_Init();
@@ -87,16 +83,11 @@ void main(void)
     Pallet_SetupLoop2();
     GPIO_SetBit(LED1_GREEN);
     GPIO_ResetBit(TIMING_SHOW_PIN);
-#endif
 
     t = ClockTime();
-    while (1) {
-#ifndef BUG
+    while (1)
+    {
          Pallet_MainLoop();
-#else
-    	 PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, ClockTime()+50*1000*TickPerUs);
-    	 GPIO_WriteBit(LED2_BLUE, !GPIO_ReadOutputBit(LED2_BLUE));
-#endif
     }
 }
 
