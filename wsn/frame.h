@@ -27,7 +27,7 @@ typedef struct
 #define FRMAE_TYPE_SETUP_PALLET_REQ        0x09
 #define FRMAE_TYPE_SETUP_GW_RSP            0x0a
 
-//frame parse definitions  GateWay Beacon
+//GateWay Beacon
 #define FRAME_GET_TIMESTAMP(p)             ( p[8] | (p[9]<<8) | (p[10]<<16) | (p[11]<<24) )
 #define FRAME_GET_PERIOD_CNT(p)            ( p[23] | (p[24]<<8) | (p[25]<<16) | (p[26]<<24) )
 #define FRAME_GET_PALLET_ID(p)             ( p[27] )
@@ -35,23 +35,22 @@ typedef struct
 #define FRAME_GET_SRC_ADDR(p)              ( p[20] | (p[21]<<8) )
 #define FRAME_GET_INCOME_DSN(p)            ( p[15] )
 
-// parse frame from node data
+//node data
 #define FRAME_GET_SRC_NODE_ID(p)            (p[20])
 #define FRAME_GET_NODE_PAYLOAD(p)            (p[23] | p[24]<<8 | p[25]<<16  | p[26]<<24 )
 
-//pare frame from pallet data
+// pallet data
 #define FRAME_GET_PAYLOAD_PALLET_ID(p)            (p[20])
-//#define FRAME_GET_PAYLOAD_NODE_ID(p)            (p[23])
 #define FRAME_GET_Point_PAYLOAD_TMP(p)            (p+23)
 
+//pallet setup beacon
+#define FRAME_GET_GB_DSN(p)              ( p[15] )
+#define FRAME_GET_DST_ADDR_NODE_REQ(p)              ( p[20] | (p[21]<<8) )
 
-
-//frame of pallet setup beacon
-//#define FRAME_GET_SRC_PALLET_ID(p)              ( p[22] )
-//#define FRAME_GET_DST_ADDR_NODE_REQ(p)              ( p[20] | (p[21]<<8) )
-
-
-
+//gateway setup
+#define FRAME_GATEWAY_SETUP_BCN_DSN(p)		(p[15])
+#define FRAME_GATEWYA_SETUP_BCN_TOTAL_NUM(p)	((p[23]) | (p[24]<<8))
+//gateway setup response
 #define FRAME_GET_PALLET_ID_FROM_GATEWAY_SETUP(p)             ( p[23] )
 
 #define FRAME_GET_NODE_ID(p)               ( p[23] )

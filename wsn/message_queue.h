@@ -1,6 +1,8 @@
 #ifndef _MESSAGE_QUEUE_H_
 #define _MESSAGE_QUEUE_H_
 
+#include "../common.h"
+
 //define the maximum length of message queue
 #define MSG_BUF_LEN            8
 

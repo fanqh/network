@@ -562,8 +562,8 @@ static RF_StatusTypeDef RF_TRxState = 0xff;
 int  RF_TrxStateSet(RF_StatusTypeDef  RF_Status,signed char RF_Channel)
 {
     int  err = 0;
-    if(RF_Status != RF_TRxState)
-    	RF_SetTxRxOff();
+    //if(RF_Status != RF_TRxState)
+    	//RF_SetTxRxOff();
 	if (RF_Status == RF_MODE_TX) {
 #if PA_MODE
 		Pa_Mode_Switch(PA_TX_MODE);
@@ -1087,7 +1087,7 @@ void RF_SetTxRxOff ()
 	CLR_BIT_FLD(REG_RF_RX_MODE,FLD_RF_RX_ENABLE);
 	CLR_BIT_FLD(REG_RF_RX_MODE,FLD_RF_RX_ENABLE);
 	CLR_BIT_FLD(REG_RF_FUNCTION0_EN,FLD_RF_TX_MANUAL_EN|FLD_RF_RX_MANUAL_EN);
-	WRITE_REG8(0xf00,0x80);
+	//WRITE_REG8(0xf00,0x80);
 }
 
 /**

@@ -232,19 +232,27 @@ void Build_GatewaySetupBeacon(unsigned char *pBuf, GWInfo_TypeDef *pInfo)
     *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
     *p++ = 0x98; //frame ctrl hig: short dst addr and src addr
     *p++ = ++(pInfo->dsn); //dsn
-    *p++ = 0xaa; //dest PANID
-    *p++ = 0xbb;
+    *p++ = 0xff; //dest PANID
+    *p++ = 0xff;
+
     *p++ = 0xff; //dest address
     *p++ = 0xff;
+
     *p++ = pInfo->mac_addr & 0xff; //source address
     *p++ = pInfo->mac_addr >> 8;
+
     *p++ = FRMAE_TYPE_SETUP_GW_BEACON;
+
+    *p++ = GW_SETUP_BCN_NUM&0xff;
+    *p++ = GW_SETUP_BCN_NUM>>8;
+
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;
     pBuf[2] = 0;
     pBuf[3] = 0;
     pBuf[4] = len + 2;
+
 }
 
 void Build_PalletSetupReq(unsigned char *pBuf, PalletInfo_TypeDef *pInfo)

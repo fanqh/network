@@ -6,6 +6,13 @@
 #define NODE_NUM               3 //the number of end devices attached to each pallet
 #define MASTER_PERIOD		   (TIMESLOT_LENGTH*PALLET_NUM)
 
+#define BACKOFF_UNIT           1000 //unit: us
+#define BACKOFF_MAX_NUM        0x3f //maximum number of backoff unit
+#define RETRY_MAX              1000 //maximum times of retry to setup with gateway request
+
+#define PALLET_SETUP_PERIOD    (2000*1000) //us
+#define GW_SETUP_BCN_NUM		10//200
+#define GP_SETUP_PERIOD        (TIMESLOT_LENGTH*GW_SETUP_BCN_NUM*PALLET_NUM) //us
 
 #define RF_TX_WAIT                      15 //in us
 #define TX_ACK_WAIT                     3 //in us
@@ -16,6 +23,10 @@
 #define TIMESTAMP_INVALID_THRESHOLD     6000 //in us
 #define ZB_TIMESTAMP_OFFSET             341 //(6byte preamble + 0x95 pll settle time)in us
 
+/**********************************************/
+#define LAST_SETUP_REQ_MARGIN	2000	//3MS
+/**********************************************/
+
 #define TX_BUF_LEN                      128
 #define RX_BUF_LEN                      64
 #define RX_BUF_NUM                      8
@@ -25,40 +36,37 @@
 #define GW_ID                  0x01
 #define NODE_ID                0x01
 
-//需要做对应修改
+//default value
 #define PALLET_ID              0x02  //由gateway分配
 #define PALLET_MAC_ADDR        0xee01
-
 #define NODE_MAC_ADDR          0xff01
-
-
 #define GW_MAC_ADDR            0xdd01
-
-#define BACKOFF_UNIT           5000 //unit: us
-#define BACKOFF_MAX_NUM        0x3f //maximum number of backoff unit
-
-#define RETRY_MAX              0x0a //maximum times of retry
-
-#define PALLET_SETUP_PERIOD    (2000*1000) //us
-#define GW_SETUP_PERIOD        (2000*1000) //us
 
 
 //just for debug
-#define TIMING_SHOW_PIN                 GPIOC_GP4
-#define GW_SETUP_TRIG_PIN         GPIOD_GP2
-//#define LED_PIN                   GPIOC_GP3
-#define PALLET_SETUP_TRIG_PIN     GPIOD_GP2
+#define TIMING_SHOW_PIN              GPIOC_GP4
+#define GW_SETUP_TRIG_PIN         	 GPIOD_GP2
+//#define LED_PIN                  	 GPIOC_GP3
+#define PALLET_SETUP_TRIG_PIN     	 GPIOD_GP2
 
-#define DEBUG_PIN         		  GPIOB_GP4
-#define DEBUG1_PIN         		  GPIOB_GP5
+#define DEBUG_PIN         		 	 GPIOB_GP4
+#define DEBUG1_PIN         		  	 GPIOB_GP5
 
-#define LED1_GREEN         		  	  GPIOC_GP3
-#define LED2_BLUE         		  	  GPIOB_GP6
-#define LED3_RED         		  	  GPIOC_GP2
-#define LED4_WHITE         		  	  GPIOB_GP4
+#define LED1_GREEN         		  	 GPIOC_GP3
+#define LED2_BLUE         		  	 GPIOB_GP6
+#define LED3_RED         		  	 GPIOC_GP2
+#define LED4_WHITE         		  	 GPIOB_GP4
 
+//device information restore address
 #define FLASH_DEVICE_INFOR_ADDR   (15*4*1024)
+
+//whether dose system enter suspend when idle
 #define SUPEND 1
+
+#define ERROR_WARN_LOOP()		{while(1){WaitMs(100);GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));}}
+#define TIME_INDICATE()		{GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));}
+
+#define		SYC_WINDOW_SIZE		20000
 
 
 #endif

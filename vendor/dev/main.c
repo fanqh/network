@@ -7,7 +7,6 @@
 
 unsigned long firmwareVersion;
 
-volatile unsigned char PalletSetupTrig = 0;
 extern PalletInfo_TypeDef pallet_info;
 
 static void SYS_Init(void)
@@ -60,31 +59,23 @@ static void Board_Init(void)
 	GPIO_SetGPIOEnable(LED4_WHITE, Bit_SET);
     GPIO_ResetBit(LED4_WHITE);
     GPIO_SetOutputEnable(LED4_WHITE, Bit_SET);
+
+    //config gpio showing timing
+    GPIO_SetGPIOEnable(TIMING_SHOW_PIN, Bit_SET);
+    GPIO_ResetBit(TIMING_SHOW_PIN);
+    GPIO_SetOutputEnable(TIMING_SHOW_PIN, Bit_SET);
 }
 
 //#define BUG
 void main(void)
 {
-	static unsigned int t;
-
 	PM_WakeupInit();
     SYS_Init();
-    RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
 
     Board_Init();
-    IRQ_Enable();
-    while(!PalletSetupTrig); //wait for pallet setup trig
-
     Pallet_Init();
-    Pallet_SetupLoop();
-    GPIO_SetBit(LED1_GREEN);
-    WaitMs(1000);
-    GPIO_ResetBit(LED1_GREEN);
-    Pallet_SetupLoop2();
-    GPIO_SetBit(LED1_GREEN);
-    GPIO_ResetBit(TIMING_SHOW_PIN);
+    IRQ_Enable();
 
-    t = ClockTime();
     while (1)
     {
          Pallet_MainLoop();
