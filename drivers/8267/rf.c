@@ -692,6 +692,8 @@ void RF_StartSrx(unsigned int RF_StartTick,unsigned int RF_RxTimeoutUs)
 	REG_RF_RX_FIRST_TIMEOUT_US = RF_RxTimeoutUs-1;// first timeout
 	REG_RF_CMD_START_TICK = RF_StartTick;		// Setting schedule trigger time
 	SET_BIT_FLD(REG_RF_FUNCTION1_EN,FLD_RF_CMD_SCHEDULE_EN);
+
+	CLR_BIT_FLD(REG_RF_FSM_CMD,FLD_FSM_RF_STX);// single rx
 	SET_BIT_FLD(REG_RF_FSM_CMD,FLD_FSM_RF_CMD_TRIGGER | FLD_FSM_RF_SRX);// single rx
 }
 
@@ -1084,7 +1086,6 @@ void RF_UpdateCapValue(unsigned  char RF_Cap)
 void RF_SetTxRxOff ()
 {
 	REG_RF_FUNCTION1_EN = 0x29;
-	CLR_BIT_FLD(REG_RF_RX_MODE,FLD_RF_RX_ENABLE);
 	CLR_BIT_FLD(REG_RF_RX_MODE,FLD_RF_RX_ENABLE);
 	CLR_BIT_FLD(REG_RF_FUNCTION0_EN,FLD_RF_TX_MANUAL_EN|FLD_RF_RX_MANUAL_EN);
 	//WRITE_REG8(0xf00,0x80);

@@ -10,7 +10,7 @@
 #define BACKOFF_MAX_NUM        0x3f //maximum number of backoff unit
 #define RETRY_MAX              1000 //maximum times of retry to setup with gateway request
 
-#define PALLET_SETUP_PERIOD    (2000*1000) //us
+#define PALLET_SETUP_PERIOD    (2000*PALLET_NUM*100) //us
 #define GW_SETUP_BCN_NUM		10//200
 #define GP_SETUP_PERIOD        (TIMESLOT_LENGTH*GW_SETUP_BCN_NUM*PALLET_NUM) //us
 
@@ -66,7 +66,7 @@
 #define ERROR_WARN_LOOP()		{while(1){WaitMs(100);GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));}}
 #define TIME_INDICATE()		{GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));}
 
-#define		SYC_WINDOW_SIZE		20000
+#define		SYC_WINDOW_SIZE		5000
 
 
 #endif

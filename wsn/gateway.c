@@ -206,7 +206,7 @@ void Gateway_MainLoop(void)
     		ev_unon_timer(&gateway_setup_timer);
 		gw_info.dsn = 0;
     	gw_info.state = GW_STATE_SETUP_IDLE;
-    	gateway_setup_timer = ev_on_timer(Gateway_SetupTimer_Callback, NULL, GP_SETUP_PERIOD);
+    	//gateway_setup_timer = ev_on_timer(Gateway_SetupTimer_Callback, NULL, GP_SETUP_PERIOD-1000*TickPerUs);
     }
     if(IS_GW_WITHIN_SETUP_STATE(gw_info.state))
     {
@@ -276,6 +276,11 @@ _attribute_ram_code_ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
     }
     else if(GW_STATE_SETUP_SEND_GB == gw_info.state)
     {
+    	if(gw_info.dsn>=GW_SETUP_BCN_NUM)
+    	{
+    		gw_info.state = GW_STATE_TRANSIT_ASSOCIATE;
+    		return;
+    	}
     	//RF_SetTxRxOff();
         RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
         Build_GatewaySetupBeacon(tx_buf, &gw_info);
@@ -326,12 +331,30 @@ _attribute_ram_code_ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
                 Build_GatewaySetupRsp(tx_buf, &gw_info);
                 RF_TxPkt(tx_buf);
                 Wait_Tx_Done(1000); //wait for tx done
-                GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
+                TIME_INDICATE();
                 RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //resume to rx mode and continue to receive PALLET_MSG_TYPE_SETUP_REQ
             }
             Message_Reset(msg);
         }
         #endif
+    }
+    else if(GW_STATE_TRANSIT_ASSOCIATE == gw_info.state)
+    {
+    	GatewaySetupTrig = 0;
+
+    	gw_info.state = GW_STATE_SEND_GW_BCN;
+    	RF_SetTxRxOff();
+    	RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //frequency 2425
+    	if(gw_info.pallet_table_len!=0)
+    	{
+    		GPIO_SetBit(LED1_GREEN);
+    		GPIO_ResetBit(LED3_RED);
+    	}
+    	else
+    	{
+    		GPIO_SetBit(LED3_RED);
+    		GPIO_ResetBit(LED1_GREEN);
+    	}
     }
 }
 
