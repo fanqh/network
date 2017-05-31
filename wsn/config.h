@@ -23,6 +23,8 @@
 #define TIMESTAMP_INVALID_THRESHOLD     6000 //in us
 #define ZB_TIMESTAMP_OFFSET             341 //(6byte preamble + 0x95 pll settle time)in us
 
+#define SETUP_SUSPNED_EARLY_WAKEUP		300
+
 /**********************************************/
 #define LAST_SETUP_REQ_MARGIN	2000	//3MS
 /**********************************************/

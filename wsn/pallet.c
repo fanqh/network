@@ -505,6 +505,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
             {
                 if (msg->type == PALLET_MSG_TYPE_SETUP_GW_BCN)
                 {
+                	TIME_INDICATE();
                 	gwb_receive_t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
                     pallet_info.state = PALLET_STATE_SETUP_BACKOFF;
                     pallet_info.retry_times = 0;
@@ -514,6 +515,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
                     if((pallet_info.gw_setup_bcn_total>=500) || (pallet_info.gw_setup_sn >=pallet_info.gw_setup_bcn_total - 6))
                     	pallet_info.state = PALLET_STATE_OFF;
                     pallet_info.gw_addr = FRAME_GET_SRC_ADDR(msg->data);
+                    TIME_INDICATE();
 
                 }
                 Message_Reset(msg);
@@ -593,15 +595,16 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 #if 1
 			if(msg)
 			{
+				pallet_info.state = S_GP_SUSPNED;
 				if(msg->type==PALLET_MSG_TYPE_GW_BCN)
 				{
+					//GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
 		            now = ClockTime();
 		            unsigned int timestamp = FRAME_GET_TIMESTAMP(msg->data);
 		            pallet_info.t0 = timestamp - ZB_TIMESTAMP_OFFSET*TickPerUs;
 		            pallet_info.wakeup_tick = pallet_info.t0 + MASTER_PERIOD*TickPerUs;
 		            pallet_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
-		            GPIO_WriteBit(LED3_RED, 1);
-#if 0
+#if 1
 		            if ((pallet_info.period_cnt % PALLET_NUM) == (pallet_info.pallet_id % PALLET_NUM))
 		            {
 		            	GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
@@ -622,8 +625,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 				}
 				else
 				{
-					GPIO_WriteBit(LED3_RED, 1);
-					pallet_info.wakeup_tick = pallet_info.wakeup_tick + MASTER_PERIOD*TickPerUs;
+					pallet_info.wakeup_tick = pallet_info.wakeup_tick + MASTER_PERIOD*TickPerUs - 100*TickPerUs;
 				}
 				Message_Reset(msg);
 			}
@@ -636,19 +638,15 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 		}
 		case S_GP_SUSPNED:
 		{
-//#if SUPEND
-
+#if SUPEND
 			RF_SetTxRxOff();
-			GPIO_WriteBit(TIMING_SHOW_PIN, 0);
-			PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick - 1000*TickPerUs);
-			GPIO_WriteBit(TIMING_SHOW_PIN, 1);
-//#else
-			//while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
-//#endif
-
+			GPIO_WriteBit(DEBUG1_PIN, 0);
+			PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick - SETUP_SUSPNED_EARLY_WAKEUP*TickPerUs);
+			GPIO_WriteBit(DEBUG1_PIN, 1);
+#else
+			while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
+#endif
     		pallet_info.state = S_GP_LISTEN_GB;
-    		//RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
-			//ERROR_WARN_LOOP();
 
 	        RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //switch to auto mode
 	        RF_StartSrx(ClockTime(), SYC_WINDOW_SIZE);
