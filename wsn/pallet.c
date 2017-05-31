@@ -337,6 +337,20 @@ _attribute_ram_code_ void Pallet_RxIrqHandler(void)
 
 _attribute_ram_code_ void Pallet_RxTimeoutHandler(void)
 {
+	switch(pallet_info.state)
+	{
+		case PALLET_STATE_NODE_DATA_WAIT:
+		case PALLET_STATE_GW_ACK_WAIT:
+		case PALLET_STATE_SETUP_GW_RSP_WAIT:
+		case S_GP_LISTEN_GB:
+		case S_GP_ACK_WAIT:
+			MsgQueue_Push(&msg_queue, NULL, PALLET_MSG_TYPE_ED_DATA_TIMEOUT);
+		break;
+		default:
+			//todo debug here
+			break;
+	}
+#if 0
     if (PALLET_STATE_NODE_DATA_WAIT == pallet_info.state) {
         MsgQueue_Push(&msg_queue, NULL, PALLET_MSG_TYPE_ED_DATA_TIMEOUT);
     }
@@ -346,15 +360,20 @@ _attribute_ram_code_ void Pallet_RxTimeoutHandler(void)
     else if (PALLET_STATE_SETUP_GW_RSP_WAIT == pallet_info.state) {
         MsgQueue_Push(&msg_queue, NULL, PALLET_MSG_TYPE_SETUP_GW_RSP_TIMEOUT);
     }
+    else if(S_GP_LISTEN_GB == pallet_info.state)
+    	MsgQueue_Push(&msg_queue, NULL, PALLET_MSG_TYPE_SETUP_GW_RSP_TIMEOUT);
+    else if(S_GP_ACK_WAIT == pallet_info.state)
+    	MsgQueue_Push(&msg_queue, NULL, PALLET_MSG_TYPE_SETUP_GW_RSP_TIMEOUT);
     else {
 
     }
+#endif
 }
 unsigned short dest_mac;
 static int Pallet_SetupTimer_Callback(void *data)
 {
 	PalletSetupTrig = 0;
-    pallet_info.state = PN_SETUP_IDLE;
+    pallet_info.state = S_PN_SETUP_IDLE;
     ev_unon_timer(&pallet_setup_timer);
     return -1;
 }
@@ -367,7 +386,7 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
 
     switch(pallet_info.state)
     {
-		case PN_SETUP_IDLE:
+		case S_PN_SETUP_IDLE:
 		{
 	    	t1 = ClockTime();
 	        RF_SetTxRxOff();
@@ -511,8 +530,8 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
                     pallet_info.retry_times = 0;
                     pallet_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
                     pallet_info.gw_setup_bcn_total = FRAME_GATEWYA_SETUP_BCN_TOTAL_NUM(msg->data);
-                    pallet_info.gw_setup_sn = (FRAME_GATEWAY_SETUP_BCN_DSN(msg->data));
-                    if((pallet_info.gw_setup_bcn_total>=500) || (pallet_info.gw_setup_sn >=pallet_info.gw_setup_bcn_total - 6))
+                    pallet_info.gw_sn = (FRAME_GATEWAY_BCN_DSN(msg->data));
+                    if((pallet_info.gw_setup_bcn_total>=500) || (pallet_info.gw_sn >=pallet_info.gw_setup_bcn_total - 6))
                     	pallet_info.state = PALLET_STATE_OFF;
                     pallet_info.gw_addr = FRAME_GET_SRC_ADDR(msg->data);
                     TIME_INDICATE();
@@ -525,7 +544,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
     	case PALLET_STATE_SETUP_BACKOFF:
     	{
     		//todo gateway setup 的总数可以放在gateway包中
-            pallet_info.wakeup_tick = now + (((Rand()& BACKOFF_MAX_NUM)*BACKOFF_UNIT*TickPerUs) % ((pallet_info.gw_setup_bcn_total - pallet_info.gw_setup_sn)*TIMESLOT_LENGTH*TickPerUs));
+            pallet_info.wakeup_tick = now + (((Rand()& BACKOFF_MAX_NUM)*BACKOFF_UNIT*TickPerUs) % ((pallet_info.gw_setup_bcn_total - pallet_info.gw_sn)*TIMESLOT_LENGTH*TickPerUs));
             PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
 
             pallet_info.state = PALLET_STATE_SETUP_REQ_SEND;
@@ -561,7 +580,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
                 	pallet_info.is_associate = 1;
                     pallet_info.state = S_GP_SUSPNED;
                     pallet_info.pallet_id = FRAME_GET_PALLET_ID_FROM_GATEWAY_SETUP(msg->data);
-                    pallet_info.wakeup_tick = pallet_info.t0 + (pallet_info.gw_setup_bcn_total-pallet_info.gw_setup_sn)*TIMESLOT_LENGTH*PALLET_NUM*TickPerUs;
+                    pallet_info.wakeup_tick = pallet_info.t0 + (pallet_info.gw_setup_bcn_total-pallet_info.gw_sn)*TIMESLOT_LENGTH*PALLET_NUM*TickPerUs;
                     //ERROR_WARN_LOOP();
                     TIME_INDICATE();
                     GPIO_SetBit(LED1_GREEN);
@@ -595,7 +614,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 #if 1
 			if(msg)
 			{
-				pallet_info.state = S_GP_SUSPNED;
+
 				if(msg->type==PALLET_MSG_TYPE_GW_BCN)
 				{
 					//GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
@@ -603,11 +622,12 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 		            unsigned int timestamp = FRAME_GET_TIMESTAMP(msg->data);
 		            pallet_info.t0 = timestamp - ZB_TIMESTAMP_OFFSET*TickPerUs;
 		            pallet_info.wakeup_tick = pallet_info.t0 + MASTER_PERIOD*TickPerUs;
+
 		            pallet_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
+		            pallet_info.gw_sn = (FRAME_GATEWAY_BCN_DSN(msg->data));
 #if 1
 		            if ((pallet_info.period_cnt % PALLET_NUM) == (pallet_info.pallet_id % PALLET_NUM))
 		            {
-		            	GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
 		            	TIME_INDICATE();
 		                RF_SetTxRxOff();
 		                RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL);
@@ -615,16 +635,17 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 		                Build_PalletData(tx_buf, &pallet_info, node_data);
 		                //clear data that have been sent
 						memset(&node_data, 0, sizeof(NodeDataWaitSend_Typdedef)*3 );
-
 		                pallet_info.state = S_GP_ACK_WAIT;
 		            }
 		            else
 		            {
+		            	pallet_info.state = S_GP_SUSPNED;
 		            }
 #endif
 				}
 				else
 				{
+					pallet_info.state = S_GP_SUSPNED;
 					pallet_info.wakeup_tick = pallet_info.wakeup_tick + MASTER_PERIOD*TickPerUs - 100*TickPerUs;
 				}
 				Message_Reset(msg);
@@ -638,6 +659,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 		}
 		case S_GP_SUSPNED:
 		{
+			unsigned int rec_window_size = 0;
 #if SUPEND
 			RF_SetTxRxOff();
 			GPIO_WriteBit(DEBUG1_PIN, 0);
@@ -646,22 +668,26 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 #else
 			while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
 #endif
-    		pallet_info.state = S_GP_LISTEN_GB;
-
 	        RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //switch to auto mode
-	        RF_StartSrx(ClockTime(), SYC_WINDOW_SIZE);
+	        //todo 应该根据睡眠时间来设置窗口大小,提前醒来的时间，也应该对应接收窗口大小
+	        if(pallet_info.gw_sn<=pallet_info.gw_setup_bcn_total)
+	        	rec_window_size = SYC_EXTEND_WINDOW_SIZE;
+	        else
+	        	rec_window_size = SYC_WINDOW_SIZE;
+	        RF_StartSrx(ClockTime(), rec_window_size);
+	        pallet_info.state = S_GP_LISTEN_GB;
 			break;
 		}
 		case S_GP_ACK_WAIT:
 		{
-
-            TIME_INDICATE();
             if(msg)
             {
+            	TIME_INDICATE();
             	pallet_info.state = S_GP_SUSPNED;
 				if (msg->type == PALLET_MSG_TYPE_GW_ACK)
 				{
 					//todo
+					GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
 				}
 				else if (msg->type == PALLET_MSG_TYPE_GW_ACK_TIMEOUT)
 				{
@@ -684,15 +710,15 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 	}
 }
 
-unsigned short yy;
 void Pallet_MainLoop(void)
 {
     Msg_TypeDef *pMsg = NULL;
 
     if((PalletSetupTrig==1) &&(pallet_info.is_associate == 1))
     {
-    	pallet_info.state = PN_SETUP_IDLE;
-    	pallet_setup_timer = ev_on_timer(Pallet_SetupTimer_Callback, NULL, PALLET_SETUP_PERIOD);
+    	pallet_info.dsn = 0;
+    	pallet_info.state = S_PN_SETUP_IDLE;
+    	//pallet_setup_timer = ev_on_timer(Pallet_SetupTimer_Callback, NULL, PALLET_SETUP_PERIOD);
     }
 
     pMsg = MsgQueue_Pop(&msg_queue);

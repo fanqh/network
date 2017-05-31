@@ -48,7 +48,7 @@ typedef struct
 #define FRAME_GET_DST_ADDR_NODE_REQ(p)              ( p[20] | (p[21]<<8) )
 
 //gateway setup
-#define FRAME_GATEWAY_SETUP_BCN_DSN(p)		(p[15])
+#define FRAME_GATEWAY_BCN_DSN(p)		(p[15])
 #define FRAME_GATEWYA_SETUP_BCN_TOTAL_NUM(p)	((p[23]) | (p[24]<<8))
 //gateway setup response
 #define FRAME_GET_PALLET_ID_FROM_GATEWAY_SETUP(p)             ( p[23] )

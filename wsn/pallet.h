@@ -9,7 +9,7 @@
 #define GP_KEEP_SYC_MASK		0X800
 typedef enum {
 	//setup with node
-    PN_SETUP_IDLE = PN_SETUP_STATE_MASK,
+    S_PN_SETUP_IDLE = PN_SETUP_STATE_MASK,
     PALLET_STATE_GW_BCN_WAIT0 ,
     PALLET_STATE_SETUP_BACKOFF0,
     PALLET_STATE_SETUP_SEND_BCN,
@@ -41,10 +41,10 @@ typedef enum {
     PALLET_STATE_SUSPEND_BEFORE_GB,
 }PALLET_StateTypeDef;
 
-#define IS_STATE_PALLET_SETUP_WITH_NODE(state) 			(state&PN_SETUP_IDLE)
-#define IS_STATE_PALLET_SETUP_WITH_GATEWAY(state) 		(state&GP_SETUP_STATE_MASK)
-#define IS_STATE_PALLET_KEEP_SYC_WITH_GW(state)			(state&GP_KEEP_SYC_MASK)
-#define IS_STATE_PALLET_CONSIGN(state) 					(state&GPN_CONSIGN_STATE_MASK)
+#define IS_STATE_PALLET_SETUP_WITH_NODE(state) 			(state & PN_SETUP_STATE_MASK)
+#define IS_STATE_PALLET_SETUP_WITH_GATEWAY(state) 		(state & GP_SETUP_STATE_MASK)
+#define IS_STATE_PALLET_KEEP_SYC_WITH_GW(state)			(state & GP_KEEP_SYC_MASK)
+#define IS_STATE_PALLET_CONSIGN(state) 					(state & GPN_CONSIGN_STATE_MASK)
 
 typedef struct {
     unsigned short node_addr;
@@ -55,9 +55,9 @@ typedef struct {
 
 typedef struct {
 	PALLET_StateTypeDef state; //current state of device
+
     unsigned int t0; //the moment starting to send the beacon 
     unsigned int wakeup_tick; //the moment wakeup
-
 
     //setup with node
     unsigned char gsn;
@@ -75,7 +75,7 @@ typedef struct {
     unsigned char dsn; //sequence number of outgoing packet
     unsigned char ack_dsn; //sequence number of incoming packet
 
-    unsigned char gw_setup_sn;
+    unsigned char gw_sn;
     unsigned char gw_setup_bcn_total;
     unsigned char retry_times; //retry times
     unsigned char node_table_len;
