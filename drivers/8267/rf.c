@@ -21,6 +21,7 @@
  *******************************************************************************************************/
 #include "bsp.h"
 #include "rf.h"
+#include "pa.h"
 
 
 
@@ -418,6 +419,10 @@ int	 RF_Init( RF_OscSelTypeDef  OscSel,RF_ModeTypeDef RF_Mode)
 {
 	unsigned  char   i;
 	int temflag;
+
+#if PA_MODE
+	PA_Control_Pin_Init();
+#endif
 	LoadTblCmdSet (TblRFIni, sizeof (TblRFIni)/sizeof (BSP_TblCmdSetTypeDef));
 	if (OscSel == RF_OSC_12M) {
 		LoadTblCmdSet (TblRFIni12M, sizeof (TblRFIni12M)/sizeof (BSP_TblCmdSetTypeDef));
@@ -564,6 +569,9 @@ int  RF_TrxStateSet(RF_StatusTypeDef  RF_Status,signed char RF_Channel)
     int  err = 0;
 
 	if (RF_Status == RF_MODE_TX) {
+#if PA_MODE
+		Pa_Mode_Switch(PA_TX_MODE);
+#endif
 		RF_TRxState = RF_MODE_TX;
 		CLR_BIT_FLD(REG_RF_FUNCTION0_EN,FLD_RF_TX_MANUAL_EN|FLD_RF_RX_MANUAL_EN);
 		REG_RF_TX_CHANNEL = 2400 + RF_Channel;
@@ -571,6 +579,9 @@ int  RF_TrxStateSet(RF_StatusTypeDef  RF_Status,signed char RF_Channel)
 		CLR_BIT_FLD(REG_RF_RX_MODE,FLD_RF_RX_ENABLE);
 	}
 	else if (RF_Status == RF_MODE_RX) {
+#if PA_MODE
+		Pa_Mode_Switch(PA_RX_MODE);
+#endif
 		RF_TRxState = RF_MODE_RX;
 		CLR_BIT_FLD(REG_RF_FUNCTION0_EN,FLD_RF_TX_MANUAL_EN|FLD_RF_RX_MANUAL_EN);
 		REG_RF_TX_CHANNEL =  2400 + RF_Channel;
@@ -656,7 +667,9 @@ void RF_TxPkt (unsigned char* RF_TxAddr)
 */
 void RF_StartStx  (unsigned char* RF_TxAddr,unsigned int RF_StartTick)
 {
-
+#if PA_MODE
+		Pa_Mode_Switch(PA_TX_MODE);
+#endif
 	SET_BIT_FLD(REG_RF_FUNCTION1_EN,FLD_RF_CMD_SCHEDULE_EN);// Enable cmd_schedule mode
 	REG_RF_CMD_START_TICK = RF_StartTick;// Setting schedule trigger time
 	REG_DMA_RF_TX_ADDR = (unsigned short)(RF_TxAddr);
@@ -676,6 +689,9 @@ void RF_StartStx  (unsigned char* RF_TxAddr,unsigned int RF_StartTick)
 */
 void RF_StartSrx(unsigned int RF_StartTick,unsigned int RF_RxTimeoutUs)
 {
+#if PA_MODE
+		Pa_Mode_Switch(PA_RX_MODE);
+#endif
 	REG_RF_RX_FIRST_TIMEOUT_US = RF_RxTimeoutUs-1;// first timeout
 	REG_RF_CMD_START_TICK = RF_StartTick;		// Setting schedule trigger time
 	SET_BIT_FLD(REG_RF_FUNCTION1_EN,FLD_RF_CMD_SCHEDULE_EN);
@@ -700,6 +716,9 @@ void RF_StartSrx(unsigned int RF_StartTick,unsigned int RF_RxTimeoutUs)
 */
 void RF_StartStxToRx  ( unsigned char* RF_TxAddr ,unsigned int RF_StartTick,unsigned short RF_RxTimeoutUs)
 {
+#if PA_MODE
+		Pa_Mode_Switch(PA_TX_MODE);
+#endif
 	REG_RF_RX_TIMEOUT_US = RF_RxTimeoutUs-1;
 	REG_RF_CMD_START_TICK = RF_StartTick;// Setting schedule trigger time
 	SET_BIT_FLD(REG_RF_FUNCTION1_EN,FLD_RF_CMD_SCHEDULE_EN);
@@ -729,6 +748,9 @@ void RF_StartStxToRx  ( unsigned char* RF_TxAddr ,unsigned int RF_StartTick,unsi
 */
 void RF_StartSrxToTx  (unsigned char* RF_TxAddr  ,unsigned int RF_StartTick,unsigned int RF_RxTimeoutUs)
 {
+#if PA_MODE
+		Pa_Mode_Switch(PA_RX_MODE);
+#endif
 	REG_RF_RX_FIRST_TIMEOUT_US = RF_RxTimeoutUs-1;// first timeout
 	REG_RF_CMD_START_TICK = RF_StartTick;		// Setting schedule trigger time
 	SET_BIT_FLD(REG_RF_FUNCTION1_EN,FLD_RF_CMD_SCHEDULE_EN);
@@ -989,6 +1011,16 @@ unsigned int RF_FsmIsIdle(void)
 }
 
 
+RF_FSM_STATE RF_Fsm_Current_State(void)
+{
+	unsigned char ret;
+
+	ret = REG_RF_FSM_STATUS & 0x07;
+	if(ret>5)
+		ret = 0;
+	return (RF_FSM_STATE)ret;
+
+}
 // just for debug
 
 // set max receive length  // need check
@@ -1183,4 +1215,23 @@ int  RF_PowerOn(void)
 {
 	WriteAnalogReg (0x06,0x00); 		//  power on analog module
 	WaitUs(5);//settle
+}
+
+void PA_Auto_Switch_Next_State(void)
+{
+	RF_FSM_STATE rf_sta;
+
+	rf_sta = RF_Fsm_Current_State();
+    if((rf_sta == RF_FSM_TXSTL)||(rf_sta == RF_FSM_TXSTL)||(rf_sta==RF_FSM_TXWAIT))
+    {
+    	Pa_Mode_Switch(PA_TX_MODE);
+    }
+    else if((rf_sta == RF_FSM_RXWAIT) || (rf_sta == RF_FSM_RX))
+    {
+    	Pa_Mode_Switch(PA_RX_MODE);
+    }
+    else
+    {
+    	Pa_Mode_Switch(PA_SHUTDOWN_MODE);
+    }
 }

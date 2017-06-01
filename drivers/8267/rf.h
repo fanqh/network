@@ -64,6 +64,15 @@ typedef enum {
 	RF_POWER_OFF	= 11
 } RF_PowerTypeDef;
 
+typedef enum{
+	RF_FSM_IDLE = 0,
+	RF_FSM_TXSTL,
+	RF_FSM_TX,
+	RF_FSM_RXWAIT,
+	RF_FSM_RX,
+	RF_FSM_TXWAIT
+}RF_FSM_STATE;
+
 /**
  *  ble
  */
@@ -460,4 +469,6 @@ extern int  RF_PowerDown(void);
 *
 */
 extern int  RF_PowerOn(void);
+extern RF_FSM_STATE RF_Fsm_Current_State(void);
+extern void PA_Auto_Switch_Next_State(void);
 #endif

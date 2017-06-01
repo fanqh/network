@@ -13,6 +13,7 @@ C_SRCS += \
 ../drivers/8267/gpio.c \
 ../drivers/8267/i2c.c \
 ../drivers/8267/irq.c \
+../drivers/8267/pa.c \
 ../drivers/8267/pm.c \
 ../drivers/8267/pwm.c \
 ../drivers/8267/rf.c \
@@ -34,6 +35,7 @@ OBJS += \
 ./drivers/8267/gpio.o \
 ./drivers/8267/i2c.o \
 ./drivers/8267/irq.o \
+./drivers/8267/pa.o \
 ./drivers/8267/pm.o \
 ./drivers/8267/pwm.o \
 ./drivers/8267/rf.o \

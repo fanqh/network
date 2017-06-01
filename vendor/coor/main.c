@@ -65,12 +65,8 @@ void Board_Init(void)
     GPIO_ResetBit(LED4_WHITE);
     GPIO_SetOutputEnable(LED4_WHITE, Bit_SET);
 
-#ifdef PA_MODE
-    PA_Control_Pin_Init();
-#endif
-
 }
-
+extern void auto_mode_state_test(void);
 void Buff_Inface_Init(void)
 {
 	ParaBuf_Init((unsigned short)commandBuff,commandBuffSize,commandBuffCnt);
@@ -86,22 +82,22 @@ void main(void)
     Buff_Inface_Init();
     IRQ_Enable();
 
-    SetChipId(0x5326);
-    // LogMsg("gateway start...\n", NULL, 0);
+    auto_mode_state_test();
+    GPIO_SetBit(LED3_RED);
     while (1)
     {
-#if 1
-//    	if(GatewaySetupTrig != 0)
-//    	{
-//    		if(SetupInitFlag == 0)
-//    		{
-//    			 SetupInitFlag = 1;
-//    			 Gateway_Init();
-//    		}
-//
-//    		Gateway_SetupLoop();
-//    	}
-//    	else
+#if 0
+    	if(GatewaySetupTrig != 0)
+    	{
+    		if(SetupInitFlag == 0)
+    		{
+    			 SetupInitFlag = 1;
+    			 Gateway_Init();
+    		}
+
+    		Gateway_SetupLoop();
+    	}
+    	else
     	{
 			test ++;
 			Gateway_MainLoop();

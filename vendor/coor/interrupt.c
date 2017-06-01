@@ -6,6 +6,8 @@
 #define GW_SETUP_TRIG_PIN    GPIOD_GP2
 extern volatile unsigned char GatewaySetupTrig;
 
+unsigned char sta[32];
+
 _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
 {
     u32 IrqSrc = IRQ_SrcGet();
@@ -22,6 +24,9 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
     }
 
     if (IrqSrc & FLD_IRQ_ZB_RT_EN) {
+
+    	RF_FSM_STATE rf_current_state;
+
         if (RfIrqSrc) {
             if (RfIrqSrc & FLD_RF_IRQ_RX) {
                 Gateway_RxIrqHandler();
@@ -31,12 +36,8 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
                 Gateway_RxTimeoutHandler();
             }
 #if PA_MODE
-            if(RfIrqSrc & FLD_RF_IRQ_TX)
-            {
-            	Pa_Mode_Switch(PA_RX_MODE);
-            }
+            PA_Auto_Switch_Next_State();
 #endif
-
             IRQ_RfIrqSrcClr();
         }
     }

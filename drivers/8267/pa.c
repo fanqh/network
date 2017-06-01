@@ -10,7 +10,7 @@
 #define PA_RXEN_PIN 	GPIOC_GP5
 #define PA_TXEN_PIN 	GPIOD_GP2
 
-PAMode_TypeDef pa_mode;
+static PAMode_TypeDef g_pa_mode;
 
 void PA_Control_Pin_Init(void)
 {
@@ -25,7 +25,7 @@ void PA_Control_Pin_Init(void)
 
 void Pa_Mode_Switch(PAMode_TypeDef mode)
 {
-	if(pa_mode != mode)
+	if(g_pa_mode != mode)
 	{
 		if(mode== PA_RX_MODE)
 		{
@@ -42,8 +42,13 @@ void Pa_Mode_Switch(PAMode_TypeDef mode)
 			GPIO_ResetBit(PA_TXEN_PIN);
 			GPIO_ResetBit(PA_RXEN_PIN);
 		}
-		pa_mode = mode;
+		g_pa_mode = mode;
 	}
+}
+
+PAMode_TypeDef Get_PA_Mode(void)
+{
+	return g_pa_mode;
 }
 
 

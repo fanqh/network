@@ -358,6 +358,12 @@ _attribute_ram_code_ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
     }
 }
 
+void auto_mode_state_test(void)
+{
+    RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //switch to auto mode
+    RF_StartStx(tx_buf , ClockTime() + RF_TX_WAIT*TickPerUs);
+    Build_GatewaySetupBeacon(tx_buf, &gw_info);
+}
 //void Gateway_SetupLoop(void)
 //{
 //    Msg_TypeDef *pMsg = NULL;

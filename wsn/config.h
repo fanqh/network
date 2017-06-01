@@ -70,6 +70,4 @@
 
 #define		SYC_WINDOW_SIZE		(1000)
 #define		SYC_EXTEND_WINDOW_SIZE		1500
-
-
 #endif

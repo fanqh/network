@@ -35,6 +35,6 @@
 #include "./drivers/8267/usb_stdRequestType.h"
 #include "./drivers/8267/flash.h"
 #include "./drivers/8267/adc.h"
-#include "./vendor/coor/pa.h"
+#include "./drivers/8267/pa.h"
 
 #endif

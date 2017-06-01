@@ -1,4 +1,5 @@
 #include "irq.h"
+#include "rf.h"
 
 unsigned char IRQ_Enable(void)
 {
@@ -60,7 +61,11 @@ void IRQ_DisableType(unsigned int TypeMask)
 
 void IRQ_RfIrqEnable(unsigned int RfIrqMask)
 {
+#if PA_MODE
+	IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT | FLD_RF_IRQ_TX | RfIrqMask);
+#else
     REG_RF_IRQ_MASK |= RfIrqMask;
+#endif
 }
 
 void IRQ_RfIrqDisable(unsigned int RfIrqMask)
