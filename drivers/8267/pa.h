@@ -9,7 +9,7 @@
 #ifndef PA_H_
 #define PA_H_
 
-//#define PA_MODE 1
+#define PA_MODE 1
 
 typedef enum
 {
