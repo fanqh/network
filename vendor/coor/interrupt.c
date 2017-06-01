@@ -3,7 +3,7 @@
 #include "../../wsn/gateway.h"
 #include "../../wsn/config.h"
 
-#define GW_SETUP_TRIG_PIN    GPIOD_GP2
+
 extern volatile unsigned char GatewaySetupTrig;
 
 unsigned char sta[32];
