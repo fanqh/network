@@ -324,6 +324,7 @@ _attribute_ram_code_ void Pallet_RxIrqHandler(void)
 
 _attribute_ram_code_ void Pallet_RxTimeoutHandler(void)
 {
+#if 0
 	switch(pallet_info.state)
 	{
 
@@ -345,6 +346,29 @@ _attribute_ram_code_ void Pallet_RxTimeoutHandler(void)
 			//todo debug here
 			break;
 	}
+#else
+	if(pallet_info.state & PN_SETUP_STATE_MASK)
+	{
+		MsgQueue_Push(&msg_queue, NULL, PALLET_MSG_TYPE_ED_DATA_TIMEOUT);
+	}
+	else if(pallet_info.state & GP_SETUP_STATE_MASK)
+	{
+		MsgQueue_Push(&msg_queue, NULL, MSG_P_SETUP_WAIT_G_TIMEOUT);
+	}
+	else if(pallet_info.state & GP_KEEP_SYC_MASK)
+	{
+		MsgQueue_Push(&msg_queue, NULL, MSG_P_SETUP_WAIT_G_TIMEOUT);
+	}
+	else if(pallet_info.state & GP_KEEP_SYC_MASK)
+	{
+
+	}
+	else
+	{
+
+	}
+
+
 #if 0
     if (PALLET_STATE_NODE_DATA_WAIT == pallet_info.state) {
         MsgQueue_Push(&msg_queue, NULL, PALLET_MSG_TYPE_ED_DATA_TIMEOUT);
@@ -362,6 +386,7 @@ _attribute_ram_code_ void Pallet_RxTimeoutHandler(void)
     else {
 
     }
+#endif
 #endif
 }
 unsigned short dest_mac;
@@ -609,7 +634,6 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 #if 1
 			if(msg)
 			{
-
 				if(msg->type==PALLET_MSG_TYPE_GW_BCN)
 				{
 					//GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
