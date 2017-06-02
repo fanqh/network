@@ -46,7 +46,7 @@
 
 
 
-#if 0
+#if 1
 	#define TIMING_SHOW_PIN              GPIOC_GP4
 	#define GW_SETUP_TRIG_PIN         	 GPIOD_GP2
 	//#define LED_PIN                  	 GPIOC_GP3
@@ -79,6 +79,6 @@
 #define ERROR_WARN_LOOP()		{while(1){WaitMs(100);GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));}}
 #define TIME_INDICATE()		{GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));}
 
-#define		SYC_WINDOW_SIZE		(1000)
-#define		SYC_EXTEND_WINDOW_SIZE		1500
+#define		SYC_WINDOW_SIZE		(2000)
+#define		SYC_EXTEND_WINDOW_SIZE		5000
 #endif

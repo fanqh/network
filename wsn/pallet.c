@@ -25,18 +25,18 @@ volatile unsigned char PalletSetupTrig = 0;
 
 static int Pallet_SetupTimer_Callback(void *data);
 _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg);
-//#define DEBUG 1
+#define DEBUG 1
 
 #if DEBUG
 typedef struct
 {
 	unsigned char msg_type;
-	unsigned char prestate;
-	unsigned char curstate;
+	PALLET_StateTypeDef prestate;
+	PALLET_StateTypeDef curstate;
 
 }debug_t;
 static int state_error = 0;
-unsigned char pre = 0;
+PALLET_StateTypeDef pre = 0;
 debug_t debug;
 Debug_Queue_Typedef DebugQ;
 //int tet;
@@ -45,7 +45,7 @@ void debug_enqueue(unsigned char type)
 	debug.msg_type = type;
 	debug.prestate = pre;
 	debug.curstate = pallet_info.state;
-	DebugQueue_Push(&DebugQ, (unsigned char*)&debug, 3);
+	DebugQueue_Push(&DebugQ, (unsigned char*)&debug, 5);
 }
 
 #endif
@@ -103,9 +103,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
 
-	#if DEBUG
-		pre = pallet_info.state;
-	#endif
+
     switch (pallet_info.state)
     {
     case PALLET_STATE_IDLE:
@@ -254,17 +252,6 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
     default :
     	break;
     }
-
-#if DEBUG
-    if(pre != pallet_info.state)
-    {
-
-    	if(msg!= NULL)
-    		debug_enqueue(msg->type );
-    	else
-    		debug_enqueue(MSG_TYPE_NONE );
-    }
-#endif
 }
 
 
@@ -339,13 +326,21 @@ _attribute_ram_code_ void Pallet_RxTimeoutHandler(void)
 {
 	switch(pallet_info.state)
 	{
+
+		case GP_SETUP_BCN_WAIT:
+		case PALLET_STATE_SETUP_GW_RSP_WAIT:
+			break;
 		case PALLET_STATE_NODE_DATA_WAIT:
+			MsgQueue_Push(&msg_queue, NULL, PALLET_MSG_TYPE_ED_DATA_TIMEOUT);
+			break;
 		case PALLET_STATE_GW_ACK_WAIT:
 		case PALLET_STATE_SETUP_GW_RSP_WAIT:
 		case S_GP_LISTEN_GB:
+			MsgQueue_Push(&msg_queue, NULL, PALLET_MSG_TYPE_GW_ACK_TIMEOUT);
+			break;
 		case S_GP_ACK_WAIT:
-			MsgQueue_Push(&msg_queue, NULL, PALLET_MSG_TYPE_ED_DATA_TIMEOUT);
-		break;
+			MsgQueue_Push(&msg_queue, NULL, PALLET_MSG_TYPE_GW_ACK_TIMEOUT);
+			break;
 		default:
 			//todo debug here
 			break;
@@ -668,6 +663,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 #else
 			while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
 #endif
+			pallet_info.state = S_GP_LISTEN_GB;
 	        RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //switch to auto mode
 	        //todo 应该根据睡眠时间来设置窗口大小,提前醒来的时间，也应该对应接收窗口大小
 	        if(pallet_info.gw_sn<=pallet_info.gw_setup_bcn_total)
@@ -675,7 +671,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 	        else
 	        	rec_window_size = SYC_WINDOW_SIZE;
 	        RF_StartSrx(ClockTime(), rec_window_size);
-	        pallet_info.state = S_GP_LISTEN_GB;
+
 			break;
 		}
 		case S_GP_ACK_WAIT:
@@ -714,6 +710,9 @@ void Pallet_MainLoop(void)
 {
     Msg_TypeDef *pMsg = NULL;
 
+#if DEBUG
+	pre = pallet_info.state;
+#endif
     if((PalletSetupTrig==1) &&(pallet_info.is_associate == 1))
     {
     	pallet_info.dsn = 0;
@@ -744,4 +743,14 @@ void Pallet_MainLoop(void)
     	 pMsg = MsgQueue_Pop(&msg_queue);
     	 Run_Pallet_Statemachine(pMsg);
     }
+
+#if DEBUG
+    if(pre != pallet_info.state)
+    {
+    	if(pMsg!= NULL)
+    		debug_enqueue(pMsg->type );
+    	else
+    		debug_enqueue(MSG_TYPE_NONE );
+    }
+#endif
 }
