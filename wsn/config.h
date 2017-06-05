@@ -23,7 +23,7 @@
 #define TIMESTAMP_INVALID_THRESHOLD     6000 //in us
 #define ZB_TIMESTAMP_OFFSET             341 //(6byte preamble + 0x95 pll settle time)in us
 
-#define SETUP_SUSPNED_EARLY_WAKEUP		200
+#define SETUP_SUSPNED_EARLY_WAKEUP		500
 
 /**********************************************/
 #define LAST_SETUP_REQ_MARGIN	2000	//3MS
@@ -77,7 +77,7 @@
 #define SUPEND 1
 
 #define ERROR_WARN_LOOP()		{while(1){WaitMs(100);GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));}}
-#define TIME_INDICATE()		{GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));}
+#define TIME_INDICATE()		//{GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));}
 
 #define		SYC_WINDOW_SIZE		(2000)
 #define		SYC_EXTEND_WINDOW_SIZE		5000

@@ -35,7 +35,6 @@ typedef struct
 	PALLET_StateTypeDef curstate;
 
 }debug_t;
-static int state_error = 0;
 PALLET_StateTypeDef pre = 0;
 debug_t debug;
 Debug_Queue_Typedef DebugQ;
@@ -296,6 +295,7 @@ _attribute_ram_code_ void Pallet_RxIrqHandler(void)
         }
         //if it is coor BCN frame, do sync and report data if it is this device's opportunity and go to suspend otherwise
         else if (FRAME_IS_GATEWAY_BEACON(rx_packet)) {
+        	GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
             MsgQueue_Push(&msg_queue, rx_packet, PALLET_MSG_TYPE_GW_BCN);
         }
         //if it is end device data frame, send ack immediately
@@ -546,7 +546,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
                 {
                 	TIME_INDICATE();
                 	gwb_receive_t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
-                    pallet_info.state = PALLET_STATE_SETUP_BACKOFF;
+                    pallet_info.state = GP_SETUP_BACKOFF;
                     pallet_info.retry_times = 0;
                     pallet_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
                     pallet_info.gw_setup_bcn_total = FRAME_GATEWYA_SETUP_BCN_TOTAL_NUM(msg->data);
@@ -561,16 +561,16 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
             }
     		break;
     	}
-    	case PALLET_STATE_SETUP_BACKOFF:
+    	case GP_SETUP_BACKOFF:
     	{
     		//todo gateway setup 的总数可以放在gateway包中
             pallet_info.wakeup_tick = now + (((Rand()& BACKOFF_MAX_NUM)*BACKOFF_UNIT*TickPerUs) % ((pallet_info.gw_setup_bcn_total - pallet_info.gw_sn)*TIMESLOT_LENGTH*TickPerUs));
             PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
 
-            pallet_info.state = PALLET_STATE_SETUP_REQ_SEND;
+            pallet_info.state = GP_SETUP_REQ_SEND;
     		break;
     	}
-    	case PALLET_STATE_SETUP_REQ_SEND:
+    	case GP_SETUP_REQ_SEND:
     	{
             if (pallet_info.retry_times < RETRY_MAX)
             {
@@ -581,7 +581,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
                 RF_StartStxToRx(tx_buf, now + RF_TX_WAIT*TickPerUs, RX_WAIT);
                 Build_PalletSetupReq(tx_buf, &pallet_info);
 
-                pallet_info.state = PALLET_STATE_SETUP_GW_RSP_WAIT;
+                pallet_info.state = GP_SETUP_GW_RSP_WAIT;
             }
             else
             {
@@ -589,7 +589,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
             }
     		break;
     	}
-    	case PALLET_STATE_SETUP_GW_RSP_WAIT:
+    	case GP_SETUP_GW_RSP_WAIT:
     	{
             if (msg)
             {
@@ -598,7 +598,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
                 	//need match mac
                 	TIME_INDICATE();
                 	pallet_info.is_associate = 1;
-                    pallet_info.state = S_GP_SUSPNED;
+                    pallet_info.state = GP_SYC_SUSPNED;
                     pallet_info.pallet_id = FRAME_GET_PALLET_ID_FROM_GATEWAY_SETUP(msg->data);
                     pallet_info.wakeup_tick = pallet_info.t0 + (pallet_info.gw_setup_bcn_total-pallet_info.gw_sn)*TIMESLOT_LENGTH*PALLET_NUM*TickPerUs;
                     //ERROR_WARN_LOOP();
@@ -629,7 +629,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 
 	switch(pallet_info.state)
 	{
-		case S_GP_LISTEN_GB:
+		case GP_SYC_LISTEN_GB:
 		{
 #if 1
 			if(msg)
@@ -639,7 +639,8 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 					//GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
 		            now = ClockTime();
 		            unsigned int timestamp = FRAME_GET_TIMESTAMP(msg->data);
-		            pallet_info.t0 = timestamp - ZB_TIMESTAMP_OFFSET*TickPerUs;
+		            //pallet_info.t0 = timestamp - ZB_TIMESTAMP_OFFSET*TickPerUs;
+		            pallet_info.t0 = timestamp;
 		            pallet_info.wakeup_tick = pallet_info.t0 + MASTER_PERIOD*TickPerUs;
 
 		            pallet_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
@@ -654,18 +655,18 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 		                Build_PalletData(tx_buf, &pallet_info, node_data);
 		                //clear data that have been sent
 						memset(&node_data, 0, sizeof(NodeDataWaitSend_Typdedef)*3 );
-		                pallet_info.state = S_GP_ACK_WAIT;
+		                pallet_info.state = GP_SYC_ACK_WAIT;
 		            }
 		            else
 		            {
-		            	pallet_info.state = S_GP_SUSPNED;
+		            	pallet_info.state = GP_SYC_SUSPNED;
 		            }
 #endif
 				}
 				else
 				{
-					pallet_info.state = S_GP_SUSPNED;
-					pallet_info.wakeup_tick = pallet_info.wakeup_tick + MASTER_PERIOD*TickPerUs - 100*TickPerUs;
+					pallet_info.state = GP_SYC_SUSPNED;
+					pallet_info.wakeup_tick = pallet_info.wakeup_tick + MASTER_PERIOD*TickPerUs;
 				}
 				Message_Reset(msg);
 			}
@@ -676,7 +677,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 #endif
 			break;
 		}
-		case S_GP_SUSPNED:
+		case GP_SYC_SUSPNED:
 		{
 			unsigned int rec_window_size = 0;
 #if SUPEND
@@ -687,7 +688,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 #else
 			while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
 #endif
-			pallet_info.state = S_GP_LISTEN_GB;
+			pallet_info.state = GP_SYC_LISTEN_GB;
 	        RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //switch to auto mode
 	        //todo 应该根据睡眠时间来设置窗口大小,提前醒来的时间，也应该对应接收窗口大小
 	        if(pallet_info.gw_sn<=pallet_info.gw_setup_bcn_total)
@@ -698,12 +699,12 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 
 			break;
 		}
-		case S_GP_ACK_WAIT:
+		case GP_SYC_ACK_WAIT:
 		{
             if(msg)
             {
             	TIME_INDICATE();
-            	pallet_info.state = S_GP_SUSPNED;
+            	pallet_info.state = GP_SYC_SUSPNED;
 				if (msg->type == PALLET_MSG_TYPE_GW_ACK)
 				{
 					//todo
