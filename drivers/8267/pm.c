@@ -925,20 +925,25 @@ __attribute__((section(".ram_code"))) unsigned char PM_LowPwrEnter2(int DeepSlee
     unsigned char r = REG_PM_IRQ_EN; //irq disable
     REG_PM_IRQ_EN = 0;
 
+    tick_cur_32k = PM_Get32kTick();
+    tick_cur = ClockTime();
     /******set wakeup source ******/
     WriteAnalogReg(ANA_REG_PM_WAKEUP_SOURCE, (WakeupSrc & 0xff));
+
+    REG_PM_WAKEUP_DIG_SRC = WakeupSrc >> 8;
+    WriteAnalogReg(ANA_REG_PM_WAKEUP_STATUS, 0x0f);
 
     unsigned char anareg2c = 0;        //power down control
     unsigned char anareg2d = ReadAnalogReg(ANA_REG_PM_XTAL_CTRL);        //power down control
 
-    REG_PM_WAKEUP_DIG_SRC = 0x00;
-    if (WakeupSrc >> 8) {                               //usb/digital_gpio/qdec wakeup
-        REG_PM_WAKEUP_DIG_SRC = (WakeupSrc >> 8);
-        if ((WakeupSrc>>8) & 0x10) {                    //if enable qdec wankeup, set 0xd4[0] to 1
-            REG_PM_WAKEUP_QDEC_EN |= BIT(0);
-            qdec_wakeup_en = 1;
-        }
-    }
+//    REG_PM_WAKEUP_DIG_SRC = 0x00;
+//    if (WakeupSrc >> 8) {                               //usb/digital_gpio/qdec wakeup
+//        REG_PM_WAKEUP_DIG_SRC = (WakeupSrc >> 8);
+//        if ((WakeupSrc>>8) & 0x10) {                    //if enable qdec wankeup, set 0xd4[0] to 1
+//            REG_PM_WAKEUP_QDEC_EN |= BIT(0);
+//            qdec_wakeup_en = 1;
+//        }
+//    }
     WriteAnalogReg(ANA_REG_PM_WAKEUP_STATUS, 0x0f);                //clear all flag
     
     /****** set power down ******/
@@ -999,8 +1004,7 @@ __attribute__((section(".ram_code"))) unsigned char PM_LowPwrEnter2(int DeepSlee
 
     //2. calculate and set the 32K timer wakeup tick
     TmpVal[2].Low32 = cali_32k_cnt;
-    tick_cur_32k = PM_Get32kTick();
-    tick_cur = ClockTime();
+
     TmpVal[0].Low32 = SleepDurationUs - (((unsigned int)(tick_cur - t0)) / TickPerUs) - PM_WAKE_UP_MARGIN;
     TN_UINT64Multiply(&TmpVal[0], TickPerUs, &TmpVal[1]);
     TN_U64AccurateDiv(&TmpVal[1], &TmpVal[2], &M, &TmpVal[3], &ErrorCode, &DivStatus);
