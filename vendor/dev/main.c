@@ -37,9 +37,9 @@ static void Board_Init(void)
     GPIO_ResetBit(TIMING_SHOW_PIN);
     GPIO_SetOutputEnable(TIMING_SHOW_PIN, Bit_SET);
 
-	GPIO_SetGPIOEnable(DEBUG1_PIN, Bit_SET);
-    GPIO_ResetBit(DEBUG1_PIN);
-    GPIO_SetOutputEnable(DEBUG1_PIN, Bit_SET);
+	GPIO_SetGPIOEnable(POWER_PIN, Bit_SET);
+    GPIO_ResetBit(POWER_PIN);
+    GPIO_SetOutputEnable(POWER_PIN, Bit_SET);
 
 	//LED Pin
     GPIO_SetGPIOEnable(LED1_GREEN, Bit_SET);

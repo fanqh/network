@@ -17,7 +17,7 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
             WaitUs(10);
             if (0 == GPIO_ReadInputBit(PALLET_SETUP_TRIG_PIN)) {
                 while(0 == GPIO_ReadInputBit(PALLET_SETUP_TRIG_PIN));
-                PalletSetupTrig ^= 1;
+                PalletSetupTrig = 1;
             }
         }
     }

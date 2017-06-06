@@ -400,7 +400,7 @@ static int Pallet_SetupTimer_Callback(void *data)
 
 _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
 {
-#if 0
+#if 1
     unsigned int now, t1;
     unsigned char i;
 
@@ -409,7 +409,6 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
 		case S_PN_SETUP_IDLE:
 		{
 	    	t1 = ClockTime();
-	        RF_SetTxRxOff();
 	        RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
 	        pallet_info.state = PALLET_STATE_GW_BCN_WAIT0;
 
@@ -682,9 +681,9 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 			unsigned int rec_window_size = 0;
 #if SUPEND
 			RF_SetTxRxOff();
-			GPIO_WriteBit(DEBUG1_PIN, 0);
+			GPIO_WriteBit(POWER_PIN, 0);
 			PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick - SETUP_SUSPNED_EARLY_WAKEUP*TickPerUs);
-			GPIO_WriteBit(DEBUG1_PIN, 1);
+			GPIO_WriteBit(POWER_PIN, 1);
 #else
 			while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
 #endif
@@ -741,7 +740,8 @@ void Pallet_MainLoop(void)
     if((PalletSetupTrig==1) &&(pallet_info.is_associate == 1))
     {
     	pallet_info.dsn = 0;
-    	pallet_info.state = S_PN_SETUP_IDLE;
+    	pallet_info.wakeup_tick = pallet_info.t0 + MASTER_PERIOD*TickPerUs;
+    	pallet_info.state = PN_SETUP_SUSPEND;
     	//pallet_setup_timer = ev_on_timer(Pallet_SetupTimer_Callback, NULL, PALLET_SETUP_PERIOD);
     }
 
