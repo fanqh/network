@@ -14,10 +14,10 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
     u16 RfIrqSrc = IRQ_RfIrqSrcGet();
 
     if (IrqSrc & FLD_IRQ_GPIO_EN) {
-        if (0 == GPIO_ReadInputBit(GW_SETUP_TRIG_PIN)) {
+        if (0 == GPIO_ReadInputBit(SW1_PIN)) {
             WaitUs(10);
-            if (0 == GPIO_ReadInputBit(GW_SETUP_TRIG_PIN)) {
-                while(0 == GPIO_ReadInputBit(GW_SETUP_TRIG_PIN));
+            if (0 == GPIO_ReadInputBit(SW1_PIN)) {
+                while(0 == GPIO_ReadInputBit(SW1_PIN));
                 GatewaySetupTrig = 1;
             }
         } 

@@ -31,38 +31,25 @@ void Board_Init(void)
 {
 
     //config the setup trig GPIO pin
-    GPIO_SetGPIOEnable(GW_SETUP_TRIG_PIN, Bit_SET);    //set as gpio
-    GPIO_SetInputEnable(GW_SETUP_TRIG_PIN, Bit_SET);   //enable input
-    GPIO_PullSet(GW_SETUP_TRIG_PIN, PULL_UP_1M);
-    GPIO_SetInterrupt(GW_SETUP_TRIG_PIN, Bit_SET);
+    GPIO_SetGPIOEnable(SW1_PIN, Bit_SET);    //set as gpio
+    GPIO_SetInputEnable(SW1_PIN, Bit_SET);   //enable input
+    GPIO_PullSet(SW1_PIN, PULL_UP_1M);
+    GPIO_SetInterrupt(SW1_PIN, Bit_SET);
     IRQ_EnableType(FLD_IRQ_GPIO_EN);
-    //debug pin
-    GPIO_SetGPIOEnable(DEBUG_PIN, Bit_SET);
-    GPIO_ResetBit(DEBUG_PIN);
-    GPIO_SetOutputEnable(DEBUG_PIN, Bit_SET);
 
     GPIO_SetGPIOEnable(TIMING_SHOW_PIN, Bit_SET);
     GPIO_ResetBit(TIMING_SHOW_PIN);
     GPIO_SetOutputEnable(TIMING_SHOW_PIN, Bit_SET);
 
 	//LED Pin
-    GPIO_SetGPIOEnable(LED1_GREEN, Bit_SET);
-    GPIO_ResetBit(LED1_GREEN);
-    GPIO_SetOutputEnable(LED1_GREEN, Bit_SET);
+    GPIO_SetGPIOEnable(LED_GREEN, Bit_SET);
+    GPIO_ResetBit(LED_GREEN);
+    GPIO_SetOutputEnable(LED_GREEN, Bit_SET);
 
-	GPIO_SetGPIOEnable(LED2_BLUE, Bit_SET);
-    GPIO_ResetBit(LED2_BLUE);
-    GPIO_SetOutputEnable(LED2_BLUE, Bit_SET);
-    //GPIO_SetBit(LED2_BLUE);
-
-	GPIO_SetGPIOEnable(LED3_RED, Bit_SET);
-    GPIO_ResetBit(LED3_RED);
-    GPIO_SetOutputEnable(LED3_RED, Bit_SET);
-
-    //for debug Pin
-	GPIO_SetGPIOEnable(LED4_WHITE, Bit_SET);
-    GPIO_ResetBit(LED4_WHITE);
-    GPIO_SetOutputEnable(LED4_WHITE, Bit_SET);
+	//LED Pin
+    GPIO_SetGPIOEnable(LED_RED, Bit_SET);
+    GPIO_ResetBit(LED_RED);
+    GPIO_SetOutputEnable(LED_RED, Bit_SET);
 }
 
 void Buff_Inface_Init(void)

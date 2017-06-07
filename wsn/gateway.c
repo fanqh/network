@@ -176,13 +176,13 @@ int Gateway_SetupTimer_Callback(void *data)
 	RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //frequency 2425
 	if(gw_info.pallet_table_len!=0)
 	{
-		GPIO_SetBit(LED1_GREEN);
-		GPIO_ResetBit(LED3_RED);
+		GPIO_SetBit(LED_GREEN);
+		GPIO_ResetBit(LED_RED);
 	}
 	else
 	{
-		GPIO_SetBit(LED3_RED);
-		GPIO_ResetBit(LED1_GREEN);
+		GPIO_SetBit(LED_RED);
+		GPIO_ResetBit(LED_GREEN);
 	}
     //WaitMs(1000);
     ev_unon_timer(&gateway_setup_timer);
@@ -201,7 +201,7 @@ void Gateway_MainLoop(void)
     {
     	GatewaySetupTrig = 0;
 
-    	GPIO_ResetBit(LED1_GREEN);
+    	GPIO_ResetBit(LED_GREEN);
     	if(gateway_setup_timer!=NULL)
     		ev_unon_timer(&gateway_setup_timer);
 		gw_info.dsn = 0;
@@ -347,13 +347,13 @@ _attribute_ram_code_ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
     	RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //frequency 2425
     	if(gw_info.pallet_table_len!=0)
     	{
-    		GPIO_SetBit(LED1_GREEN);
-    		GPIO_ResetBit(LED3_RED);
+    		GPIO_SetBit(LED_GREEN);
+    		GPIO_ResetBit(LED_RED);
     	}
     	else
     	{
-    		GPIO_SetBit(LED3_RED);
-    		GPIO_ResetBit(LED1_GREEN);
+    		GPIO_SetBit(LED_RED);
+    		GPIO_ResetBit(LED_GREEN);
     	}
     }
 }

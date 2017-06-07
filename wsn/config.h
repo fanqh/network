@@ -46,29 +46,22 @@
 
 
 
-#if 1
-	#define TIMING_SHOW_PIN              GPIOC_GP4
-	#define GW_SETUP_TRIG_PIN         	 GPIOD_GP2
-	//#define LED_PIN                  	 GPIOC_GP3
-	#define PALLET_SETUP_TRIG_PIN     	 GPIOD_GP2
-
-	#define DEBUG_PIN         		 	 GPIOB_GP4
-	#define POWER_PIN         		  	 GPIOB_GP5
-
-	#define LED1_GREEN         		  	 GPIOC_GP3
-	#define LED2_BLUE         		  	 GPIOB_GP6
-	#define LED3_RED         		  	 GPIOC_GP2
-	#define LED4_WHITE         		  	 GPIOB_GP4
-
+#ifdef PA_MODE
+	#define SW1_PIN							GPIOA_GP0
+	#define SW2_PIN							GPIOA_GP1
+	#define LED_GREEN						GPIOC_GP4
+	#define LED_RED							GPIOB_GP1
+	#define TIMING_SHOW_PIN           		GPIOC_GP3
 #else
-	#define LED2_BLUE         		  	 GPIOB_GP6
-	#define LED3_RED         		  	 GPIOC_GP2
-	#define LED4_WHITE         		  	 GPIOB_GP4
-	#define DEBUG_PIN         		 	 GPIOB_GP4
-	#define DEBUG1_PIN         		  	 GPIOB_GP5
-	#define GW_SETUP_TRIG_PIN         GPIOA_GP0
-	#define LED1_GREEN                GPIOC_GP4
-	#define TIMING_SHOW_PIN           GPIOC_GP3
+	#define TIMING_SHOW_PIN                 GPIOC_GP4
+	#define GW_SETUP_TRIG_PIN         GPIOD_GP2
+	#define PALLET_SETUP_TRIG_PIN     GPIOD_GP2
+	#define DEBUG_PIN         		  GPIOB_GP4
+	#define DEBUG1_PIN         		  GPIOB_GP5
+	#define LED1_GREEN         		  	  GPIOC_GP3
+	#define LED2_BLUE         		  	  GPIOB_GP6
+	#define LED3_RED         		  	  GPIOC_GP2
+	#define LED4_WHITE         		  	  GPIOB_GP4
 #endif
 //device information restore address
 #define FLASH_DEVICE_INFOR_ADDR   (15*4*1024)

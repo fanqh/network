@@ -20,7 +20,7 @@ OBJS += \
 wsn/%.o: ../wsn/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: TC32 Compiler'
-	tc32-elf-gcc -ffunction-sections -fdata-sections -Wall -O2 -fpack-struct -fshort-enums -finline-small-functions -std=c99 -fshort-wchar -fms-extensions -c -o"$@" "$<"
+	tc32-elf-gcc -ffunction-sections -fdata-sections -DPA_MODE=1 -Wall -O2 -fpack-struct -fshort-enums -finline-small-functions -std=c99 -fshort-wchar -fms-extensions -c -o"$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
