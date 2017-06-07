@@ -71,21 +71,8 @@ void main(void)
     while (1)
     {
 #if 1
-//    	if(GatewaySetupTrig != 0)
-//    	{
-//    		if(SetupInitFlag == 0)
-//    		{
-//    			 SetupInitFlag = 1;
-//    			 Gateway_Init();
-//    		}
-//
-//    		Gateway_SetupLoop();
-//    	}
-//    	else
-    	{
-			test ++;
-			Gateway_MainLoop();
-    	}
+		test ++;
+		Gateway_MainLoop();
 #endif
     }
 

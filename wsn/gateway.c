@@ -201,16 +201,16 @@ void Gateway_MainLoop(void)
     {
     	GatewaySetupTrig = 0;
 
-    	GPIO_ResetBit(LED_GREEN);
-    	if(gateway_setup_timer!=NULL)
-    		ev_unon_timer(&gateway_setup_timer);
+    	GPIO_SetBit(LED_GREEN);
+//    	if(gateway_setup_timer!=NULL)
+//    		ev_unon_timer(&gateway_setup_timer);
 		gw_info.dsn = 0;
     	gw_info.state = GW_STATE_SETUP_IDLE;
     	//gateway_setup_timer = ev_on_timer(Gateway_SetupTimer_Callback, NULL, GP_SETUP_PERIOD-1000*TickPerUs);
     }
     if(IS_GW_WITHIN_SETUP_STATE(gw_info.state))
     {
-		ev_process_timer();
+		//ev_process_timer();
 		Run_Gateway_Setup_Statemachine(pMsg);
     }
     else if(IS_GW_WITHIN_ASSOCIATE_STATE(gw_info.state))
