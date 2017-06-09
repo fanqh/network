@@ -14,6 +14,11 @@
 #define GW_SETUP_BCN_NUM		10//200
 #define GP_SETUP_PERIOD        (TIMESLOT_LENGTH*GW_SETUP_BCN_NUM*PALLET_NUM) //us
 
+//pallet setup with node
+#define GW_PLT_TIME		5000 // GB + 1 communication opportunity with pallet 1ms +4ms
+#define PLT_SETUP_NUM	10
+#define ND_WAIT_BCN_MARGIN	5000
+
 #define RF_TX_WAIT                      15 //in us
 #define TX_ACK_WAIT                     3 //in us
 #define WAIT_ACK_DONE                   (1600) //in us
@@ -53,11 +58,11 @@
 	#define LED_RED							GPIOB_GP1
 	#define TIMING_SHOW_PIN           		GPIOC_GP3
 #else
-	#define TIMING_SHOW_PIN                 GPIOC_GP4
-	#define GW_SETUP_TRIG_PIN         GPIOD_GP2
-	#define PALLET_SETUP_TRIG_PIN     GPIOD_GP2
-	#define DEBUG_PIN         		  GPIOB_GP4
-	#define DEBUG1_PIN         		  GPIOB_GP5
+	#define TIMING_SHOW_PIN             GPIOC_GP4
+	#define GW_SETUP_TRIG_PIN         	GPIOD_GP2
+	#define PALLET_SETUP_TRIG_PIN     	GPIOD_GP2
+	#define POWER_PIN         		  	GPIOB_GP4
+	#define DEBUG1_PIN         		  	GPIOB_GP5
 	#define LED1_GREEN         		  	  GPIOC_GP3
 	#define LED2_BLUE         		  	  GPIOB_GP6
 	#define LED3_RED         		  	  GPIOC_GP2

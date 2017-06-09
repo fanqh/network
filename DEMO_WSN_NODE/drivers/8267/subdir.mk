@@ -3,6 +3,23 @@
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
+O_SRCS += \
+../drivers/8267/adc.o \
+../drivers/8267/aes_128.o \
+../drivers/8267/bsp.o \
+../drivers/8267/div_mod.o \
+../drivers/8267/emitest.o \
+../drivers/8267/flash.o \
+../drivers/8267/gpio.o \
+../drivers/8267/i2c.o \
+../drivers/8267/irq.o \
+../drivers/8267/pa.o \
+../drivers/8267/pm.o \
+../drivers/8267/pwm.o \
+../drivers/8267/rf.o \
+../drivers/8267/spi.o \
+../drivers/8267/uart.o 
+
 C_SRCS += \
 ../drivers/8267/adc.c \
 ../drivers/8267/aes_128.c \
@@ -13,6 +30,7 @@ C_SRCS += \
 ../drivers/8267/gpio.c \
 ../drivers/8267/i2c.c \
 ../drivers/8267/irq.c \
+../drivers/8267/pa.c \
 ../drivers/8267/pm.c \
 ../drivers/8267/pwm.c \
 ../drivers/8267/rf.c \
@@ -34,6 +52,7 @@ OBJS += \
 ./drivers/8267/gpio.o \
 ./drivers/8267/i2c.o \
 ./drivers/8267/irq.o \
+./drivers/8267/pa.o \
 ./drivers/8267/pm.o \
 ./drivers/8267/pwm.o \
 ./drivers/8267/rf.o \
@@ -46,7 +65,7 @@ OBJS += \
 drivers/8267/%.o: ../drivers/8267/%.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: TC32 Compiler'
-	tc32-elf-gcc -ffunction-sections -fdata-sections -I"C:\Users\Administrator\AppData\Roaming\Skype\My Skype Received Files\sensor_mesh_pallet(2)\sensor_mesh_pallet" -Wall -O2 -fpack-struct -fshort-enums -finline-small-functions -std=c99 -fshort-wchar -fms-extensions -c -o"$@" "$<"
+	tc32-elf-gcc -ffunction-sections -fdata-sections -Wall -O2 -fpack-struct -fshort-enums -finline-small-functions -std=c99 -fshort-wchar -fms-extensions -c -o"$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

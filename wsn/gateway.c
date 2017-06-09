@@ -62,7 +62,7 @@ void Gateway_Init(void)
     //enable irq
     IRQ_EnableType(FLD_IRQ_ZB_RT_EN);
 #if PA_MODE
-    IRQ_RfIrqEnable(0);
+    IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT | FLD_RF_IRQ_TX);
 #else
     IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT);
 #endif

@@ -13,7 +13,7 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
     u32 IrqSrc = IRQ_SrcGet();
     u16 RfIrqSrc = IRQ_RfIrqSrcGet();
 
-    //GPIO_WriteBit(LED_RED, !GPIO_ReadOutputBit(LED_RED));
+
     if (IrqSrc & FLD_IRQ_GPIO_EN)
     {
         if (0 == GPIO_ReadInputBit(SW1_PIN))
@@ -22,6 +22,7 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
             if (0 == GPIO_ReadInputBit(SW1_PIN))
             {
                 while(0 == GPIO_ReadInputBit(SW1_PIN));
+                GPIO_WriteBit(LED_RED, !GPIO_ReadOutputBit(LED_RED));
                 GatewaySetupTrig = 1;
             }
         } 

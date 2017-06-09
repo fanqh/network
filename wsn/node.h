@@ -1,7 +1,23 @@
 #ifndef _NODE_H_
 #define _NODE_H_
 
+#define ND_SETUP_MASK	0x100
+#define ND_CONN_MASK	0x200
+
 enum {
+	ND_ERROR_STATE = 0,
+
+	ND_SETUP_IDLE = ND_SETUP_MASK,
+	ND_SETUP_BCN_WAIT,
+	ND_SETUP_BACKOFF,
+	ND_SETUP_REQ_SEND,
+	ND_SETUP_RSP_WAIT,
+
+	ND_CONN_IDLE = ND_CONN_MASK,
+	ND_CONN_BCN_WAIT,
+	ND_CONN_PLT_ACK_WAIT,
+	ND_CONN_SUSPEND,
+
     NODE_STATE_SETUP_IDLE = 0, //0
     NODE_STATE_SETUP_BCN_WAIT, //1
     NODE_STATE_SETUP_BACKOFF,//2
@@ -26,6 +42,7 @@ typedef struct {
     unsigned char ack_dsn; //sequence number of incoming packet
     unsigned char state; //current state of device
     unsigned char retry_times; //retry times
+    unsigned int setup_bcn_total;
     unsigned int tmp;
 } NodeInfo_TypeDef;
 

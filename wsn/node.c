@@ -10,9 +10,12 @@
 NodeInfo_TypeDef node_info;
 static MsgQueue_Typedef msg_queue;
 
+static ev_time_event_t *nd_setup_timer = NULL;
+
 static volatile unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
 static volatile unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
 static volatile unsigned char rx_ptr = 0;
+
 
 
 typedef struct
@@ -175,11 +178,20 @@ void Node_MainLoop(void)
     Msg_TypeDef* pMsg = NULL;
     //pop a message from the message queue
     pMsg = MsgQueue_Pop(&msg_queue);
-    //run state machine
-    Run_NodeStatemachine(pMsg);
-    //Message_Reset(pMsg);
 
-    //collect sensor data
+    ev_process_timer();
+    if(node_info.state & ND_SETUP_IDLE)
+    {
+    	Run_Node_Setup_Statemachine(pMsg);
+    }
+    else if(node_info.state & ND_CONN_MASK)
+    {
+    	Run_NodeStatemachine(pMsg);
+    }
+    else
+    {
+    	ERROR_WARN_LOOP();
+    }
 
 }
 
@@ -254,77 +266,175 @@ _attribute_ram_code_ void Node_RxTimeoutHandler(void)
     }
 }
 
+void Pallet_BCN_Time_On(void *data)
+{
+	if(gateway_setup_timer!=NULL)
+	    ev_unon_timer(&gateway_setup_timer);
+}
+
 _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
 
-    if (NODE_STATE_SETUP_IDLE == node_info.state) {
+    switch(node_info.state)
+    {
+    case ND_SETUP_IDLE:
+    {
     	RF_SetTxRxOff();
-        node_info.state = NODE_STATE_SETUP_BCN_WAIT;
+        node_info.state = ND_SETUP_BCN_WAIT;
         RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on waiting for mesh setup beacon
+        break;
     }
-    else if (NODE_STATE_SETUP_BCN_WAIT == node_info.state) {
-        if (msg) {
-            if (NODE_MSG_TYPE_SETUP_BCN == msg->type) {
-                now = ClockTime();
+    case ND_SETUP_BCN_WAIT:
+    {
+        if (msg)
+        {
+            if (NP_MSG_SETUP_GW_BCN == msg->type)
+            {
+
+            }
+            else if(NP_MSG_SETUP_PLT_BCN == msg->type)
+            {
                 node_info.state = NODE_STATE_SETUP_BACKOFF;
                 node_info.retry_times = 0;
-                node_info.wakeup_tick = now + ((Rand()+node_info.mac_addr) & BACKOFF_MAX_NUM)*BACKOFF_UNIT*TickPerUs;
+
+                node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
+                node_info.setup_bcn_total = 200;
                 node_info.pallet_mac = FRAME_GET_SRC_ADDR(msg->data);
-                //TODO  pallet ID 应该由gateway 分配，现在是固定值，因为此时还没有和gateway关联
-                //node_info.pallet_id = PALLET_ID;
+
+                node_info.wakeup_tick = ClockTime() +  (((Rand() % (MASTER_PERIOD - GW_PLT_TIME - ND_WAIT_BCN_MARGIN)))/BACKOFF_UNIT)*BACKOFF_UNIT*TickPerUs;
+            }
+            else
+            {
+
             }
             Message_Reset(msg);
         }
+        break;
     }
-    else if (NODE_STATE_SETUP_BACKOFF == node_info.state) {
-        //turn off receiver and go to suspend
-        RF_SetTxRxOff();
-        // while((unsigned int)(ClockTime() - node_info.wakeup_tick) > BIT(30));
+    case NODE_STATE_SETUP_BACKOFF:
+    {
         RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //turn off RX mode
-
-        WaitMs(5);
         PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
+
         node_info.state = NODE_STATE_SETUP_REQ_SEND;
+    	break;
     }
-    else if (NODE_STATE_SETUP_REQ_SEND == node_info.state) {
-        if (node_info.retry_times < RETRY_MAX) {
+    case NODE_STATE_SETUP_REQ_SEND:
+    {
+        if (node_info.retry_times < RETRY_MAX)
+        {
             now = ClockTime();
             RF_StartStxToRx(tx_buf, now + RF_TX_WAIT*TickPerUs, RX_WAIT);
             Build_NodeSetupReq(tx_buf, &node_info);
-            //GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
-            //update state
+            TIME_INDICATE();
+
             node_info.state = NODE_STATE_SETUP_PALLET_RSP_WAIT;
         }
-        else {
-            //blink led and stall
-            while (1) {
-                GPIO_SetBit(GPIOC_GP2);
-                WaitMs(20);
-                GPIO_ResetBit(GPIOC_GP2);
-                WaitMs(80);
-            }
+        else
+        {
+        	ERROR_WARN_LOOP();
         }
+    	break;
     }
-    else if (NODE_STATE_SETUP_PALLET_RSP_WAIT == node_info.state) {
-        if (msg) {
-            if (msg->type == NODE_MSG_TYPE_SETUP_RSP) {
-               // GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
+    case NODE_STATE_SETUP_PALLET_RSP_WAIT:
+    {
+        if (msg)
+        {
+            if (msg->type == NODE_MSG_TYPE_SETUP_RSP)
+            {
                 node_info.node_id = FRAME_GET_NODE_ID(msg->data);
-                //node_info.pallet_id = PALLET_ID;
                 node_info.state = NODE_STATE_IDLE;
             }
-            else {
-               // GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
-                now = ClockTime();
-                node_info.state = NODE_STATE_SETUP_BACKOFF;
-                node_info.wakeup_tick = now + ((Rand()+node_info.mac_addr) & BACKOFF_MAX_NUM)*BACKOFF_UNIT*TickPerUs;
+            else
+            {
+                node_info.state = ND_SETUP_IDLE;
                 node_info.retry_times++;
             }
+            TIME_INDICATE();
+            Message_Reset(msg);
+        }
+    	break;
+    }
 
+    default:
+    	break;
+    }
+#if 0
+    if (ND_SETUP_IDLE == node_info.state)
+    {
+    	RF_SetTxRxOff();
+        node_info.state = ND_SETUP_BCN_WAIT;
+        RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on waiting for mesh setup beacon
+    }
+    else if (ND_SETUP_BCN_WAIT == node_info.state)
+    {
+        if (msg)
+        {
+            if (NP_MSG_SETUP_GW_BCN == msg->type)
+            {
+
+            }
+            else if(NP_MSG_SETUP_PLT_BCN == msg->type)
+            {
+                node_info.state = NODE_STATE_SETUP_BACKOFF;
+                node_info.retry_times = 0;
+
+                node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
+                node_info.setup_bcn_total = 200;
+                node_info.pallet_mac = FRAME_GET_SRC_ADDR(msg->data);
+
+                node_info.wakeup_tick = ClockTime() +  (((Rand() % (MASTER_PERIOD - GW_PLT_TIME - ND_WAIT_BCN_MARGIN)))/BACKOFF_UNIT)*BACKOFF_UNIT*TickPerUs;
+            }
+            else
+            {
+
+            }
             Message_Reset(msg);
         }
     }
+    else if (NODE_STATE_SETUP_BACKOFF == node_info.state)
+    {
+        RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //turn off RX mode
+        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
+
+        node_info.state = NODE_STATE_SETUP_REQ_SEND;
+    }
+    else if (NODE_STATE_SETUP_REQ_SEND == node_info.state)
+    {
+        if (node_info.retry_times < RETRY_MAX)
+        {
+            now = ClockTime();
+            RF_StartStxToRx(tx_buf, now + RF_TX_WAIT*TickPerUs, RX_WAIT);
+            Build_NodeSetupReq(tx_buf, &node_info);
+            TIME_INDICATE();
+
+            node_info.state = NODE_STATE_SETUP_PALLET_RSP_WAIT;
+        }
+        else
+        {
+        	ERROR_WARN_LOOP();
+        }
+    }
+    else if (NODE_STATE_SETUP_PALLET_RSP_WAIT == node_info.state)
+    {
+        if (msg)
+        {
+            if (msg->type == NODE_MSG_TYPE_SETUP_RSP)
+            {
+                node_info.node_id = FRAME_GET_NODE_ID(msg->data);
+                node_info.state = NODE_STATE_IDLE;
+            }
+            else
+            {
+                node_info.state = ND_SETUP_IDLE;
+                node_info.retry_times++;
+            }
+            TIME_INDICATE();
+            Message_Reset(msg);
+        }
+    }
+#endif
 }
 
 void Node_SetupLoop(void)

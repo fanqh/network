@@ -354,7 +354,8 @@ __attribute__((section(".ram_code"))) int PM_LowPwrEnter(int DeepSleep, int Wake
     while (REG_PM_SYSTIMER_TRIG & BIT(3)); 
     WriteAnalogReg(ANA_REG_PM_WAKEUP_STATUS, 0x0f);
 
-    pm_start();
+    if(!(ReadAnalogReg(ANA_REG_PM_WAKEUP_STATUS)&0x0f))
+    	pm_start();
 
     if (DeepSleep) {
         REG_PM_POWER_DOWN_CTRL = 0x20; //reboot
@@ -1015,7 +1016,8 @@ __attribute__((section(".ram_code"))) unsigned char PM_LowPwrEnter2(int DeepSlee
     while (REG_PM_SYSTIMER_TRIG & BIT(3)); 
     WriteAnalogReg(ANA_REG_PM_WAKEUP_STATUS, 0x0f); 
 
-    pm_start();
+    if(!(ReadAnalogReg(ANA_REG_PM_WAKEUP_STATUS)&0x0f))
+    	pm_start();
 
     if (DeepSleep) {
         REG_PM_POWER_DOWN_CTRL = 0x20; //reboot

@@ -73,9 +73,8 @@ void main(void)
 	PM_WakeupInit();
     SYS_Init();
 
-//    WaitMs(3000);
-
     Node_Init();
+#if 0
     //mesh network setup
     Node_SetupLoop();
     GPIO_SetBit(LED1_GREEN);
@@ -85,6 +84,7 @@ void main(void)
     I2C_Init(TMP102A_ADDRESS, 4);
     // LogMsg("end device start...\n", NULL, 0);
     t = ClockTime();
+#endif
     while (1) {
 //    	if(ClockTimeExceed(t, 300*1000))
 //    	{
