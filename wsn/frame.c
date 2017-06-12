@@ -161,8 +161,8 @@ _attribute_ram_code_ void Build_NodeSetupReq(unsigned char *pBuf, NodeInfo_TypeD
     *p++ = ++(pInfo->dsn); //dsn
     *p++ = 0xaa; //dest PANID
     *p++ = 0xbb;
-    *p++ = pInfo->pallet_mac & 0xff; //dest address
-    *p++ = pInfo->pallet_mac >> 8;
+    *p++ = pInfo->p_nd_setup_infor->plt_mac & 0xff; //dest address
+    *p++ = pInfo->p_nd_setup_infor->plt_mac >> 8;
     *p++ = pInfo->mac_addr & 0xff; //src address
     *p++ = pInfo->mac_addr >> 8;
     *p++ = FRMAE_TYPE_SETUP_NODE_REQ;
@@ -190,6 +190,7 @@ _attribute_ram_code_ void Build_PalletSetupBeacon(unsigned char *pBuf, PalletInf
     *p++ = pInfo->mac_addr & 0xff; //source address
     *p++ = pInfo->mac_addr >> 8;
     *p++ = FRMAE_TYPE_SETUP_PALLET_BEACON;
+	*p++ = pInfo->pallet_id;
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;

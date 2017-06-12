@@ -61,12 +61,14 @@
 	#define TIMING_SHOW_PIN             GPIOC_GP4
 	#define GW_SETUP_TRIG_PIN         	GPIOD_GP2
 	#define PALLET_SETUP_TRIG_PIN     	GPIOD_GP2
-	#define POWER_PIN         		  	GPIOB_GP4
-	#define DEBUG1_PIN         		  	GPIOB_GP5
+	#define POWER_PIN         		  	GPIOE_GP0
+	#define SHOW_DEBUG         		  	GPIOA_GP3
 	#define LED1_GREEN         		  	  GPIOC_GP3
 	#define LED2_BLUE         		  	  GPIOB_GP6
 	#define LED3_RED         		  	  GPIOC_GP2
 	#define LED4_WHITE         		  	  GPIOB_GP4
+
+	#define TEST_PIN         		  	GPIOA_GP4
 #endif
 //device information restore address
 #define FLASH_DEVICE_INFOR_ADDR   (15*4*1024)
@@ -75,7 +77,7 @@
 #define SUPEND 1
 
 #define ERROR_WARN_LOOP()		{while(1){WaitMs(100);GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));}}
-#define TIME_INDICATE()		//{GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));}
+#define TIME_INDICATE()			{GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));}
 
 #define		SYC_WINDOW_SIZE		(2000)
 #define		SYC_EXTEND_WINDOW_SIZE		5000

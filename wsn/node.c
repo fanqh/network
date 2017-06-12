@@ -9,14 +9,13 @@
 
 NodeInfo_TypeDef node_info;
 static MsgQueue_Typedef msg_queue;
+NodeSetup_Infor_TypeDef ND_Setup_Infor;
 
 static ev_time_event_t *nd_setup_timer = NULL;
 
 static volatile unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
 static volatile unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
 static volatile unsigned char rx_ptr = 0;
-
-
 
 typedef struct
 {
@@ -30,8 +29,6 @@ device_infor_t device_infor;
 extern unsigned int Get_Temperature(void);
 void Node_Init(void)
 {
-
-
 	FLASH_PageRead(FLASH_DEVICE_INFOR_ADDR, sizeof(device_infor_t), (unsigned char*)&device_infor);
 	if((device_infor.pallet_id == 0xff) || (device_infor.node_mac == 0xffff))
 	{
@@ -43,6 +40,7 @@ void Node_Init(void)
     node_info.mac_addr = device_infor.node_mac;
     node_info.dsn = node_info.mac_addr & 0xff;
     node_info.pallet_id = device_infor.pallet_id; //应该由gate分配
+    node_info.p_nd_setup_infor = &ND_Setup_Infor;
         
     RF_RxBufferSet(rx_buf + rx_ptr*RX_BUF_LEN, RX_BUF_LEN, 0);
    
@@ -223,7 +221,7 @@ _attribute_ram_code_ void Node_RxIrqHandler(void)
         if (FRAME_IS_SETUP_PALLET_RSP(rx_packet))
         {
             unsigned short dst_addr = FRAME_GET_DST_ADDR(rx_packet);
-            if (dst_addr == node_info.mac_addr)
+            if (dst_addr == ND_Setup_Infor.plt_mac)
             {
                 MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_SETUP_RSP);
             }
@@ -266,12 +264,6 @@ _attribute_ram_code_ void Node_RxTimeoutHandler(void)
     }
 }
 
-void Pallet_BCN_Time_On(void *data)
-{
-	if(gateway_setup_timer!=NULL)
-	    ev_unon_timer(&gateway_setup_timer);
-}
-
 _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
@@ -295,13 +287,22 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
             }
             else if(NP_MSG_SETUP_PLT_BCN == msg->type)
             {
-                node_info.state = NODE_STATE_SETUP_BACKOFF;
+                node_info.state = ND_SETUP_BACKOFF;
                 node_info.retry_times = 0;
 
                 node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
                 node_info.setup_bcn_total = 200;
-                node_info.pallet_mac = FRAME_GET_SRC_ADDR(msg->data);
-
+                ND_Setup_Infor.plt_mac = FRAME_PLT_SETUP_BCN_GET_SRC_MAC(msg->data);
+                ND_Setup_Infor.plt_id = FRAME_PLT_SETU_BCN_GET_PLT_ID(msg->data);
+                if(node_info.is_connect==1)
+                {
+                	if((ND_Setup_Infor.plt_mac==node_info.pallet_mac)&&(ND_Setup_Infor.plt_id==node_info.pallet_id))
+                	{
+                		node_info.state = ND_SETUP_IDLE;
+                		node_info.wakeup_tick  = node_info.t0 + MASTER_PERIOD*TickPerUs;
+                		break;
+                	}
+                }
                 node_info.wakeup_tick = ClockTime() +  (((Rand() % (MASTER_PERIOD - GW_PLT_TIME - ND_WAIT_BCN_MARGIN)))/BACKOFF_UNIT)*BACKOFF_UNIT*TickPerUs;
             }
             else
@@ -312,15 +313,14 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
         }
         break;
     }
-    case NODE_STATE_SETUP_BACKOFF:
+    case ND_SETUP_BACKOFF:
     {
-        RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //turn off RX mode
+    	RF_SetTxRxOff(); //turn off RX mode
         PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
-
-        node_info.state = NODE_STATE_SETUP_REQ_SEND;
+        node_info.state = ND_SETUP_REQ_SEND;
     	break;
     }
-    case NODE_STATE_SETUP_REQ_SEND:
+    case ND_SETUP_REQ_SEND:
     {
         if (node_info.retry_times < RETRY_MAX)
         {
@@ -329,7 +329,7 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
             Build_NodeSetupReq(tx_buf, &node_info);
             TIME_INDICATE();
 
-            node_info.state = NODE_STATE_SETUP_PALLET_RSP_WAIT;
+            node_info.state = ND_SETUP_RSP_WAIT;
         }
         else
         {
@@ -337,23 +337,36 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
         }
     	break;
     }
-    case NODE_STATE_SETUP_PALLET_RSP_WAIT:
+    case ND_SETUP_RSP_WAIT:
     {
         if (msg)
         {
             if (msg->type == NODE_MSG_TYPE_SETUP_RSP)
             {
                 node_info.node_id = FRAME_GET_NODE_ID(msg->data);
-                node_info.state = NODE_STATE_IDLE;
+                node_info.pallet_mac = ND_Setup_Infor.plt_mac;
+                node_info.pallet_id = ND_Setup_Infor.plt_id;
+
+                node_info.state = ND_SETUP_SUSPEND;
+                node_info.is_connect = 1;
             }
             else
             {
-                node_info.state = ND_SETUP_IDLE;
+            	node_info.pallet_mac = 0;
+                node_info.state = ND_SETUP_SUSPEND;
                 node_info.retry_times++;
             }
+            node_info.wakeup_tick =  node_info.t0 + MASTER_PERIOD*TickPerUs;
             TIME_INDICATE();
             Message_Reset(msg);
         }
+    	break;
+    }
+    case ND_SETUP_SUSPEND:
+    {
+    	RF_SetTxRxOff(); //turn off RX mode
+        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick - 2000*TickPerUs);
+        node_info.state = ND_SETUP_IDLE;
     	break;
     }
 

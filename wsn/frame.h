@@ -43,9 +43,13 @@ typedef struct
 #define FRAME_GET_PAYLOAD_PALLET_ID(p)            (p[20])
 #define FRAME_GET_Point_PAYLOAD_TMP(p)            (p+23)
 
-//pallet setup beacon
-#define FRAME_GET_GB_DSN(p)              ( p[15] )
+/*
+ * pallet setup beacon
+ */
+#define FRAME_GET_GB_DSN(p)              			( p[15] )
 #define FRAME_GET_DST_ADDR_NODE_REQ(p)              ( p[20] | (p[21]<<8) )
+#define FRAME_PLT_SETUP_BCN_GET_SRC_MAC(p)			(p[20] | p[21]<<8)
+#define FRAME_PLT_SETU_BCN_GET_PLT_ID(p)			(p[23])
 
 //gateway setup
 #define FRAME_GATEWAY_BCN_DSN(p)		(p[15])

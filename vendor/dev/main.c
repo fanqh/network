@@ -61,9 +61,14 @@ static void Board_Init(void)
     GPIO_SetOutputEnable(LED4_WHITE, Bit_SET);
 
     //config gpio showing timing
-    GPIO_SetGPIOEnable(TIMING_SHOW_PIN, Bit_SET);
-    GPIO_ResetBit(TIMING_SHOW_PIN);
-    GPIO_SetOutputEnable(TIMING_SHOW_PIN, Bit_SET);
+    GPIO_SetGPIOEnable(SHOW_DEBUG, Bit_SET);
+    GPIO_ResetBit(SHOW_DEBUG);
+    GPIO_SetOutputEnable(SHOW_DEBUG, Bit_SET);
+
+    //config gpio showing timing
+    GPIO_SetGPIOEnable(TEST_PIN, Bit_SET);
+    GPIO_ResetBit(TEST_PIN);
+    GPIO_SetOutputEnable(TEST_PIN, Bit_SET);
 }
 
 //#define BUG
