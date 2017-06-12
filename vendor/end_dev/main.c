@@ -23,9 +23,6 @@ static void SYS_Init(void)
     USB_LogInit();
     USB_DpPullUpEn(1); //pull up DP pin of USB interface
 
-    GPIO_SetGPIOEnable(DEBUG1_PIN, Bit_SET);
-    GPIO_ResetBit(DEBUG1_PIN);
-    GPIO_SetOutputEnable(DEBUG1_PIN, Bit_SET);
 
     GPIO_SetGPIOEnable(TIMING_SHOW_PIN, Bit_SET);
     GPIO_ResetBit(TIMING_SHOW_PIN);
@@ -64,7 +61,53 @@ unsigned int Get_Temperature(void)
 
 	return temperature;
 }
+void Board_Init(void)
+{
 
+    //config the setup trig GPIO pin
+    GPIO_SetGPIOEnable(PALLET_SETUP_TRIG_PIN, Bit_SET);    //set as gpio
+    GPIO_SetInputEnable(PALLET_SETUP_TRIG_PIN, Bit_SET);   //enable input
+    GPIO_PullSet(PALLET_SETUP_TRIG_PIN, PULL_UP_1M);
+    GPIO_SetInterrupt(PALLET_SETUP_TRIG_PIN, Bit_SET);
+    IRQ_EnableType(FLD_IRQ_GPIO_EN);
+
+	GPIO_SetGPIOEnable(TIMING_SHOW_PIN, Bit_SET);
+    GPIO_ResetBit(TIMING_SHOW_PIN);
+    GPIO_SetOutputEnable(TIMING_SHOW_PIN, Bit_SET);
+
+	GPIO_SetGPIOEnable(POWER_PIN, Bit_SET);
+    GPIO_ResetBit(POWER_PIN);
+    GPIO_SetOutputEnable(POWER_PIN, Bit_SET);
+
+	//LED Pin
+    GPIO_SetGPIOEnable(LED1_GREEN, Bit_SET);
+    GPIO_ResetBit(LED1_GREEN);
+    GPIO_SetOutputEnable(LED1_GREEN, Bit_SET);
+
+	GPIO_SetGPIOEnable(LED2_BLUE, Bit_SET);
+    GPIO_ResetBit(LED2_BLUE);
+    GPIO_SetOutputEnable(LED2_BLUE, Bit_SET);
+    //GPIO_SetBit(LED2_BLUE);
+
+	GPIO_SetGPIOEnable(LED3_RED, Bit_SET);
+    GPIO_ResetBit(LED3_RED);
+    GPIO_SetOutputEnable(LED3_RED, Bit_SET);
+
+    //for debug Pin
+	GPIO_SetGPIOEnable(LED4_WHITE, Bit_SET);
+    GPIO_ResetBit(LED4_WHITE);
+    GPIO_SetOutputEnable(LED4_WHITE, Bit_SET);
+
+    //config gpio showing timing
+    GPIO_SetGPIOEnable(SHOW_DEBUG, Bit_SET);
+    GPIO_ResetBit(SHOW_DEBUG);
+    GPIO_SetOutputEnable(SHOW_DEBUG, Bit_SET);
+
+    //config gpio showing timing
+    GPIO_SetGPIOEnable(TEST_PIN, Bit_SET);
+    GPIO_ResetBit(TEST_PIN);
+    GPIO_SetOutputEnable(TEST_PIN, Bit_SET);
+}
 
 void main(void)
 {

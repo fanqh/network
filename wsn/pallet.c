@@ -90,8 +90,7 @@ void Pallet_Init(void)
     //set rx buffer
     RF_RxBufferSet(rx_buf, RX_BUF_LEN, 0);
     //enable irq
-    //IRQ_RfIrqDisable(0xffffffff);
-    IRQ_DisableType(0xffff);
+    IRQ_RfIrqDisable(FLD_RF_IRQ_TX);
     IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT | FLD_RF_IRQ_FIRST_TIMEOUT);
     IRQ_EnableType(FLD_IRQ_ZB_RT_EN);
     IRQ_Enable();
@@ -453,9 +452,11 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
 	        Build_PalletSetupBeacon(tx_buf, &pallet_info);
 	        TIME_INDICATE();
 	        RF_TxPkt(tx_buf);
-//	        if(Wait_Tx_Done(1000)!=SUCCESS)
-//	        	ERROR_WARN_LOOP();
-	        WaitUs(1000);
+	        if(Wait_Tx_Done(TX_DONE_TIMEOUT)!=SUCCESS)
+	        {
+	        	ERROR_WARN_LOOP();
+	        }
+	        //WaitUs(1000);
 	        TIME_INDICATE();
 
 	        RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
@@ -498,7 +499,7 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
 						}
 						Build_PalletSetupRsp(tx_buf, &pallet_info);
 						RF_TxPkt(tx_buf);
-						WaitUs(1000); //wait for tx done
+						Wait_Tx_Done(TX_DONE_TIMEOUT);
 						TIME_INDICATE();
 						//RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //resume to rx mode and continue to receive PALLET_MSG_TYPE_SETUP_REQ
 					}

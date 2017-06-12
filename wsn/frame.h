@@ -50,6 +50,8 @@ typedef struct
 #define FRAME_GET_DST_ADDR_NODE_REQ(p)              ( p[20] | (p[21]<<8) )
 #define FRAME_PLT_SETUP_BCN_GET_SRC_MAC(p)			(p[20] | p[21]<<8)
 #define FRAME_PLT_SETU_BCN_GET_PLT_ID(p)			(p[23])
+#define FRAME_PLT_SETUP_RSP_DEST_ADDR(p)			( p[18] | (p[19]<<8) )
+#define FRAME_PLT_SETUP_RSP_SRC_ADDR(p)				( p[20] | (p[21]<<8) )
 
 //gateway setup
 #define FRAME_GATEWAY_BCN_DSN(p)		(p[15])

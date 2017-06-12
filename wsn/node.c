@@ -10,8 +10,8 @@
 NodeInfo_TypeDef node_info;
 static MsgQueue_Typedef msg_queue;
 NodeSetup_Infor_TypeDef ND_Setup_Infor;
-
-static ev_time_event_t *nd_setup_timer = NULL;
+unsigned int temp_t0;
+unsigned char bug;
 
 static volatile unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
 static volatile unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
@@ -30,28 +30,23 @@ extern unsigned int Get_Temperature(void);
 void Node_Init(void)
 {
 	FLASH_PageRead(FLASH_DEVICE_INFOR_ADDR, sizeof(device_infor_t), (unsigned char*)&device_infor);
-	if((device_infor.pallet_id == 0xff) || (device_infor.node_mac == 0xffff))
-	{
-		device_infor.pallet_id = 0x01;
-		device_infor.node_mac = 0xff01;
-	}
 
     memset(&node_info, 0, sizeof(NodeInfo_TypeDef));
     node_info.mac_addr = device_infor.node_mac;
     node_info.dsn = node_info.mac_addr & 0xff;
-    node_info.pallet_id = device_infor.pallet_id; //应该由gate分配
+    //node_info.pallet_id = device_infor.pallet_id; //应该由gate分配
     node_info.p_nd_setup_infor = &ND_Setup_Infor;
+    node_info.state = ND_SETUP_IDLE;
         
     RF_RxBufferSet(rx_buf + rx_ptr*RX_BUF_LEN, RX_BUF_LEN, 0);
    
     //enable irq
-    IRQ_EnableType(FLD_IRQ_ZB_RT_EN);
+
+    IRQ_RfIrqDisable(0xffff);
     IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT);
+    IRQ_EnableType(FLD_IRQ_ZB_RT_EN);
     IRQ_Enable();
 
-    //config gpio showing timing
-    GPIO_SetGPIOEnable(TIMING_SHOW_PIN, Bit_SET);
-    GPIO_ResetBit(TIMING_SHOW_PIN);
 }
 
 
@@ -60,6 +55,7 @@ void Node_Init(void)
 
 _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 {
+#if 0
     unsigned int now;
     unsigned int timestamp;
 
@@ -169,6 +165,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 
         node_info.state = NODE_STATE_IDLE;
     }
+#endif
 }
 
 void Node_MainLoop(void)
@@ -176,9 +173,9 @@ void Node_MainLoop(void)
     Msg_TypeDef* pMsg = NULL;
     //pop a message from the message queue
     pMsg = MsgQueue_Pop(&msg_queue);
-
     ev_process_timer();
-    if(node_info.state & ND_SETUP_IDLE)
+
+    if(node_info.state & ND_SETUP_MASK)
     {
     	Run_Node_Setup_Statemachine(pMsg);
     }
@@ -206,24 +203,22 @@ _attribute_ram_code_ void Node_RxIrqHandler(void)
     }
     //receive a valid packet
     else {
-//    	aa[j][31] =ttt++;
-//    	memcpy(aa[j++], rx_packet, 31);
-//    	if(j>=8)
-//    		j = 0;
-
         //if it is pallet setup beacon frame, perform a random backoff and then require to associate
         if (FRAME_IS_SETUP_PALLET_BEACON(rx_packet))
         {
 
-            MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_SETUP_BCN);
+            MsgQueue_Push(&msg_queue, rx_packet, NP_MSG_SETUP_PLT_BCN);
         }
         //if it is pallet setup response frame, check whether the dst addr matches the local addr
         if (FRAME_IS_SETUP_PALLET_RSP(rx_packet))
         {
-            unsigned short dst_addr = FRAME_GET_DST_ADDR(rx_packet);
-            if (dst_addr == ND_Setup_Infor.plt_mac)
+
+        	unsigned short dst_addr = FRAME_PLT_SETUP_RSP_DEST_ADDR(rx_packet);
+        	unsigned short src_addr = FRAME_PLT_SETUP_RSP_SRC_ADDR(rx_packet);
+
+            if ((src_addr == ND_Setup_Infor.plt_mac) &&(dst_addr == node_info.mac_addr))
             {
-                MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_SETUP_RSP);
+                MsgQueue_Push(&msg_queue, rx_packet, NP_MSG_SETUP_RSP);
             }
             else
             {
@@ -250,20 +245,33 @@ _attribute_ram_code_ void Node_RxIrqHandler(void)
 
 _attribute_ram_code_ void Node_RxTimeoutHandler(void)
 {
-    if (NODE_STATE_PALLET_ACK_WAIT == node_info.state)
-    {
-        MsgQueue_Push(&msg_queue, NULL, NODE_MSG_TYPE_PALLET_ACK_TIMEOUT);
-    }
-    else if (NODE_STATE_SETUP_PALLET_RSP_WAIT == node_info.state)
-    {
-        MsgQueue_Push(&msg_queue, NULL, NODE_MSG_TYPE_SETUP_RSP_TIMEOUT);
-    }
-    else
-    {
-    	//todo need add some code to tell application
-    }
+//    if (NODE_STATE_PALLET_ACK_WAIT == node_info.state)
+//    {
+//        MsgQueue_Push(&msg_queue, NULL, NODE_MSG_TYPE_PALLET_ACK_TIMEOUT);
+//    }
+//    else if (NODE_STATE_SETUP_PALLET_RSP_WAIT == node_info.state)
+//    {
+//        MsgQueue_Push(&msg_queue, NULL, NP_MSG_SETUP_RSP_TIMEOUT);
+//    }
+//    else
+//    {
+//    	//todo need add some code to tell application
+//    }
 }
 
+unsigned char Wait_Tx_Done(unsigned int timeout)//unit : us
+{
+	unsigned int t;
+
+	t = ClockTime();
+	while(!RF_TxFinish())
+	{
+		if(ClockTimeExceed(t, timeout))
+			return FAILURE;
+	}
+	//RF_TxFinishClearFlag();
+	return SUCCESS;
+}
 _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
@@ -287,9 +295,10 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
             }
             else if(NP_MSG_SETUP_PLT_BCN == msg->type)
             {
+            	GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
+
                 node_info.state = ND_SETUP_BACKOFF;
                 node_info.retry_times = 0;
-
                 node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
                 node_info.setup_bcn_total = 200;
                 ND_Setup_Infor.plt_mac = FRAME_PLT_SETUP_BCN_GET_SRC_MAC(msg->data);
@@ -298,7 +307,7 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
                 {
                 	if((ND_Setup_Infor.plt_mac==node_info.pallet_mac)&&(ND_Setup_Infor.plt_id==node_info.pallet_id))
                 	{
-                		node_info.state = ND_SETUP_IDLE;
+                		node_info.state = ND_SETUP_SUSPEND;
                 		node_info.wakeup_tick  = node_info.t0 + MASTER_PERIOD*TickPerUs;
                 		break;
                 	}
@@ -315,8 +324,14 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
     }
     case ND_SETUP_BACKOFF:
     {
-    	RF_SetTxRxOff(); //turn off RX mode
-        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
+		RF_SetTxRxOff();
+		GPIO_WriteBit(POWER_PIN, 0);
+#if SUPEND
+		PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick - SETUP_SUSPNED_EARLY_WAKEUP*TickPerUs);
+#else
+		while((unsigned int)(ClockTime() - node_info.wakeup_tick) > BIT(30));
+#endif
+		GPIO_WriteBit(POWER_PIN, 1);
         node_info.state = ND_SETUP_REQ_SEND;
     	break;
     }
@@ -324,12 +339,33 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
     {
         if (node_info.retry_times < RETRY_MAX)
         {
-            now = ClockTime();
-            RF_StartStxToRx(tx_buf, now + RF_TX_WAIT*TickPerUs, RX_WAIT);
+#if 0
+            RF_SetTxRxOff();
+            RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL); //switch to auto mode
+            RF_StartStxToRx(tx_buf , now + RF_TX_WAIT*TickPerUs, RX_WAIT);
             Build_NodeSetupReq(tx_buf, &node_info);
-            TIME_INDICATE();
+            node_info.state = ND_SETUP_RSP_WAIT;
+            temp_t0 = ClockTime();
+            GPIO_SetBit(SHOW_DEBUG);
+#else
+	        RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
+	        Build_NodeSetupReq(tx_buf, &node_info);
+
+	        TIME_INDICATE();
+	        RF_TxPkt(tx_buf);
+
+	        if(Wait_Tx_Done(TX_DONE_TIMEOUT) == FAILURE)
+	        {
+	        	ERROR_WARN_LOOP();
+	        }
+	        TIME_INDICATE();
+
+        	temp_t0 = ClockTime();
+        	GPIO_SetBit(SHOW_DEBUG);
+        	RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on waiting for mesh setup beacon
 
             node_info.state = ND_SETUP_RSP_WAIT;
+#endif
         }
         else
         {
@@ -339,33 +375,42 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
     }
     case ND_SETUP_RSP_WAIT:
     {
-        if (msg)
+    	if(ClockTimeExceed(temp_t0, 3000))
+		{
+			TIME_INDICATE();
+        	node_info.pallet_mac = 0;
+            node_info.state = ND_SETUP_SUSPEND;
+            node_info.retry_times++;
+            node_info.wakeup_tick =  node_info.t0 + MASTER_PERIOD*TickPerUs;
+            GPIO_ResetBit(SHOW_DEBUG);
+		}
+		else if (msg)
         {
-            if (msg->type == NODE_MSG_TYPE_SETUP_RSP)
+            if (msg->type == NP_MSG_SETUP_RSP)
             {
+            	TIME_INDICATE();
                 node_info.node_id = FRAME_GET_NODE_ID(msg->data);
                 node_info.pallet_mac = ND_Setup_Infor.plt_mac;
                 node_info.pallet_id = ND_Setup_Infor.plt_id;
-
+                GPIO_SetBit(LED1_GREEN);
                 node_info.state = ND_SETUP_SUSPEND;
                 node_info.is_connect = 1;
+                node_info.wakeup_tick =  node_info.t0 + MASTER_PERIOD*TickPerUs;
+                Message_Reset(msg);
             }
-            else
-            {
-            	node_info.pallet_mac = 0;
-                node_info.state = ND_SETUP_SUSPEND;
-                node_info.retry_times++;
-            }
-            node_info.wakeup_tick =  node_info.t0 + MASTER_PERIOD*TickPerUs;
-            TIME_INDICATE();
-            Message_Reset(msg);
         }
     	break;
     }
     case ND_SETUP_SUSPEND:
     {
-    	RF_SetTxRxOff(); //turn off RX mode
-        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick - 2000*TickPerUs);
+		RF_SetTxRxOff();
+		GPIO_WriteBit(POWER_PIN, 0);
+#if SUPEND
+		PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick - SETUP_SUSPNED_EARLY_WAKEUP*TickPerUs);
+#else
+		while((unsigned int)(ClockTime() - node_info.wakeup_tick) > BIT(30));
+#endif
+		GPIO_WriteBit(POWER_PIN, 1);
         node_info.state = ND_SETUP_IDLE;
     	break;
     }
@@ -449,16 +494,16 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
     }
 #endif
 }
-
-void Node_SetupLoop(void)
-{
-    Msg_TypeDef* pMsg = NULL;
-
-    while (NODE_STATE_IDLE != node_info.state)
-    {
-        //pop a message from the message queue
-        pMsg = MsgQueue_Pop(&msg_queue);
-        //run state machine
-        Run_Node_Setup_Statemachine(pMsg);
-    }
-}
+//
+//void Node_SetupLoop(void)
+//{
+//    Msg_TypeDef* pMsg = NULL;
+//
+//    while (NODE_STATE_IDLE != node_info.state)
+//    {
+//        //pop a message from the message queue
+//        pMsg = MsgQueue_Pop(&msg_queue);
+//        //run state machine
+//        Run_Node_Setup_Statemachine(pMsg);
+//    }
+//}

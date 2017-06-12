@@ -3,6 +3,7 @@
 #include "../../wsn/node.h"
 #include "../../wsn/config.h"
 
+unsigned short st;
 _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
 {
     u32 IrqSrc = IRQ_SrcGet();
@@ -18,7 +19,11 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
             if (RfIrqSrc & FLD_RF_IRQ_RX_TIMEOUT) {
                 Node_RxTimeoutHandler();
             }
-
+            if(RfIrqSrc & FLD_RF_IRQ_FIRST_TIMEOUT)
+            {
+            	Node_RxTimeoutHandler();
+            }
+            st = RfIrqSrc;
             IRQ_RfIrqSrcClr();
         }
     }

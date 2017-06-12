@@ -39,8 +39,10 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
             {
             	Pallet_RxTimeoutHandler();
             }
+            st = RfIrqSrc;
             IRQ_RfIrqSrcClr();
         }
+
     }
 
     IRQ_SrcClr();

@@ -27,6 +27,7 @@
 #define ACK_WAIT                        1800 //in us
 #define TIMESTAMP_INVALID_THRESHOLD     6000 //in us
 #define ZB_TIMESTAMP_OFFSET             341 //(6byte preamble + 0x95 pll settle time)in us
+#define TX_DONE_TIMEOUT							1000
 
 #define SETUP_SUSPNED_EARLY_WAKEUP		500
 
@@ -74,7 +75,7 @@
 #define FLASH_DEVICE_INFOR_ADDR   (15*4*1024)
 
 //whether dose system enter suspend when idle
-#define SUPEND 1
+//#define SUPEND 1
 
 #define ERROR_WARN_LOOP()		{while(1){WaitMs(100);GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));}}
 #define TIME_INDICATE()			{GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));}
