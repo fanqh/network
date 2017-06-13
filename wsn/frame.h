@@ -53,6 +53,9 @@ typedef struct
 #define FRAME_PLT_SETUP_RSP_DEST_ADDR(p)			( p[18] | (p[19]<<8) )
 #define FRAME_PLT_SETUP_RSP_SRC_ADDR(p)				( p[20] | (p[21]<<8) )
 
+//pallet beacon
+#define FRAME_GET_PLT_BCN_ID(p)			(p[27])
+
 //gateway setup
 #define FRAME_GATEWAY_BCN_DSN(p)		(p[15])
 #define FRAME_GATEWYA_SETUP_BCN_TOTAL_NUM(p)	((p[23]) | (p[24]<<8))
@@ -60,7 +63,7 @@ typedef struct
 #define FRAME_GET_PALLET_ID_FROM_GATEWAY_SETUP(p)             ( p[23] )
 
 #define FRAME_GET_NODE_ID(p)               ( p[23] )
-//#define FRAME_GET_PALLET_ID(p)             ( p[23] )
+
 
 #define FRAME_GET_PALLET_NODE_NUM(p)       ( p[23] )
 

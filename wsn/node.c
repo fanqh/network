@@ -41,7 +41,6 @@ void Node_Init(void)
     RF_RxBufferSet(rx_buf + rx_ptr*RX_BUF_LEN, RX_BUF_LEN, 0);
    
     //enable irq
-
     IRQ_RfIrqDisable(0xffff);
     IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT);
     IRQ_EnableType(FLD_IRQ_ZB_RT_EN);
@@ -197,22 +196,22 @@ _attribute_ram_code_ void Node_RxIrqHandler(void)
     RF_RxBufferSet(rx_buf + rx_ptr*RX_BUF_LEN, RX_BUF_LEN, 0);
 
 
-    if ((rx_packet[13] == 0) || (!FRAME_IS_CRC_OK(rx_packet)) || (!FRAME_IS_LENGTH_OK(rx_packet))) {
+    if ((rx_packet[13] == 0) || (!FRAME_IS_CRC_OK(rx_packet)) || (!FRAME_IS_LENGTH_OK(rx_packet)))
+    {
         // Garbage packet
         MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_INVALID_DATA);
     }
     //receive a valid packet
-    else {
+    else
+    {
         //if it is pallet setup beacon frame, perform a random backoff and then require to associate
         if (FRAME_IS_SETUP_PALLET_BEACON(rx_packet))
         {
-
             MsgQueue_Push(&msg_queue, rx_packet, NP_MSG_SETUP_PLT_BCN);
         }
         //if it is pallet setup response frame, check whether the dst addr matches the local addr
         if (FRAME_IS_SETUP_PALLET_RSP(rx_packet))
         {
-
         	unsigned short dst_addr = FRAME_PLT_SETUP_RSP_DEST_ADDR(rx_packet);
         	unsigned short src_addr = FRAME_PLT_SETUP_RSP_SRC_ADDR(rx_packet);
 
@@ -226,18 +225,22 @@ _attribute_ram_code_ void Node_RxIrqHandler(void)
             }
         }
         //if it is pallet ACK frame, check it and then go to suspend immediately
-        if (FRAME_IS_ACK_TYPE(rx_packet) && (rx_packet[15] == node_info.dsn)) {
+        if (FRAME_IS_ACK_TYPE(rx_packet) && (rx_packet[15] == node_info.dsn))
+        {
             MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_PALLET_ACK);
         }
         //if it is gateway BCN frame, do sync 
-        else if (FRAME_IS_GATEWAY_BEACON(rx_packet)) {
+        else if (FRAME_IS_GATEWAY_BEACON(rx_packet))
+        {
             MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_GW_BCN);
         }
         //if it is pallet BCN frame, do sync 
-        else if (FRAME_IS_PALLET_BEACON(rx_packet)) {
+        else if (FRAME_IS_PALLET_BEACON(rx_packet))
+        {
             MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_PALLET_BCN);
         }
-        else {
+        else
+        {
             MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_INVALID_DATA);
         }
     }   
@@ -269,7 +272,7 @@ unsigned char Wait_Tx_Done(unsigned int timeout)//unit : us
 		if(ClockTimeExceed(t, timeout))
 			return FAILURE;
 	}
-	//RF_TxFinishClearFlag();
+	RF_TxFinishClearFlag();
 	return SUCCESS;
 }
 _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
@@ -295,8 +298,8 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
             }
             else if(NP_MSG_SETUP_PLT_BCN == msg->type)
             {
-            	GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));
 
+            	TIME_INDICATE();
                 node_info.state = ND_SETUP_BACKOFF;
                 node_info.retry_times = 0;
                 node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
@@ -314,9 +317,13 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
                 }
                 node_info.wakeup_tick = ClockTime() +  (((Rand() % (MASTER_PERIOD - GW_PLT_TIME - ND_WAIT_BCN_MARGIN)))/BACKOFF_UNIT)*BACKOFF_UNIT*TickPerUs;
             }
-            else
+            else if(NODE_MSG_TYPE_PALLET_BCN == msg->type)
             {
-
+            	if(FRAME_GET_PLT_BCN_ID(msg->data) == node_info.pallet_id)
+            	{
+            		node_info.state = ND_CONN_SUSPEND;
+            		node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id - DEV_RX_MARGIN)*TickPerUs;
+            	}
             }
             Message_Reset(msg);
         }
@@ -375,7 +382,7 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
     }
     case ND_SETUP_RSP_WAIT:
     {
-    	if(ClockTimeExceed(temp_t0, 3000))
+    	if(ClockTimeExceed(temp_t0, RX_WAIT))
 		{
 			TIME_INDICATE();
         	node_info.pallet_mac = 0;
