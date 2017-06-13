@@ -116,6 +116,7 @@ void main(void)
 	PM_WakeupInit();
     SYS_Init();
 
+    Board_Init();
     Node_Init();
 #if 0
     //mesh network setup

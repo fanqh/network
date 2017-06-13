@@ -13,6 +13,7 @@
 #define PALLET_SETUP_PERIOD    (2000*PALLET_NUM*100) //us
 #define GW_SETUP_BCN_NUM		10//200
 #define GP_SETUP_PERIOD        (TIMESLOT_LENGTH*GW_SETUP_BCN_NUM*PALLET_NUM) //us
+#define PLT_SETUP_BCN_NUM		10
 
 //pallet setup with node
 #define GW_PLT_TIME		5000 // GB + 1 communication opportunity with pallet 1ms +4ms
@@ -25,7 +26,7 @@
 #define DEV_RX_MARGIN                   20 //in us
 #define RX_WAIT                         (1600) //in us
 #define ACK_WAIT                        1800 //in us
-#define TIMESTAMP_INVALID_THRESHOLD     6000 //in us
+#define TIMESTAMP_INVALID_THRESHOLD     3000 //in us
 #define ZB_TIMESTAMP_OFFSET             341 //(6byte preamble + 0x95 pll settle time)in us
 #define TX_DONE_TIMEOUT							1000
 
@@ -35,10 +36,10 @@
 #define LAST_SETUP_REQ_MARGIN	2000	//3MS
 /**********************************************/
 
-#define TX_BUF_LEN                      128
-#define RX_BUF_LEN                      64
-#define RX_BUF_NUM                      8
-#define RX_BUF_INVALID_FLG              0x01
+#define TX_BUF_LEN             128
+#define RX_BUF_LEN             64
+#define RX_BUF_NUM             8
+#define RX_BUF_INVALID_FLG     0x01
 
 #define RF_CHANNEL             70
 #define GW_ID                  0x01
@@ -53,23 +54,22 @@
 
 
 #ifdef PA_MODE
-	#define SW1_PIN							GPIOA_GP0
-	#define SW2_PIN							GPIOA_GP1
-	#define LED_GREEN						GPIOC_GP4
-	#define LED_RED							GPIOB_GP1
-	#define TIMING_SHOW_PIN           		GPIOC_GP3
+	#define SW1_PIN						  GPIOA_GP0
+	#define SW2_PIN						  GPIOA_GP1
+	#define LED_GREEN					  GPIOC_GP4
+	#define LED_RED						  GPIOB_GP1
+	#define TIMING_SHOW_PIN           	  GPIOC_GP3
 #else
-	#define TIMING_SHOW_PIN             GPIOC_GP4
-	#define GW_SETUP_TRIG_PIN         	GPIOD_GP2
-	#define PALLET_SETUP_TRIG_PIN     	GPIOD_GP2
-	#define POWER_PIN         		  	GPIOE_GP0
-	#define SHOW_DEBUG         		  	GPIOA_GP3
+	#define TIMING_SHOW_PIN            	  GPIOC_GP4
+	#define GW_SETUP_TRIG_PIN         	  GPIOD_GP2
+	#define PALLET_SETUP_TRIG_PIN     	  GPIOD_GP2
+	#define POWER_PIN         		  	  GPIOE_GP0
+	#define SHOW_DEBUG         		  	  GPIOA_GP3
 	#define LED1_GREEN         		  	  GPIOC_GP3
 	#define LED2_BLUE         		  	  GPIOB_GP6
 	#define LED3_RED         		  	  GPIOC_GP2
 	#define LED4_WHITE         		  	  GPIOB_GP4
-
-	#define TEST_PIN         		  	GPIOA_GP4
+	#define TEST_PIN         		  	  GPIOA_GP4
 #endif
 //device information restore address
 #define FLASH_DEVICE_INFOR_ADDR   (15*4*1024)
