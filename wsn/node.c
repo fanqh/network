@@ -85,16 +85,15 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                 node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
                 node_info.t0 = node_info.wakeup_tick;
 			}
-			else
-				if(msg->type==NODE_MSG_TYPE_PALLET_BCN)
+			else if(msg->type==NODE_MSG_TYPE_PALLET_BCN)
 			{
 				//TIME_INDICATE();
                 now = ClockTime();
                 timestamp = FRAME_GET_TIMESTAMP(msg->data);
-                unsigned short tmp_pallet_id = FRAME_GET_SRC_ADDR(msg->data);
+                unsigned short tmp_pallet_id = FRAME_PLT_PB_GET_SRC_ID(msg->data);
                 node_info.t0 = timestamp - (ZB_TIMESTAMP_OFFSET + tmp_pallet_id*TIMESLOT_LENGTH)*TickPerUs;  //gateway beacon time
-                node_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
-                if ((node_info.period_cnt % NODE_NUM) == (node_info.node_id % NODE_NUM))
+                node_info.gw_sn = FRAME_PLT_PB_GET_GW_SN(msg->data);
+                if ((node_info.gw_sn % NODE_NUM) == (node_info.node_id % NODE_NUM))
                 {
                     if (tmp_pallet_id == node_info.pallet_id)
                     {

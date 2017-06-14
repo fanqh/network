@@ -361,19 +361,4 @@ void auto_mode_state_test(void)
     RF_StartStx(tx_buf , ClockTime() + RF_TX_WAIT*TickPerUs);
     Build_GatewaySetupBeacon(tx_buf, &gw_info);
 }
-//void Gateway_SetupLoop(void)
-//{
-//    Msg_TypeDef *pMsg = NULL;
-//
-//    gateway_setup_timer = ev_on_timer(Gateway_SetupTimer_Callback, NULL, GW_SETUP_PERIOD);
-//    assert(gateway_setup_timer);
-//
-//    while (IS_GW_WITHIN_SETUP_STATE(gw_info.state))
-//    {
-//        ev_process_timer();
-//        //pop a message from the message queue
-//        pMsg = MsgQueue_Pop(&msg_queue);
-//        //run state machine
-//        Run_Gateway_Setup_Statemachine(pMsg);
-//    }
-//}
+

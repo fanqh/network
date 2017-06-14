@@ -20,12 +20,12 @@ _attribute_ram_code_ void Build_GatewayBeacon(unsigned char *pBuf, GWInfo_TypeDe
     *p++ = (unsigned char)(GW_ID>>8);
 
     *p++ = FRMAE_TYPE_GATEWAY_BEACON;
-    *p++ = pInfo->period_cnt & 0xff;
-    *p++ = (pInfo->period_cnt >> 8) & 0xff;
-    *p++ = (pInfo->period_cnt >> 16) & 0xff;
-    *p++ = (pInfo->period_cnt >> 24) & 0xff;
-    *p++ = pInfo->pallet_id;
-    *p++ = pInfo->pallet_id;
+///    *p++ = pInfo->period_cnt;
+//    *p++ = (pInfo->period_cnt >> 8) & 0xff;
+//    *p++ = (pInfo->period_cnt >> 16) & 0xff;
+//    *p++ = (pInfo->period_cnt >> 24) & 0xff;
+//    *p++ = pInfo->pallet_id;
+//    *p++ = pInfo->pallet_id;
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;
@@ -95,11 +95,7 @@ _attribute_ram_code_ void Build_PalletBeacon(unsigned char *pBuf, PalletInfo_Typ
     *p++ = 0;
 
     *p++ = FRMAE_TYPE_PALLET_BEACON;
-    *p++ = pInfo->period_cnt & 0xff;
-    *p++ = (pInfo->period_cnt >> 8) & 0xff;
-    *p++ = (pInfo->period_cnt >> 16) & 0xff;
-    *p++ = (pInfo->period_cnt >> 24) & 0xff;
-    *p++ = pInfo->pallet_id;
+    *p++ = pInfo->gw_sn;
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;

@@ -129,9 +129,9 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 				GPIO_WriteBit(SHOW_DEBUG, !GPIO_ReadOutputBit(SHOW_DEBUG));
 				now = ClockTime();
 				pallet_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
-				pallet_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
+				pallet_info.gw_sn = FRAME_GET_DSN(msg->data);
 
-				if ((pallet_info.period_cnt % PALLET_NUM) == (pallet_info.pallet_id % PALLET_NUM))
+				if ((pallet_info.gw_sn % PALLET_NUM) == (pallet_info.pallet_id % PALLET_NUM))
 				{
 					TIME_INDICATE();
 
@@ -575,9 +575,10 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
                     pallet_info.retry_times = 0;
                     pallet_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
                     pallet_info.gw_setup_bcn_total = FRAME_GATEWYA_SETUP_BCN_TOTAL_NUM(msg->data);
-                    pallet_info.gw_sn = (FRAME_GATEWAY_BCN_DSN(msg->data));
+                    pallet_info.gw_sn = (FRAME_GET_DSN(msg->data));
                     if((pallet_info.gw_setup_bcn_total>=500) || (pallet_info.gw_sn >=pallet_info.gw_setup_bcn_total - 6))
                     	pallet_info.state = PALLET_STATE_OFF;
+
                     pallet_info.gw_addr = FRAME_GET_SRC_ADDR(msg->data);
                     TIME_INDICATE();
 
@@ -669,13 +670,11 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 		            GPIO_WriteBit(SHOW_DEBUG, !GPIO_ReadOutputBit(SHOW_DEBUG));
 		            pallet_info.wakeup_tick = pallet_info.t0 + MASTER_PERIOD*TickPerUs;
 
-		            pallet_info.period_cnt = FRAME_GET_PERIOD_CNT(msg->data);
-		            pallet_info.gw_sn = (FRAME_GATEWAY_BCN_DSN(msg->data));
+		            pallet_info.gw_sn = (FRAME_GET_DSN(msg->data));
 #if 1
-		            if ((pallet_info.period_cnt % PALLET_NUM) == (pallet_info.pallet_id % PALLET_NUM))
+		            if ((pallet_info.gw_sn % PALLET_NUM) == (pallet_info.pallet_id % PALLET_NUM))
 		            {
 		            	TIME_INDICATE();
-		                RF_SetTxRxOff();
 		                RF_TrxStateSet(RF_MODE_AUTO, RF_CHANNEL);
 		                RF_StartStxToRx(tx_buf , now + RF_TX_WAIT*TickPerUs, ACK_WAIT);
 		                Build_PalletData(tx_buf, &pallet_info, node_data);

@@ -61,7 +61,7 @@ typedef struct {
     //setup with node
     unsigned char gsn;
 
-    unsigned int period_cnt; //the overall period count
+    //unsigned int period_cnt; //the overall period count
     unsigned short mac_addr; //mac addr of the pallet
 
 

@@ -41,7 +41,9 @@ typedef struct {
 	NodeState_TypeDef state; //current state of device
     unsigned int t0; //the moment starting to send the beacon 
     unsigned int wakeup_tick; //the moment wakeup
-    unsigned int period_cnt; //the overall period count
+
+	unsigned char gw_sn;
+    //unsigned int period_cnt; //the overall period count
     unsigned short mac_addr; //mac address of this node
 
     unsigned short pallet_mac; //id of the pallet this node attaches to
