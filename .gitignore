@@ -236,3 +236,4 @@ sandbox
 *.iex
 *.uvopt
 *.uvgui.*
+drivers/

@@ -540,7 +540,7 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
 
 _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
 {
-    static unsigned int now,rx_begain_t0, gwb_receive_t0;
+    static unsigned int now;
 
     switch (pallet_info.state)
     {
@@ -551,8 +551,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
     	}
     	case GP_SETUP_IDLE:
     	{
-    		rx_begain_t0 = ClockTime();
-    		RF_SetTxRxOff();
+    		temp_t1 = ClockTime();
     		pallet_info.state = GP_SETUP_BCN_WAIT;
     		RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
     		break;
@@ -560,22 +559,22 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
     	case GP_SETUP_BCN_WAIT:
     	{
         	now = ClockTime();
-//        	if(now - (rx_begain_t0 + TIMESLOT_LENGTH*PALLET_NUM*5*TickPerUs)<BIT(31))//长时间没有收到包，reset RF baseband
-//        	{//reset RF baseband state
-//        		pallet_info.state = GP_SETUP_IDLE;
-//        	}
+        	if(now - (temp_t1 + TIMESLOT_LENGTH*PALLET_NUM*5*TickPerUs)<BIT(31))//长时间没有收到包，reset RF baseband
+        	{//reset RF baseband state
+        		pallet_info.state = GP_SETUP_IDLE;
+        	}
 
             if (msg)
             {
                 if (msg->type == PALLET_MSG_TYPE_SETUP_GW_BCN)
                 {
                 	TIME_INDICATE();
-                	gwb_receive_t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
                     pallet_info.state = GP_SETUP_BACKOFF;
                     pallet_info.retry_times = 0;
                     pallet_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
                     pallet_info.gw_setup_bcn_total = FRAME_GATEWYA_SETUP_BCN_TOTAL_NUM(msg->data);
                     pallet_info.gw_sn = (FRAME_GET_DSN(msg->data));
+
                     if((pallet_info.gw_setup_bcn_total>=500) || (pallet_info.gw_sn >=pallet_info.gw_setup_bcn_total - 6))
                     	pallet_info.state = PALLET_STATE_OFF;
 
