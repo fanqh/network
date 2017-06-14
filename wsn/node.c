@@ -79,13 +79,13 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 		}
 		case ND_CONN_BCN_WAIT:
 		{
-//			if(ClockTimeExceed(temp_t0, 3000))
-//			{
-//                node_info.state = ND_CONN_SUSPEND;
-//                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
-//                node_info.t0 = node_info.wakeup_tick;
-//			}
-//			else
+			if(ClockTimeExceed(temp_t0, RX_WAIT))
+			{
+                node_info.state = ND_CONN_SUSPEND;
+                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+                node_info.t0 = node_info.wakeup_tick;
+			}
+			else
 				if(msg->type==NODE_MSG_TYPE_PALLET_BCN)
 			{
 				//TIME_INDICATE();
@@ -391,10 +391,7 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
             {
 
             	TIME_INDICATE();
-                node_info.state = ND_SETUP_BACKOFF;
-                node_info.retry_times = 0;
                 node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
-                node_info.setup_bcn_total = 200;
                 ND_Setup_Infor.plt_mac = FRAME_PLT_SETUP_BCN_GET_SRC_MAC(msg->data);
                 ND_Setup_Infor.plt_id = FRAME_PLT_SETU_BCN_GET_PLT_ID(msg->data);
                 if(node_info.is_connect==1)
@@ -406,8 +403,15 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
                 		break;
                 	}
                 }
-                node_info.wakeup_tick = ClockTime() +  (((Rand() % (MASTER_PERIOD - GW_PLT_TIME - ND_WAIT_BCN_MARGIN)))/BACKOFF_UNIT)*BACKOFF_UNIT*TickPerUs;
-                TIME_INDICATE();
+                else
+                {
+                    node_info.state = ND_SETUP_BACKOFF;
+                    node_info.retry_times = 0; //todo
+                	node_info.setup_bcn_total = 200;//todo
+                    node_info.wakeup_tick = ClockTime() +  (((Rand() % (MASTER_PERIOD - GW_PLT_TIME - ND_WAIT_BCN_MARGIN)))/BACKOFF_UNIT)*BACKOFF_UNIT*TickPerUs;
+                    TIME_INDICATE();
+                }
+
             }
             else if(NODE_MSG_TYPE_PALLET_BCN == msg->type)
             {

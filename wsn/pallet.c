@@ -140,7 +140,6 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 					RF_TxPkt(tx_buf);
 					Wait_Tx_Done(3000);
 
-					//RF_SetTxRxOff();
 					temp_t1 = ClockTime();
 					pallet_info.state = PALLET_STATE_GW_ACK_WAIT;
 					RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on waiting for mesh setup beacon
@@ -214,7 +213,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 		}
 		case PALLET_STATE_NODE_DATA_WAIT:
 		{
-			if(ClockTimeExceed(temp_t1, 3000))
+			if(ClockTimeExceed(temp_t1, RX_WAIT))
 			{
 				TIME_INDICATE();
 				pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
