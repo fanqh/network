@@ -30,10 +30,9 @@ typedef struct
 
 //common
 #define FRAME_GET_DSN(p)					(p[15])
-
+#define FRAME_GET_TIMESTAMP(p)             		( p[8] | (p[9]<<8) | (p[10]<<16) | (p[11]<<24) )
 /****************************gateway frame***************************************************/
 //GateWay Beacon
-#define FRAME_GET_TIMESTAMP(p)             		( p[8] | (p[9]<<8) | (p[10]<<16) | (p[11]<<24) )
 #define FRAME_GET_PERIOD_CNT(p)            		( p[23] | (p[24]<<8) | (p[25]<<16) | (p[26]<<24) )
 #define FRAME_GET_PALLET_ID(p)             		( p[27] )
 #define FRAME_GET_DST_ADDR(p)              		( p[18] | (p[19]<<8) )
@@ -82,6 +81,7 @@ typedef struct
 #define FRAME_IS_PALLET_BEACON(p)          ( (p[22] == FRMAE_TYPE_PALLET_BEACON)&&(p[16]==0xaa)&&(p[17]==0xbb))
 #define FRAME_IS_LENGTH_OK(p)              ( p[0] == p[12]+13)
 #define FRAME_IS_CRC_OK(p)                 ((p[p[0]+3] & 0x51) == 0x10)
+#define FRAME_GET_LENGTH(p)				   (p[12])
 
 #define FRAME_IS_SETUP_PALLET_BEACON(p)    ( p[22] == FRMAE_TYPE_SETUP_PALLET_BEACON)
 #define FRAME_IS_SETUP_NODE_REQ(p)         ( p[22] == FRMAE_TYPE_SETUP_NODE_REQ)

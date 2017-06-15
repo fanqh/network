@@ -103,6 +103,20 @@ void Pallet_Init(void)
 }
 
 
+unsigned int Estimate_SendT_From_RecT(unsigned char *packet)
+{
+	if(packet==NULL)
+	{
+		ERROR_WARN_LOOP();
+		return 0;
+	}
+	else
+	{
+		return FRAME_GET_TIMESTAMP(packet)- 0x95*TickPerUs - 32*(FRAME_GET_LENGTH(packet)+6);
+	}
+}
+
+
 _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 {
     unsigned int now;
@@ -119,7 +133,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 		}
 		case PALLET_STATE_GW_BCN_WAIT:
 		{
-			if(ClockTimeExceed(temp_t1, RX_WAIT))
+			if(ClockTimeExceed(temp_t1, 1200))
 			{
 				pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
 				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
@@ -127,9 +141,10 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 			}
 			else if (msg && (msg->type == PALLET_MSG_TYPE_GW_BCN))
 			{
-				GPIO_WriteBit(SHOW_DEBUG, !GPIO_ReadOutputBit(SHOW_DEBUG));
-				now = ClockTime();
-				pallet_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
+				RX_INDICATE();
+				//pallet_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
+
+				pallet_info.t0 = Estimate_SendT_From_RecT(msg->data);
 				pallet_info.gw_sn = FRAME_GET_DSN(msg->data);
 
 				if ((pallet_info.gw_sn % PALLET_NUM) == (pallet_info.pallet_id % PALLET_NUM))
@@ -139,7 +154,9 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 					RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
 					Build_PalletData(tx_buf, &pallet_info, node_data);
 					RF_TxPkt(tx_buf);
+					TX_INDICATE();
 					Wait_Tx_Done(3000);
+					TX_INDICATE();
 
 					temp_t1 = ClockTime();
 					pallet_info.state = PALLET_STATE_GW_ACK_WAIT;
@@ -166,19 +183,12 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 				pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
 				pallet_info.wakeup_tick = pallet_info.t0 + TIMESLOT_LENGTH*pallet_info.pallet_id*TickPerUs;
 			}
-			else if (msg)
+			else if (msg && (msg->type == PALLET_MSG_TYPE_GW_ACK))
 			{
 				TIME_INDICATE();
+				GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
 				pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
 				pallet_info.wakeup_tick = pallet_info.t0 + TIMESLOT_LENGTH*pallet_info.pallet_id*TickPerUs;
-				if (msg->type == PALLET_MSG_TYPE_GW_ACK)
-				{
-					//todo
-				}
-				else
-				{
-					//todo
-				}
 				Message_Reset(msg);
 			}
 			break;
@@ -204,7 +214,10 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 			Build_PalletBeacon(tx_buf, &pallet_info);
 			TIME_INDICATE();
 			RF_TxPkt(tx_buf);
+
+			TX_INDICATE();
 			Wait_Tx_Done(TX_DONE_TIMEOUT);
+			TX_INDICATE();
 
 			temp_t1 = ClockTime();
 			RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
@@ -218,7 +231,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 			{
 				TIME_INDICATE();
 				pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
-				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - 100)*TickPerUs;
 			}
 			else if (msg)
 			{
@@ -226,7 +239,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 				{
 					unsigned char node_id;
 					TIME_INDICATE();
-					GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
+					//GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
 					//ToDo: process received data submitted by end device
 					//save the dsn for subsequent ack
 					pallet_info.ack_dsn = msg->data[15];

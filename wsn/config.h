@@ -20,6 +20,10 @@
 #define PLT_SETUP_NUM	10
 #define ND_WAIT_BCN_MARGIN	5000
 
+
+/*
+ * send packet txstl + (packet length + 6 preamble)*32
+ */
 #define RF_TX_WAIT                      15 //in us
 #define TX_ACK_WAIT                     3 //in us
 #define WAIT_ACK_DONE                   (1600) //in us
@@ -42,8 +46,6 @@
 #define RX_BUF_INVALID_FLG     0x01
 
 #define RF_CHANNEL             70
-#define GW_ID                  0x01
-#define NODE_ID                0x01
 
 //default value
 #define PALLET_ID              0x02  //由gateway分配
