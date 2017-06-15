@@ -29,7 +29,7 @@ typedef struct
 #define FRMAE_TYPE_SETUP_GW_RSP            0x0a
 
 //common
-#define FRAME_GET_DSN(p)					( p[15] )
+#define FRAME_GET_DSN(p)					(p[15])
 
 /****************************gateway frame***************************************************/
 //GateWay Beacon
@@ -66,10 +66,10 @@ typedef struct
 
 
 //node data
-#define FRAME_GET_SRC_NODE_ID(p)           (p[20])
-#define FRAME_GET_NODE_PAYLOAD(p)          (p[23] | p[24]<<8 | p[25]<<16  | p[26]<<24 )
+#define FRAME_ND_DATE_GET_SRC_ND_ID(p)           (p[20])
+#define FRAME_ND_DATE_GET_ND_PAYLOAD(p)          (p[24] | p[25]<<8 | p[26]<<16  | p[27]<<24 )
 
-#define FRAME_GET_PALLET_ID_FROM_GATEWAY_SETUP(p)             ( p[23] )
+//pallet setup
 #define FRAME_GET_NODE_ID(p)               					 ( p[23] )
 #define FRAME_GET_PALLET_NODE_NUM(p)       					 ( p[23] )
 

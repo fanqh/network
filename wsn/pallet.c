@@ -230,10 +230,10 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 					//ToDo: process received data submitted by end device
 					//save the dsn for subsequent ack
 					pallet_info.ack_dsn = msg->data[15];
-					node_id = FRAME_GET_SRC_NODE_ID(msg->data);
+					node_id = FRAME_ND_DATE_GET_SRC_ND_ID(msg->data);
 
 					node_data[(node_id-1)%NODE_NUM].updata = 1;
-					node_data[(node_id-1)%NODE_NUM].temperature = FRAME_GET_NODE_PAYLOAD(msg->data);
+					node_data[(node_id-1)%NODE_NUM].temperature = FRAME_ND_DATE_GET_ND_PAYLOAD(msg->data);
 					pallet_info.state = PALLET_STATE_SEND_NODE_ACK;
 				}
 				Message_Reset(msg);

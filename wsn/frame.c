@@ -118,19 +118,23 @@ _attribute_ram_code_ void Build_NodeData(unsigned char *pBuf, NodeInfo_TypeDef *
     *p++ = 0x61; //frame ctrl
     *p++ = 0x98;
     *p++ = ++(pInfo->dsn); //dsn
+
     *p++ = 0xaa; //dest PANID
     *p++ = 0xbb;
     *p++ = pInfo->pallet_id; //dest address
     *p++ = 0;
+
     *p++ = pInfo->node_id; //src address
     *p++ = 0;
+
     *p++ = FRMAE_TYPE_NODE_DATA;
+    *p++ = pInfo->plt_dsn;
+
     *p++ = pInfo->tmp & 0xff;
     *p++ = (pInfo->tmp >> 8) & 0xff;
     *p++ = (pInfo->tmp >> 16) & 0xff;
     *p++ = (pInfo->tmp >> 24) & 0xff;
-    *p++ = pInfo->pallet_id;
-    *p++ = pInfo->node_id;
+
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;
@@ -201,7 +205,7 @@ _attribute_ram_code_ void Build_PalletSetupBeacon(unsigned char *pBuf, PalletInf
     pBuf[4] = len + 2;
 }
 
-void Build_PalletSetupRsp(unsigned char *pBuf, PalletInfo_TypeDef *pInfo)
+_attribute_ram_code_ void Build_PalletSetupRsp(unsigned char *pBuf, PalletInfo_TypeDef *pInfo)
 {
     unsigned char *p = &pBuf[5];
     int len = 0;
@@ -226,7 +230,7 @@ void Build_PalletSetupRsp(unsigned char *pBuf, PalletInfo_TypeDef *pInfo)
     pBuf[4] = len + 2;
 }
 
-void Build_GatewaySetupBeacon(unsigned char *pBuf, GWInfo_TypeDef *pInfo)
+_attribute_ram_code_ void Build_GatewaySetupBeacon(unsigned char *pBuf, GWInfo_TypeDef *pInfo)
 {
     unsigned char *p = &pBuf[5];
     int len = 0;
@@ -257,7 +261,7 @@ void Build_GatewaySetupBeacon(unsigned char *pBuf, GWInfo_TypeDef *pInfo)
 
 }
 
-void Build_PalletSetupReq(unsigned char *pBuf, PalletInfo_TypeDef *pInfo)
+_attribute_ram_code_ void Build_PalletSetupReq(unsigned char *pBuf, PalletInfo_TypeDef *pInfo)
 {
     unsigned char *p = &pBuf[5];
     int len = 0;
@@ -282,7 +286,7 @@ void Build_PalletSetupReq(unsigned char *pBuf, PalletInfo_TypeDef *pInfo)
     pBuf[4] = len + 2;
 }
 
-void Build_GatewaySetupRsp(unsigned char *pBuf, GWInfo_TypeDef *pInfo)
+_attribute_ram_code_ void Build_GatewaySetupRsp(unsigned char *pBuf, GWInfo_TypeDef *pInfo)
 {
     unsigned char *p = &pBuf[5];
     int len = 0;

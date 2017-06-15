@@ -129,12 +129,8 @@ void main(void)
     // LogMsg("end device start...\n", NULL, 0);
     t = ClockTime();
 #endif
-    while (1) {
-//    	if(ClockTimeExceed(t, 300*1000))
-//    	{
-//    		t = ClockTime();
-//    		GPIO_WriteBit(LED2_BLUE, !GPIO_ReadOutputBit(LED2_BLUE));
-//    	}
+    while (1)
+    {
         Node_MainLoop();
     }
 }
