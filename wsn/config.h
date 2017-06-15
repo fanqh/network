@@ -65,7 +65,7 @@
 #else
 	#define TIMING_SHOW_PIN            	  GPIOC_GP4
 	#define GW_SETUP_TRIG_PIN         	  GPIOD_GP2
-	#define PALLET_SETUP_TRIG_PIN     	  GPIOD_GP2
+	#define PALLET_SETUP_TRIG_PIN     	  GPIOC_GP5
 	#define POWER_PIN         		  	  GPIOE_GP0
 	#define SHOW_DEBUG         		  	  GPIOA_GP3
 	#define LED1_GREEN         		  	  GPIOC_GP3
@@ -75,7 +75,7 @@
 	#define TEST_PIN         		  	  GPIOA_GP4
 	#define RX_STATE_PIN				  GPIOB_GP7
 	#define TX_STATE_PIN				  GPIOB_GP5
-	#define ERROR_WARN_LOOP()		{while(1){WaitMs(100);GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));}}
+	#define ERROR_WARN_LOOP()			  {while(1){WaitMs(100);GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));}}
 #endif
 //device information restore address
 #define FLASH_DEVICE_INFOR_ADDR   (15*4*1024)
