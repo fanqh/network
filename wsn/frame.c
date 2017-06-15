@@ -16,10 +16,11 @@ _attribute_ram_code_ void Build_GatewayBeacon(unsigned char *pBuf, GWInfo_TypeDe
     *p++ = 0xff; //dest address
     *p++ = 0xff;
 
-    *p++ = (unsigned char)(GW_ID&0xff); //src address
-    *p++ = (unsigned char)(GW_ID>>8);
+    *p++ = pInfo->mac_addr & 0xff; //source address
+    *p++ = pInfo->mac_addr >> 8;
 
     *p++ = FRMAE_TYPE_GATEWAY_BEACON;
+	*p++ = pInfo->gw_id;
 ///    *p++ = pInfo->period_cnt;
 //    *p++ = (pInfo->period_cnt >> 8) & 0xff;
 //    *p++ = (pInfo->period_cnt >> 16) & 0xff;
@@ -43,13 +44,17 @@ _attribute_ram_code_ void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeD
     *p++ = 0x61; //frame ctrl
     *p++ = 0x98;
     *p++ = ++(pInfo->dsn); //dsn
+
     *p++ = 0xaa; //dest PANID
     *p++ = 0xbb;
     *p++ = pInfo->gw_id; //dest address
     *p++ = 0;
+
     *p++ = pInfo->pallet_id; //src address
     *p++ = 0;
+
     *p++ = FRMAE_TYPE_PALLET_DATA;
+    *p++ = pInfo->gw_sn; ///add one line
 
 	*p++ = pnode[0].updata;
     *p++ = (pnode[0].temperature) & 0xff;
@@ -187,6 +192,7 @@ _attribute_ram_code_ void Build_PalletSetupBeacon(unsigned char *pBuf, PalletInf
     *p++ = pInfo->mac_addr >> 8;
     *p++ = FRMAE_TYPE_SETUP_PALLET_BEACON;
 	*p++ = pInfo->pallet_id;
+	*p++ = pInfo->gsn;
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;
@@ -240,8 +246,7 @@ void Build_GatewaySetupBeacon(unsigned char *pBuf, GWInfo_TypeDef *pInfo)
 
     *p++ = FRMAE_TYPE_SETUP_GW_BEACON;
 
-    *p++ = GW_SETUP_BCN_NUM&0xff;
-    *p++ = GW_SETUP_BCN_NUM>>8;
+    *p++ = pInfo->gw_id;
 
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
@@ -290,6 +295,7 @@ void Build_GatewaySetupRsp(unsigned char *pBuf, GWInfo_TypeDef *pInfo)
     *p++ = 0xbb;
     *p++ = pInfo->pallet_addr & 0xff; //dest address
     *p++ = pInfo->pallet_addr >> 8;
+	
     *p++ = pInfo->mac_addr & 0xff; //source address
     *p++ = pInfo->mac_addr >> 8;
     *p++ = FRMAE_TYPE_SETUP_GW_RSP;

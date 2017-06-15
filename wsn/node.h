@@ -52,7 +52,7 @@ typedef struct {
     unsigned char node_id; //pallet-assigned id for this node
     volatile unsigned char dsn; //sequence number of outgoing packet
     unsigned char ack_dsn; //sequence number of incoming packet
-    unsigned char retry_times; //retry times
+
     unsigned int setup_bcn_total;
     unsigned int tmp;
     unsigned char is_connect;

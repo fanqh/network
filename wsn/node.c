@@ -414,7 +414,7 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
             }
             else if(NODE_MSG_TYPE_PALLET_BCN == msg->type)
             {
-            	 unsigned char tmp_pallet_id = FRAME_GET_PLT_BCN_ID(msg->data);
+            	 unsigned char tmp_pallet_id = FRAME_PLT_PB_GET_SRC_ID(msg->data);
             	if(tmp_pallet_id == node_info.pallet_id)
             	{
                     node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - (ZB_TIMESTAMP_OFFSET + node_info.pallet_id*TIMESLOT_LENGTH)*TickPerUs;
@@ -481,6 +481,7 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
             node_info.state = ND_SETUP_SUSPEND;
             node_info.retry_times++;
             node_info.wakeup_tick =  node_info.t0 + MASTER_PERIOD*TickPerUs;
+			node_info.t0 = pallet_info.wakeup_tick;
             GPIO_ResetBit(SHOW_DEBUG);
 		}
 		else if (msg)

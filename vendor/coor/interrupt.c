@@ -5,6 +5,7 @@
 
 
 extern volatile unsigned char GatewaySetupTrig;
+volatile unsigned char Tx_Done_falg = 0;
 
 unsigned char sta[32];
 
@@ -31,12 +32,11 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
     if (IrqSrc & FLD_IRQ_ZB_RT_EN)
     {
 
-    	RF_FSM_STATE rf_current_state;
-
         if (RfIrqSrc)
         {
             if (RfIrqSrc & FLD_RF_IRQ_RX)
             {
+
                 Gateway_RxIrqHandler();
             }
             
@@ -46,6 +46,8 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
             }
 #if PA_MODE
             PA_Auto_Switch_Next_State();
+            if(RF_TxFinish())
+            	Tx_Done_falg = 1;
 #endif
             IRQ_RfIrqSrcClr();
         }

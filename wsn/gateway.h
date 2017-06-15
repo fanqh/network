@@ -34,6 +34,7 @@ typedef struct {
 	unsigned char state; //current state of device
     unsigned int t0; //the moment starting to send the beacon 
     unsigned int wakeup_tick; //the moment wakeup
+    unsigned char gw_id;
     unsigned int period_cnt; //the overall period count
     unsigned short mac_addr; //mac addr of the gateway
     unsigned short pallet_addr; //mac addr of current remote pallet

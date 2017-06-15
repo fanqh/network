@@ -50,6 +50,15 @@ void Board_Init(void)
     GPIO_SetGPIOEnable(LED_RED, Bit_SET);
     GPIO_ResetBit(LED_RED);
     GPIO_SetOutputEnable(LED_RED, Bit_SET);
+
+
+    GPIO_SetGPIOEnable(RX_STATE_PIN, Bit_SET);
+    GPIO_ResetBit(RX_STATE_PIN);
+    GPIO_SetOutputEnable(RX_STATE_PIN, Bit_SET);
+
+    GPIO_SetGPIOEnable(TX_STATE_PIN, Bit_SET);
+    GPIO_ResetBit(TX_STATE_PIN);
+    GPIO_SetOutputEnable(TX_STATE_PIN, Bit_SET);
 }
 
 void Buff_Inface_Init(void)

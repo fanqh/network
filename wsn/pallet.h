@@ -23,14 +23,16 @@ typedef enum {
     GP_SETUP_BACKOFF,
     GP_SETUP_REQ_SEND,
     GP_SETUP_GW_RSP_WAIT,
+    GP_SETUP_SUSPEND,
 
     //keep listen gateway and suspend alternate
-    GP_SYC_LISTEN_GB=GP_KEEP_SYC_MASK,  //0x800
+    GP_SYC_IDLE=GP_KEEP_SYC_MASK,  //0x400
     GP_SYC_SUSPNED,
     GP_SYC_ACK_WAIT,
+    GP_SYC_LISTEN_GB,
 
     //consign state
-    PALLET_STATE_IDLE = GPN_CONSIGN_STATE_MASK, //0x400
+    PALLET_STATE_IDLE = GPN_CONSIGN_STATE_MASK, //0x800
     PALLET_STATE_GW_BCN_WAIT,
     PALLET_STATE_GW_ACK_WAIT,
     PALLET_STATE_SUSPEND_BEFORE_PB,
@@ -50,6 +52,12 @@ typedef struct {
     unsigned char node_id;
     unsigned char node_data[NODE_DATA_LEN];
 } NodeEntry_Typedef;
+
+typedef struct{
+    unsigned short gw_mac; //id of the pallet this node attaches to
+    unsigned char gw_id; //id of the pallet this node attaches to
+    unsigned char retry_times; //retry times
+}PalletSetup_Infor_TypeDef;
 
 
 typedef struct {
@@ -76,9 +84,10 @@ typedef struct {
 
     unsigned char gw_sn;
     unsigned char gw_setup_bcn_total;
-    unsigned char retry_times; //retry times
+    //unsigned char retry_times; //retry times
     unsigned char node_table_len;
     unsigned char is_associate;
+    PalletSetup_Infor_TypeDef *p_gp_Setup_infor;
 	//NodeDataWaitSend_Typdedef *pNodeData;
 } PalletInfo_TypeDef;
 
