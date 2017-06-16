@@ -6,12 +6,14 @@
 C_SRCS += \
 ../wsn/frame.c \
 ../wsn/gateway.c \
+../wsn/mac.c \
 ../wsn/mac_data.c \
 ../wsn/message_queue.c 
 
 OBJS += \
 ./wsn/frame.o \
 ./wsn/gateway.o \
+./wsn/mac.o \
 ./wsn/mac_data.o \
 ./wsn/message_queue.o 
 

@@ -259,27 +259,33 @@ _attribute_ram_code_ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
             if (msg->type == GW_MSG_TYPE_SETUP_REQ)
             {
             	RX_INDICATE();
-                //send gateway setup response
-                RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
                 gw_info.pallet_addr = FRAME_GET_SRC_ADDR(msg->data);
-                //check whether the node has been added in to the node table  todo need to optimize
-                for (i = 0; i < gw_info.pallet_table_len; i++) {
-                    if (gw_info.pallet_addr == pallet_table[i].pallet_addr) {
+                //todo need to optimize and have bug here
+                for (i = 0; i < gw_info.pallet_table_len; i++)
+                {
+                    if (gw_info.pallet_addr == pallet_table[i].pallet_addr)
+                    {
                         gw_info.pallet_id = pallet_table[i].pallet_id;
                         break;
                     }
                 }
-                if (i == gw_info.pallet_table_len) {
+                if (i == gw_info.pallet_table_len)
+                {
                     gw_info.pallet_table_len++;
                     gw_info.pallet_id = gw_info.pallet_table_len;
                     //add the new node to node table
-                    assert(gw_info.pallet_table_len <= PALLET_TABLE_MAX_LEN);
+                    //assert(gw_info.pallet_table_len <= PALLET_TABLE_MAX_LEN);
+                    if(gw_info.pallet_table_len > PALLET_TABLE_MAX_LEN)
+                    	ERROR_WARN_LOOP();
                     pallet_table[i].pallet_addr = gw_info.pallet_addr;
                     pallet_table[i].pallet_id = gw_info.pallet_id;
                     pallet_table[i].pallet_node_num = FRAME_GET_PALLET_NODE_NUM(msg->data);
                 }
+
+                RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
                 Build_GatewaySetupRsp(tx_buf, &gw_info);
                 RF_TxPkt(tx_buf);
+
                 TX_INDICATE();
                 Wait_Tx_Done(TX_DONE_TIMEOUT);
                 TX_INDICATE();

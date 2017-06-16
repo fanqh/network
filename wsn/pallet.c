@@ -64,37 +64,24 @@ device_infor_t device_infor;
 unsigned char Wait_Tx_Done(unsigned int timeout);
 
 
-void Get_Pallet_Infor(device_infor_t *pInfor)
-{
-	FLASH_PageRead(FLASH_DEVICE_INFOR_ADDR, sizeof(device_infor_t), (unsigned char*)&device_infor);
-	if(device_infor.pallet_mac == 0xffff)
-		device_infor.pallet_mac = PALLET_MAC_ADDR;
-	if(device_infor.pallet_id == 0xffff)
-		device_infor.pallet_id = 1;
-}
-
 void Pallet_Init(void)
 {
 
-    memset(&pallet_info, 0, sizeof(PalletInfo_TypeDef));
+	unsigned short addr;
 
-    Get_Pallet_Infor(&device_infor);
+	addr = Get_MAC_Addr();
+	if(addr==0xffff)
+		addr = Rand();
 
-    pallet_info.gw_id = 1;
-    pallet_info.dsn = pallet_info.mac_addr & 0xff;
-    pallet_info.mac_addr = device_infor.pallet_mac;
-    pallet_info.pallet_id = device_infor.pallet_id;
+    pallet_info.mac_addr = addr;
     pallet_info.state = GP_SETUP_IDLE;
     pallet_info.p_gp_Setup_infor = &plt_setup_infor;
 
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
-    //set rx buffer
     RF_RxBufferSet(rx_buf, RX_BUF_LEN, 0);
-    //enable irq
     IRQ_RfIrqDisable(FLD_RF_IRQ_TX);
     IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT | FLD_RF_IRQ_FIRST_TIMEOUT);
     IRQ_EnableType(FLD_IRQ_ZB_RT_EN);
-    IRQ_Enable();
     RF_SetTxRxOff();
 
 #if DEBUG
@@ -102,25 +89,8 @@ void Pallet_Init(void)
 #endif
 }
 
-
-unsigned int Estimate_SendT_From_RecT(unsigned char *packet)
-{
-	if(packet==NULL)
-	{
-		ERROR_WARN_LOOP();
-		return 0;
-	}
-	else
-	{
-		return FRAME_GET_TIMESTAMP(packet)- 0x95*TickPerUs - 32*(FRAME_GET_LENGTH(packet)+6);
-	}
-}
-
-
 _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 {
-    unsigned int now;
-
     switch (pallet_info.state)
     {
 		case PALLET_STATE_IDLE:
@@ -143,17 +113,15 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 			{
 				RX_INDICATE();
 				//pallet_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
-
-				pallet_info.t0 = Estimate_SendT_From_RecT(msg->data);
 				pallet_info.gw_sn = FRAME_GET_DSN(msg->data);
+				pallet_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data));
 
 				if ((pallet_info.gw_sn % PALLET_NUM) == (pallet_info.pallet_id % PALLET_NUM))
 				{
-					TIME_INDICATE();
-
 					RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
 					Build_PalletData(tx_buf, &pallet_info, node_data);
 					RF_TxPkt(tx_buf);
+
 					TX_INDICATE();
 					Wait_Tx_Done(3000);
 					TX_INDICATE();
@@ -179,13 +147,12 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 			//todo
 			if(ClockTimeExceed(temp_t1, RX_WAIT))
 			{
-				TIME_INDICATE();
 				pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
 				pallet_info.wakeup_tick = pallet_info.t0 + TIMESLOT_LENGTH*pallet_info.pallet_id*TickPerUs;
 			}
 			else if (msg && (msg->type == PALLET_MSG_TYPE_GW_ACK))
 			{
-				TIME_INDICATE();
+				//RX_INDICATE();
 				GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
 				pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
 				pallet_info.wakeup_tick = pallet_info.t0 + TIMESLOT_LENGTH*pallet_info.pallet_id*TickPerUs;
@@ -229,16 +196,15 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 		{
 			if(ClockTimeExceed(temp_t1, RX_WAIT))
 			{
-				TIME_INDICATE();
 				pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
-				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - 100)*TickPerUs;
+				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - WAKERUP_EARLY_TIME)*TickPerUs;
 			}
 			else if (msg)
 			{
 				if (msg->type == PALLET_MSG_TYPE_ED_DATA)
 				{
 					unsigned char node_id;
-					TIME_INDICATE();
+					RX_INDICATE();
 					//GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
 					//ToDo: process received data submitted by end device
 					//save the dsn for subsequent ack
@@ -257,10 +223,12 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 		{
 			RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
 			Build_Ack(tx_buf, pallet_info.ack_dsn);
-			TIME_INDICATE();
 			RF_TxPkt(tx_buf);
+
+			TX_INDICATE();
 			Wait_Tx_Done(TX_DONE_TIMEOUT);
-			TIME_INDICATE();
+			TX_INDICATE();
+
 			pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
 			pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
 			break;

@@ -32,9 +32,10 @@
 #define ACK_WAIT                        1800 //in us
 #define TIMESTAMP_INVALID_THRESHOLD     3000 //in us
 #define ZB_TIMESTAMP_OFFSET             341 //(6byte preamble + 0x95 pll settle time)in us
-#define TX_DONE_TIMEOUT							1000
+#define TX_DONE_TIMEOUT					1000
 
 #define SETUP_SUSPNED_EARLY_WAKEUP		500
+#define WAKERUP_EARLY_TIME				150
 
 /**********************************************/
 #define LAST_SETUP_REQ_MARGIN	2000	//3MS
@@ -91,6 +92,7 @@
 #define RX_INDICATE()			{GPIO_WriteBit(RX_STATE_PIN, !GPIO_ReadOutputBit(RX_STATE_PIN));}
 #define TX_INDICATE()			{GPIO_WriteBit(TX_STATE_PIN, !GPIO_ReadOutputBit(TX_STATE_PIN));}
 
-#define		SYC_WINDOW_SIZE		(2000)
-#define		SYC_EXTEND_WINDOW_SIZE		5000
+#define		SYC_WINDOW_SIZE				(2000)
+#define		SYC_EXTEND_WINDOW_SIZE		(5000)
+
 #endif

@@ -22,7 +22,7 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
             WaitUs(10);
             if (0 == GPIO_ReadInputBit(SW1_PIN))
             {
-                while(0 == GPIO_ReadInputBit(SW1_PIN));
+                //while(0 == GPIO_ReadInputBit(SW1_PIN));
                 GPIO_WriteBit(LED_RED, !GPIO_ReadOutputBit(LED_RED));
                 GatewaySetupTrig = 1;
             }

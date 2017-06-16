@@ -17,11 +17,6 @@ RM := rm -rf
 -include debug/subdir.mk
 -include common/subdir.mk
 -include boot/8267/subdir.mk
--include DEMO_WSN_ED/wsn/subdir.mk
--include DEMO_WSN_ED/vendor/end_dev/subdir.mk
--include DEMO_WSN_ED/drivers/8267/subdir.mk
--include DEMO_WSN_ED/common/subdir.mk
--include DEMO_WSN_ED/boot/8267/subdir.mk
 -include objects.mk
 
 -include ../makefile.defs

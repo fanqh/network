@@ -24,9 +24,4 @@ drivers/8267 \
 debug \
 common \
 boot/8267 \
-DEMO_WSN_ED/wsn \
-DEMO_WSN_ED/vendor/end_dev \
-DEMO_WSN_ED/drivers/8267 \
-DEMO_WSN_ED/common \
-DEMO_WSN_ED/boot/8267 \
 
