@@ -5,7 +5,6 @@
 
 
 extern volatile unsigned char PalletSetupTrig;
-unsigned short st;
 
 _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
 {
@@ -39,7 +38,10 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
             {
             	Pallet_RxTimeoutHandler();
             }
-            st = RfIrqSrc;
+            if(RfIrqSrc & FLD_RF_IRQ_TX)
+            {
+            	Pallet_TxDoneHandle();
+            }
             IRQ_RfIrqSrcClr();
         }
 

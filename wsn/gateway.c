@@ -140,7 +140,7 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
     }
 	case GW_CONN_SEND_PLT_DATA_ACK:
     {
-    	send_len = RF_Manual_Send(Build_Ack, (void*)&gw_info);
+    	send_len = RF_Manual_Send(Build_Ack, &gw_info.ack_dsn);
     	TX_INDICATE();
     	temp_t0 = ClockTime();
     	gw_info.state = GW_CONN_DATA_ACK_TX_DONE;

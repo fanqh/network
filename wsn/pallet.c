@@ -350,6 +350,11 @@ _attribute_ram_code_ void Pallet_RxTimeoutHandler(void)
 	}
 }
 
+_attribute_ram_code_ void Pallet_TxDoneHandle(void)
+{
+	MsgQueue_Push(&msg_queue, NULL, MSG_TX_DONE);
+}
+
 unsigned char Wait_Tx_Done(unsigned int timeout)//unit : us
 {
 	unsigned int t;

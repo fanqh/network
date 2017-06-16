@@ -40,12 +40,191 @@ _attribute_ram_code_ unsigned char Build_GatewayBeacon(unsigned char *pBuf, void
 
     return len;
 }
-
-_attribute_ram_code_ void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeDef *pInfo, NodeDataWaitSend_Typdedef* pnode)
+_attribute_ram_code_ unsigned char Build_GatewaySetupBeacon(unsigned char *pBuf, void *arg)
 {
-    unsigned char *p = &pBuf[5];
-    int len = 0;
+    unsigned char *p;
+    unsigned char len;
+	GWInfo_TypeDef *pInfo;
 
+	 p = &pBuf[5];
+	 pInfo = (GWInfo_TypeDef*)arg;
+    //build the 802.15.4 mac data frame header
+    *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
+    *p++ = 0x98; //frame ctrl hig: short dst addr and src addr
+    *p++ = ++(pInfo->dsn); //dsn
+    *p++ = 0xff; //dest PANID
+    *p++ = 0xff;
+
+    *p++ = 0xff; //dest address
+    *p++ = 0xff;
+
+    *p++ = pInfo->mac_addr & 0xff; //source address
+    *p++ = pInfo->mac_addr >> 8;
+
+    *p++ = FRMAE_TYPE_SETUP_GW_BEACON;
+
+    *p++ = pInfo->gw_id;
+
+    len = p - (&pBuf[5]);
+    pBuf[0] = len + 1;
+    pBuf[1] = 0;
+    pBuf[2] = 0;
+    pBuf[3] = 0;
+    pBuf[4] = len + 2;
+
+	return len;
+}
+
+_attribute_ram_code_ unsigned char Build_GatewaySetupRsp(unsigned char *pBuf, void *arg)
+{
+    unsigned char *p;
+    unsigned char len;
+	GWInfo_TypeDef *pInfo;
+
+	 p = &pBuf[5];
+	 pInfo = (GWInfo_TypeDef*)arg;
+    //build the 802.15.4 mac data frame header
+    *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
+    *p++ = 0x98; //frame ctrl hig: short dst addr and src addr
+    *p++ = ++(pInfo->dsn); //dsn
+    *p++ = 0xaa; //dest PANID
+    *p++ = 0xbb;
+    *p++ = pInfo->pallet_addr & 0xff; //dest address
+    *p++ = pInfo->pallet_addr >> 8;
+
+    *p++ = pInfo->mac_addr & 0xff; //source address
+    *p++ = pInfo->mac_addr >> 8;
+    *p++ = FRMAE_TYPE_SETUP_GW_RSP;
+    *p++ = pInfo->pallet_id;
+    len = p - (&pBuf[5]);
+    pBuf[0] = len + 1;
+    pBuf[1] = 0;
+    pBuf[2] = 0;
+    pBuf[3] = 0;
+    pBuf[4] = len + 2;
+
+    return len;
+}
+
+_attribute_ram_code_ unsigned char Build_Ack(unsigned char *pBuf, void* arg)
+{
+	//GWInfo_TypeDef *pInfo;
+
+	//pInfo = (GWInfo_TypeDef*)arg;
+    pBuf[0] = 4;
+    pBuf[1] = 0;
+    pBuf[2] = 0;
+    pBuf[3] = 0;
+    pBuf[4] = 5;
+    pBuf[5] = 0x02;
+    pBuf[6] = 0x00;
+    pBuf[7] = *(unsigned char *)arg; //dsn
+
+	return (pBuf[0]-1);
+}
+_attribute_ram_code_ unsigned char Build_PalletSetupBeacon(unsigned char *pBuf, void *arg)
+{
+     unsigned char *p;
+     unsigned char len;
+     PalletInfo_TypeDef *pInfo;
+
+	 p = &pBuf[5];
+	 pInfo = (PalletInfo_TypeDef*)arg;
+
+    //build the 802.15.4 mac data frame header
+    *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
+    *p++ = 0x98; //frame ctrl hig: short dst addr and src addr
+    *p++ = ++(pInfo->dsn); //dsn
+    *p++ = 0xaa; //dest PANID
+    *p++ = 0xbb;
+    *p++ = 0xff; //dest address
+    *p++ = 0xff;
+    *p++ = pInfo->mac_addr & 0xff; //source address
+    *p++ = pInfo->mac_addr >> 8;
+    *p++ = FRMAE_TYPE_SETUP_PALLET_BEACON;
+	*p++ = pInfo->pallet_id;
+	*p++ = pInfo->gsn;
+    len = p - (&pBuf[5]);
+    pBuf[0] = len + 1;
+    pBuf[1] = 0;
+    pBuf[2] = 0;
+    pBuf[3] = 0;
+    pBuf[4] = len + 2;
+
+    return len;
+}
+
+_attribute_ram_code_ unsigned char Build_NodeSetupReq(unsigned char *pBuf,  void *arg)
+{
+    unsigned char *p;
+    unsigned char len;
+    NodeInfo_TypeDef *pInfo;
+
+	 p = &pBuf[5];
+	 pInfo = (NodeInfo_TypeDef*)arg;
+
+    //build the 802.15.4 mac data frame header
+    *p++ = 0x41; //frame ctrl
+    *p++ = 0x98;
+    *p++ = ++(pInfo->dsn); //dsn
+    *p++ = 0xaa; //dest PANID
+    *p++ = 0xbb;
+    *p++ = pInfo->p_nd_setup_infor->plt_mac & 0xff; //dest address
+    *p++ = pInfo->p_nd_setup_infor->plt_mac >> 8;
+    *p++ = pInfo->mac_addr & 0xff; //src address
+    *p++ = pInfo->mac_addr >> 8;
+    *p++ = FRMAE_TYPE_SETUP_NODE_REQ;
+    len = p - (&pBuf[5]);
+    pBuf[0] = len + 1;
+    pBuf[1] = 0;
+    pBuf[2] = 0;
+    pBuf[3] = 0;
+    pBuf[4] = len + 2;
+
+    return len;
+}
+
+_attribute_ram_code_ unsigned char Build_PalletBeacon(unsigned char *pBuf, void *arg)
+{
+     unsigned char *p;
+     unsigned char len;
+     PalletInfo_TypeDef *pInfo;
+
+	 p = &pBuf[5];
+	 pInfo = (PalletInfo_TypeDef*)arg;
+
+    //build the 802.15.4 mac data frame header
+    *p++ = 0x41; //frame ctrl
+    *p++ = 0x98;
+    *p++ = ++(pInfo->dsn); //dsn
+    *p++ = 0xaa; //dest PANID
+    *p++ = 0xbb;
+    *p++ = 0xff; //dest address
+    *p++ = 0xff;
+
+    *p++ = pInfo->pallet_id & 0xff; //src address
+    *p++ = 0;
+
+    *p++ = FRMAE_TYPE_PALLET_BEACON;
+    *p++ = pInfo->gw_sn;
+    len = p - (&pBuf[5]);
+    pBuf[0] = len + 1;
+    pBuf[1] = 0;
+    pBuf[2] = 0;
+    pBuf[3] = 0;
+    pBuf[4] = len + 2;
+
+    return len;
+}
+
+_attribute_ram_code_ unsigned char Build_PalletData(unsigned char *pBuf, PalletInfo_TypeDef *pInfo, void *arg)
+{
+    unsigned char *p;
+    unsigned char len;
+    NodeDataWaitSend_Typdedef* pnode;
+
+    pnode = (NodeDataWaitSend_Typdedef*)arg;
+    p = &pBuf[5];
     //build the 802.15.4 mac data frame header
     *p++ = 0x61; //frame ctrl
     *p++ = 0x98;
@@ -86,40 +265,18 @@ _attribute_ram_code_ void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeD
     pBuf[2] = 0;
     pBuf[3] = 0;
     pBuf[4] = len + 2;
+
+    return len;
 }
 
-_attribute_ram_code_ void Build_PalletBeacon(unsigned char *pBuf, PalletInfo_TypeDef *pInfo)
+_attribute_ram_code_ unsigned char Build_NodeData(unsigned char *pBuf, void *arg)
 {
-    unsigned char *p = &pBuf[5];
-    int len = 0;
+     unsigned char *p;
+     unsigned char len;
+     NodeInfo_TypeDef *pInfo;
 
-    //build the 802.15.4 mac data frame header
-    *p++ = 0x41; //frame ctrl
-    *p++ = 0x98;
-    *p++ = ++(pInfo->dsn); //dsn
-    *p++ = 0xaa; //dest PANID
-    *p++ = 0xbb;
-    *p++ = 0xff; //dest address
-    *p++ = 0xff;
-
-    *p++ = pInfo->pallet_id & 0xff; //src address
-    *p++ = 0;
-
-    *p++ = FRMAE_TYPE_PALLET_BEACON;
-    *p++ = pInfo->gw_sn;
-    len = p - (&pBuf[5]);
-    pBuf[0] = len + 1;
-    pBuf[1] = 0;
-    pBuf[2] = 0;
-    pBuf[3] = 0;
-    pBuf[4] = len + 2;
-}
-
-_attribute_ram_code_ void Build_NodeData(unsigned char *pBuf, NodeInfo_TypeDef *pInfo)
-{
-    unsigned char *p = &pBuf[5];
-    int len = 0;
-
+	 p = &pBuf[5];
+	 pInfo = (NodeInfo_TypeDef*)arg;
     //build the 802.15.4 mac data frame header
     *p++ = 0x61; //frame ctrl
     *p++ = 0x98;
@@ -147,79 +304,18 @@ _attribute_ram_code_ void Build_NodeData(unsigned char *pBuf, NodeInfo_TypeDef *
     pBuf[2] = 0;
     pBuf[3] = 0;
     pBuf[4] = len + 2;
+
+    return len;
 }
 
-_attribute_ram_code_ unsigned char Build_Ack(unsigned char *pBuf, void* arg)
+_attribute_ram_code_ unsigned char Build_PalletSetupRsp(unsigned char *pBuf, void *arg)
 {
-	GWInfo_TypeDef *pInfo;
-	
-	pInfo = (GWInfo_TypeDef*)arg;
-    pBuf[0] = 4;
-    pBuf[1] = 0;
-    pBuf[2] = 0;
-    pBuf[3] = 0;
-    pBuf[4] = 5;
-    pBuf[5] = 0x02;
-    pBuf[6] = 0x00;
-    pBuf[7] = pInfo->ack_dsn; //dsn
+     unsigned char *p;
+     unsigned char len;
+     PalletInfo_TypeDef *pInfo;
 
-	return (pBuf[0]-1);
-}
-
-_attribute_ram_code_ void Build_NodeSetupReq(unsigned char *pBuf, NodeInfo_TypeDef *pInfo)
-{
-    unsigned char *p = &pBuf[5];
-    int len = 0;
-
-    //build the 802.15.4 mac data frame header
-    *p++ = 0x41; //frame ctrl
-    *p++ = 0x98;
-    *p++ = ++(pInfo->dsn); //dsn
-    *p++ = 0xaa; //dest PANID
-    *p++ = 0xbb;
-    *p++ = pInfo->p_nd_setup_infor->plt_mac & 0xff; //dest address
-    *p++ = pInfo->p_nd_setup_infor->plt_mac >> 8;
-    *p++ = pInfo->mac_addr & 0xff; //src address
-    *p++ = pInfo->mac_addr >> 8;
-    *p++ = FRMAE_TYPE_SETUP_NODE_REQ;
-    len = p - (&pBuf[5]);
-    pBuf[0] = len + 1;
-    pBuf[1] = 0;
-    pBuf[2] = 0;
-    pBuf[3] = 0;
-    pBuf[4] = len + 2;
-}
-
-_attribute_ram_code_ void Build_PalletSetupBeacon(unsigned char *pBuf, PalletInfo_TypeDef *pInfo)
-{
-    unsigned char *p = &pBuf[5];
-    int len = 0;
-
-    //build the 802.15.4 mac data frame header
-    *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
-    *p++ = 0x98; //frame ctrl hig: short dst addr and src addr
-    *p++ = ++(pInfo->dsn); //dsn
-    *p++ = 0xaa; //dest PANID
-    *p++ = 0xbb;
-    *p++ = 0xff; //dest address
-    *p++ = 0xff;
-    *p++ = pInfo->mac_addr & 0xff; //source address
-    *p++ = pInfo->mac_addr >> 8;
-    *p++ = FRMAE_TYPE_SETUP_PALLET_BEACON;
-	*p++ = pInfo->pallet_id;
-	*p++ = pInfo->gsn;
-    len = p - (&pBuf[5]);
-    pBuf[0] = len + 1;
-    pBuf[1] = 0;
-    pBuf[2] = 0;
-    pBuf[3] = 0;
-    pBuf[4] = len + 2;
-}
-
-_attribute_ram_code_ void Build_PalletSetupRsp(unsigned char *pBuf, PalletInfo_TypeDef *pInfo)
-{
-    unsigned char *p = &pBuf[5];
-    int len = 0;
+	 p = &pBuf[5];
+	 pInfo = (PalletInfo_TypeDef*)arg;
 
     //build the 802.15.4 mac data frame header
     *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
@@ -239,48 +335,20 @@ _attribute_ram_code_ void Build_PalletSetupRsp(unsigned char *pBuf, PalletInfo_T
     pBuf[2] = 0;
     pBuf[3] = 0;
     pBuf[4] = len + 2;
+
+    return len;
 }
 
-_attribute_ram_code_ unsigned char Build_GatewaySetupBeacon(unsigned char *pBuf, void *arg)
+
+
+_attribute_ram_code_ unsigned char Build_PalletSetupReq(unsigned char *pBuf, void *arg)
 {
-    unsigned char *p;
-    unsigned char len;
-	GWInfo_TypeDef *pInfo;
+     unsigned char *p;
+     unsigned char len;
+     PalletInfo_TypeDef *pInfo;
 
 	 p = &pBuf[5];
-	 pInfo = (GWInfo_TypeDef*)arg;
-    //build the 802.15.4 mac data frame header
-    *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
-    *p++ = 0x98; //frame ctrl hig: short dst addr and src addr
-    *p++ = ++(pInfo->dsn); //dsn
-    *p++ = 0xff; //dest PANID
-    *p++ = 0xff;
-
-    *p++ = 0xff; //dest address
-    *p++ = 0xff;
-
-    *p++ = pInfo->mac_addr & 0xff; //source address
-    *p++ = pInfo->mac_addr >> 8;
-
-    *p++ = FRMAE_TYPE_SETUP_GW_BEACON;
-
-    *p++ = pInfo->gw_id;
-
-    len = p - (&pBuf[5]);
-    pBuf[0] = len + 1;
-    pBuf[1] = 0;
-    pBuf[2] = 0;
-    pBuf[3] = 0;
-    pBuf[4] = len + 2;
-	
-	return len;
-
-}
-
-_attribute_ram_code_ void Build_PalletSetupReq(unsigned char *pBuf, PalletInfo_TypeDef *pInfo)
-{
-    unsigned char *p = &pBuf[5];
-    int len = 0;
+	 pInfo = (PalletInfo_TypeDef*)arg;
 
     //build the 802.15.4 mac data frame header
     *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
@@ -300,37 +368,9 @@ _attribute_ram_code_ void Build_PalletSetupReq(unsigned char *pBuf, PalletInfo_T
     pBuf[2] = 0;
     pBuf[3] = 0;
     pBuf[4] = len + 2;
-}
-
-_attribute_ram_code_ unsigned char Build_GatewaySetupRsp(unsigned char *pBuf, void *arg)
-{
-    unsigned char *p;
-    unsigned char len;
-	GWInfo_TypeDef *pInfo;
-
-	 p = &pBuf[5];
-	 pInfo = (GWInfo_TypeDef*)arg;
-    //build the 802.15.4 mac data frame header
-    *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
-    *p++ = 0x98; //frame ctrl hig: short dst addr and src addr
-    *p++ = ++(pInfo->dsn); //dsn
-    *p++ = 0xaa; //dest PANID
-    *p++ = 0xbb;
-    *p++ = pInfo->pallet_addr & 0xff; //dest address
-    *p++ = pInfo->pallet_addr >> 8;
-	
-    *p++ = pInfo->mac_addr & 0xff; //source address
-    *p++ = pInfo->mac_addr >> 8;
-    *p++ = FRMAE_TYPE_SETUP_GW_RSP;
-    *p++ = pInfo->pallet_id;
-    len = p - (&pBuf[5]);
-    pBuf[0] = len + 1;
-    pBuf[1] = 0;
-    pBuf[2] = 0;
-    pBuf[3] = 0;
-    pBuf[4] = len + 2;
 
     return len;
 }
+
 
 

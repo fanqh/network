@@ -95,7 +95,8 @@ extern void Pallet_Init(void);
 extern void Pallet_MainLoop(void);
 extern void Pallet_RxIrqHandler(void);
 extern void Pallet_RxTimeoutHandler(void);
-void Pallet_SetupLoop(void);
-void Pallet_SetupLoop2(void);
+//void Pallet_SetupLoop(void);
+//void Pallet_SetupLoop2(void);
+void Pallet_TxDoneHandle(void);
 
 #endif /*_PALLET_H_*/
