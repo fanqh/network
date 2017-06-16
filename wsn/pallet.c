@@ -79,8 +79,8 @@ void Pallet_Init(void)
 
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
     RF_RxBufferSet(rx_buf, RX_BUF_LEN, 0);
-    IRQ_RfIrqDisable(FLD_RF_IRQ_TX);
-    IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT | FLD_RF_IRQ_FIRST_TIMEOUT);
+    IRQ_RfIrqDisable(0xffff);
+    IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT | FLD_RF_IRQ_FIRST_TIMEOUT | FLD_RF_IRQ_TX);
     IRQ_EnableType(FLD_IRQ_ZB_RT_EN);
     RF_SetTxRxOff();
 

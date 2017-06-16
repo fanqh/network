@@ -39,14 +39,14 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
                 Gateway_RxIrqHandler();
             }
             
-            if (RfIrqSrc & FLD_RF_IRQ_RX_TIMEOUT)
-            {
-                Gateway_RxTimeoutHandler();
-            }
-            if(RfIrqSrc & FLD_RF_IRQ_FIRST_TIMEOUT)
-            {
-            	Gateway_RxTimeoutHandler();
-            }
+//            if (RfIrqSrc & FLD_RF_IRQ_RX_TIMEOUT)
+//            {
+//                Gateway_RxTimeoutHandler();
+//            }
+//            if(RfIrqSrc & FLD_RF_IRQ_FIRST_TIMEOUT)
+//            {
+//            	Gateway_RxTimeoutHandler();
+//            }
             if(RfIrqSrc & FLD_RF_IRQ_TX)
             {
             	Gateway_TxDoneHandle();
