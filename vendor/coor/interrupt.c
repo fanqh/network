@@ -53,8 +53,8 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
             }
 #if PA_MODE
             PA_Auto_Switch_Next_State();
-            if(RF_TxFinish())
-            	Tx_Done_falg = 1;
+//            if(RF_TxFinish())
+//            	Tx_Done_falg = 1;
 #endif
             IRQ_RfIrqSrcClr();
         }

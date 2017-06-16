@@ -20,12 +20,12 @@ unsigned short Get_MAC_Addr(void)
 
 unsigned int Estimate_SendT_From_RecT(unsigned int rec_time, unsigned char rec_size)
 {
-	return rec_time- 0x95*TickPerUs - 32*(rec_size+6);
+	return rec_time- 0x95*TickPerUs - 32*(rec_size+6)*TickPerUs;
 }
 unsigned int Estimate_SendData_Time_Length(unsigned char s_size)
 {
-	#define TX_DONE_EX_TIME	500 //us
-	return (32*(s_size+6) + 0x95*TickPerUs + TX_DONE_EX_TIME);
+	#define TX_DONE_EX_TIME	100 //us
+	return (32*(s_size+6) + 0x95 + TX_DONE_EX_TIME);
 }
 
 unsigned char RF_Manual_Send(FunCreatPDU_Typedef pfun_creat_pdu, void* arg)

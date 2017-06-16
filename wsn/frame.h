@@ -91,22 +91,28 @@ typedef struct
 #define FRAME_IS_SETUP_GW_RSP(p)           ( p[22] == FRMAE_TYPE_SETUP_GW_RSP)
 
 //frame pack functions
-extern void Build_GatewayBeacon(unsigned char *pBuf, GWInfo_TypeDef *pInfo);
+//extern void Build_GatewayBeacon(unsigned char *pBuf, GWInfo_TypeDef *pInfo);
 //extern void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeDef *pInfo);
+unsigned char Build_GatewayBeacon(unsigned char *pBuf, void *arg);
+unsigned char Build_GatewaySetupRsp(unsigned char *pBuf, void *arg);
+extern unsigned char Build_GatewaySetupBeacon(unsigned char *pBuf, void *arg);
+unsigned char Build_Ack(unsigned char *pBuf, void* arg);
+
+
+
 void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeDef *pInfo, NodeDataWaitSend_Typdedef* pnode);
 
 extern void Build_PalletBeacon(unsigned char *pBuf, PalletInfo_TypeDef *pInfo);
 extern void Build_NodeData(unsigned char *pBuf, NodeInfo_TypeDef *pInfo);
 extern void Build_NodeSetupReq(unsigned char *pBuf, NodeInfo_TypeDef *pInfo);
-extern void Build_Ack(unsigned char *pBuf, unsigned char dsn);
+//extern void Build_Ack(unsigned char *pBuf, unsigned char dsn);
 
 extern void Build_PalletSetupBeacon(unsigned char *pBuf, PalletInfo_TypeDef *pInfo);
 extern void Build_PalletSetupRsp(unsigned char *pBuf, PalletInfo_TypeDef *pInfo);
 
-extern unsigned char Build_GatewaySetupBeacon(unsigned char *pBuf, void *arg);
 //extern void Build_GatewaySetupBeacon(unsigned char *pBuf, GWInfo_TypeDef *pInfo);
 extern void Build_PalletSetupReq(unsigned char *pBuf, PalletInfo_TypeDef *pInfo);
-extern void Build_GatewaySetupRsp(unsigned char *pBuf, GWInfo_TypeDef *pInfo);
+
 
 
 #endif /*_FRAME_H_*/

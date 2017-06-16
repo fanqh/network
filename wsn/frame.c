@@ -2,10 +2,14 @@
 #include "frame.h"
 #include "config.h"
 
-_attribute_ram_code_ void Build_GatewayBeacon(unsigned char *pBuf, GWInfo_TypeDef *pInfo)
+_attribute_ram_code_ unsigned char Build_GatewayBeacon(unsigned char *pBuf, void *arg)
 {
-    unsigned char *p = &pBuf[5];
-    int len = 0;
+    unsigned char *p;
+    unsigned char len;
+	GWInfo_TypeDef *pInfo;
+
+	 p = &pBuf[5];
+	 pInfo = (GWInfo_TypeDef*)arg;
 
     //build the 802.15.4 mac data frame header
     *p++ = 0x41; //frame ctrl
@@ -33,6 +37,8 @@ _attribute_ram_code_ void Build_GatewayBeacon(unsigned char *pBuf, GWInfo_TypeDe
     pBuf[2] = 0;
     pBuf[3] = 0;
     pBuf[4] = len + 2;
+
+    return len;
 }
 
 _attribute_ram_code_ void Build_PalletData(unsigned char *pBuf, PalletInfo_TypeDef *pInfo, NodeDataWaitSend_Typdedef* pnode)
@@ -143,8 +149,11 @@ _attribute_ram_code_ void Build_NodeData(unsigned char *pBuf, NodeInfo_TypeDef *
     pBuf[4] = len + 2;
 }
 
-_attribute_ram_code_ void Build_Ack(unsigned char *pBuf, unsigned char dsn)
+_attribute_ram_code_ unsigned char Build_Ack(unsigned char *pBuf, void* arg)
 {
+	GWInfo_TypeDef *pInfo;
+	
+	pInfo = (GWInfo_TypeDef*)arg;
     pBuf[0] = 4;
     pBuf[1] = 0;
     pBuf[2] = 0;
@@ -152,7 +161,9 @@ _attribute_ram_code_ void Build_Ack(unsigned char *pBuf, unsigned char dsn)
     pBuf[4] = 5;
     pBuf[5] = 0x02;
     pBuf[6] = 0x00;
-    pBuf[7] = dsn; //dsn
+    pBuf[7] = pInfo->ack_dsn; //dsn
+
+	return (pBuf[0]-1);
 }
 
 _attribute_ram_code_ void Build_NodeSetupReq(unsigned char *pBuf, NodeInfo_TypeDef *pInfo)
@@ -291,11 +302,14 @@ _attribute_ram_code_ void Build_PalletSetupReq(unsigned char *pBuf, PalletInfo_T
     pBuf[4] = len + 2;
 }
 
-_attribute_ram_code_ void Build_GatewaySetupRsp(unsigned char *pBuf, GWInfo_TypeDef *pInfo)
+_attribute_ram_code_ unsigned char Build_GatewaySetupRsp(unsigned char *pBuf, void *arg)
 {
-    unsigned char *p = &pBuf[5];
-    int len = 0;
+    unsigned char *p;
+    unsigned char len;
+	GWInfo_TypeDef *pInfo;
 
+	 p = &pBuf[5];
+	 pInfo = (GWInfo_TypeDef*)arg;
     //build the 802.15.4 mac data frame header
     *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
     *p++ = 0x98; //frame ctrl hig: short dst addr and src addr
@@ -315,6 +329,8 @@ _attribute_ram_code_ void Build_GatewaySetupRsp(unsigned char *pBuf, GWInfo_Type
     pBuf[2] = 0;
     pBuf[3] = 0;
     pBuf[4] = len + 2;
+
+    return len;
 }
 
 
