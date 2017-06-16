@@ -9,25 +9,17 @@
 #define PALLET_TABLE_MAX_LEN 3
 
 static unsigned int temp_t0 = 0;
+static unsigned char send_len;
 static GWInfo_TypeDef gw_info;
 static MsgQueue_Typedef msg_queue;
 
 static PalletEntry_Typedef pallet_table[PALLET_TABLE_MAX_LEN];
 
-static unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
-static unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
-static unsigned char rx_ptr = 0;
-
-
+unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
+unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
+static volatile unsigned char rx_ptr = 0;
 extern volatile unsigned char GatewaySetupTrig;
 
-
-typedef struct
-{
-	unsigned short gateway_mac;
-	unsigned char rst;
-	unsigned long master_period;
-}gateway_infor_t;
 
 typedef struct
 {
@@ -38,7 +30,6 @@ typedef struct
 
 }WaitForUpload_Typedef;
 
-gateway_infor_t device_infor;
 WaitForUpload_Typedef DataToSend;
 extern volatile unsigned char Tx_Done_falg;
 
@@ -46,12 +37,13 @@ extern volatile unsigned char Tx_Done_falg;
 void Gateway_Init(void)
 {
 
-	FLASH_PageRead(FLASH_DEVICE_INFOR_ADDR, sizeof(gateway_infor_t), (unsigned char*)&device_infor);
-	if(device_infor.gateway_mac == 0xffff)
-		device_infor.gateway_mac = PALLET_MAC_ADDR;
+	unsigned short addr;
 
-    memset(&gw_info, 0, sizeof(GWInfo_TypeDef));
-    gw_info.mac_addr = device_infor.gateway_mac;
+	addr = Get_MAC_Addr();
+	if(addr = 0xffff)
+		addr = Rand();
+
+    gw_info.mac_addr = addr;
     //gw_info.dsn = gw_info.mac_addr & 0xff;
     gw_info.state = GW_STATE_RF_OFF;
 	gw_info.gw_id = Rand()%255;
@@ -97,7 +89,7 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
     {
     	gw_info.t0 = ClockTime() + RF_TX_WAIT*TickPerUs;
 
-    	RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
+    	RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL);
     	Build_GatewayBeacon(tx_buf, &gw_info);
         RF_TxPkt(tx_buf);
 
@@ -200,17 +192,146 @@ _attribute_ram_code_ void Gateway_RxIrqHandler(void)
 
 _attribute_ram_code_ void Gateway_RxTimeoutHandler(void)
 {
-    if (GW_STATE_PALLET_DATA_WAIT == gw_info.state) {
+    if (GW_STATE_PALLET_DATA_WAIT == gw_info.state)
+    {
         MsgQueue_Push(&msg_queue, NULL, GW_MSG_TYPE_PALLET_DATA_TIMEOUT);
     }
-    else {
+    else
+    {
 
     }
+}
+_attribute_ram_code_ void Gateway_TxDoneHandle(void)
+{
+	MsgQueue_Push(&msg_queue, NULL, MSG_TX_DONE);
 }
 
 _attribute_ram_code_ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
 {
-    if (GW_STATE_SETUP_IDLE == gw_info.state)
+	switch (gw_info.state)
+	{
+		case GW_SETUP_IDLE:
+		{
+	    	if(gw_info.dsn>=GW_SETUP_BCN_NUM)
+	    	{
+	        	if(gw_info.pallet_table_len!=0)
+	        	{
+	        		GPIO_SetBit(LED_GREEN);
+	        		GPIO_ResetBit(LED_RED);
+	        	}
+	        	else
+	        	{
+	        		GPIO_SetBit(LED_RED);
+	        		GPIO_ResetBit(LED_GREEN);
+	        	}
+	        	gw_info.state = GW_STATE_SEND_GW_BCN;
+	    	}
+	    	else
+	    	{
+	            gw_info.state = GW_SETUP_SEND_GB;
+	    	}
+			break;
+		}
+		case GW_SETUP_SEND_GB:
+		{
+	        TIME_INDICATE();
+	        send_len = RF_Manual_Send(Build_GatewaySetupBeacon, &gw_info);
+	        temp_t0 = ClockTime();
+	        gw_info.state = GW_SETUP_GB_TX_DONE_WAIT;
+
+	        TX_INDICATE();
+//	        Wait_Tx_Done(TX_DONE_TIMEOUT);
+//	        TX_INDICATE();
+//
+//	        temp_t0 = ClockTime();
+//	        gw_info.state = GW_SETUP_PLT_REQ_WAIT;
+//	        RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //switch to rx mode and wait for
+
+			break;
+		}
+		case GW_SETUP_GB_TX_DONE_WAIT:
+		{
+			if(ClockTimeExceed(temp_t0, Estimate_SendData_Time_Length(send_len)) || ((msg)&&(msg->type==MSG_TX_DONE)))
+			{
+				TX_INDICATE();
+				//temp_t0 = ClockTime();
+				gw_info.state = GW_SETUP_PLT_REQ_WAIT;
+				RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //switch to rx mode and wait for
+			}
+			break;
+		}
+		case GW_SETUP_PLT_REQ_WAIT:
+		{
+	    	if(ClockTime() - (temp_t0+MASTER_PERIOD*TickPerUs ) <= BIT(31))
+	    	{
+	    		temp_t0 = ClockTime();
+	    		gw_info.state = GW_SETUP_IDLE;
+	    	}
+	        if (msg)
+	        {
+	        	int i = 0;
+	            if (msg->type == GW_MSG_TYPE_SETUP_REQ)
+	            {
+	            	RX_INDICATE();
+	                gw_info.pallet_addr = FRAME_GET_SRC_ADDR(msg->data);
+	                //todo need to optimize and have bug here
+	                for (i = 0; i < gw_info.pallet_table_len; i++)
+	                {
+	                    if (gw_info.pallet_addr == pallet_table[i].pallet_addr)
+	                    {
+	                        gw_info.pallet_id = pallet_table[i].pallet_id;
+	                        break;
+	                    }
+	                }
+	                if (i == gw_info.pallet_table_len)
+	                {
+	                    gw_info.pallet_table_len++;
+	                    gw_info.pallet_id = gw_info.pallet_table_len;
+	                    //add the new node to node table
+	                    //assert(gw_info.pallet_table_len <= PALLET_TABLE_MAX_LEN);
+	                    if(gw_info.pallet_table_len > PALLET_TABLE_MAX_LEN)
+	                    	ERROR_WARN_LOOP();
+	                    pallet_table[i].pallet_addr = gw_info.pallet_addr;
+	                    pallet_table[i].pallet_id = gw_info.pallet_id;
+	                    pallet_table[i].pallet_node_num = FRAME_GET_PALLET_NODE_NUM(msg->data);
+	                }
+
+
+	    	        send_len = RF_Manual_Send(Build_GatewaySetupRsp, &gw_info);
+	    	        temp_t0 = ClockTime();
+	    	        gw_info.state = GW_SETUP_RSP_TX_DONE;
+	    	        TX_INDICATE();
+
+
+//	                RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
+//	                Build_GatewaySetupRsp(tx_buf, &gw_info);
+//	                RF_TxPkt(tx_buf);
+//
+//	                TX_INDICATE();
+//	                Wait_Tx_Done(TX_DONE_TIMEOUT);
+//	                TX_INDICATE();
+//
+//	                RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //resume to rx mode and continue to receive PALLET_MSG_TYPE_SETUP_REQ
+	            }
+	            Message_Reset(msg);
+	        }
+			break;
+		}
+		case GW_SETUP_RSP_TX_DONE:
+		{
+			if(ClockTimeExceed(temp_t0, Estimate_SendData_Time_Length(send_len)) || ((msg)&&(msg->type==MSG_TX_DONE)))
+			{
+				TX_INDICATE();
+				gw_info.state = GW_SETUP_PLT_REQ_WAIT;
+				RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //resume to rx mode and continue to receive PALLET_MSG_TYPE_SETUP_REQ
+			}
+			break;
+		}
+		default :
+			break;
+	}
+#if 0
+    if (GW_SETUP_IDLE == gw_info.state)
     {
     	if(gw_info.dsn>=GW_SETUP_BCN_NUM)
     	{
@@ -228,29 +349,34 @@ _attribute_ram_code_ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
     	}
     	else
     	{
-            gw_info.state = GW_STATE_SETUP_SEND_GB;
+            gw_info.state = GW_SETUP_SEND_GB;
     	}
     }
-    else if(GW_STATE_SETUP_SEND_GB == gw_info.state)
+    else if(GW_SETUP_SEND_GB == gw_info.state)
     {
-        RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
-        Build_GatewaySetupBeacon(tx_buf, &gw_info);
+//        RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
+//        Build_GatewaySetupBeacon(tx_buf, &gw_info);
+//        TIME_INDICATE();
+//        RF_TxPkt(tx_buf);
+
         TIME_INDICATE();
-        temp_t0 = ClockTime();
-        RF_TxPkt(tx_buf);
+        RF_Manual_Send(Build_GatewaySetupBeacon, &gw_info);
+
         TX_INDICATE();
         Wait_Tx_Done(TX_DONE_TIMEOUT);
         TX_INDICATE();
 
-        gw_info.state = GW_STATE_SETUP_PALLET_REQ_WAIT;
+        temp_t0 = ClockTime();
+        gw_info.state = GW_SETUP_PLT_REQ_WAIT;
         RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //switch to rx mode and wait for
     }
-    else if (GW_STATE_SETUP_PALLET_REQ_WAIT == gw_info.state)
+    GW_SETUP_SEND_GB_DONE_WAIT
+    else if (GW_SETUP_PLT_REQ_WAIT == gw_info.state)
     {
     	if(ClockTime() - (temp_t0+MASTER_PERIOD*TickPerUs ) <= BIT(31))
     	{
     		temp_t0 = ClockTime();
-    		gw_info.state = GW_STATE_SETUP_IDLE;
+    		gw_info.state = GW_SETUP_IDLE;
     	}
 #if 1
         if (msg)
@@ -296,6 +422,7 @@ _attribute_ram_code_ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
         }
         #endif
     }
+#endif
 }
 
 void Gateway_MainLoop(void)
@@ -311,7 +438,7 @@ void Gateway_MainLoop(void)
 
     	GPIO_ResetBit(LED_GREEN);
 		gw_info.dsn = 0;
-    	gw_info.state = GW_STATE_SETUP_IDLE;
+    	gw_info.state = GW_SETUP_IDLE;
     	//gateway_setup_timer = ev_on_timer(Gateway_SetupTimer_Callback, NULL, GP_SETUP_PERIOD-1000*TickPerUs);
     }
     if(IS_GW_WITHIN_SETUP_STATE(gw_info.state))

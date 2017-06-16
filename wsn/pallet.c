@@ -16,8 +16,8 @@ static MsgQueue_Typedef msg_queue;
 
 static NodeEntry_Typedef node_table[NODE_TABLE_MAX_LEN];
 
-static volatile unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
-static volatile unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
+volatile unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
+volatile unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
 static volatile unsigned char rx_ptr = 0;
 volatile unsigned char PalletSetupTrig = 0;
 unsigned int temp_t1;

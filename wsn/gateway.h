@@ -4,20 +4,21 @@
 #define CONN_PLT_NUM_MAX       32
 
 //states of the gateway state machine
-#define GW_SETUP_MASK		0X10
-#define GW_ASSOCIATE_MASK	0X20
-enum {
+#define GW_SETUP_MASK		0X100
+#define GW_ASSOCIATE_MASK	0X200
+typedef enum {
 	GW_STATE_RF_OFF,
-    GW_STATE_SETUP_IDLE = GW_SETUP_MASK,
-    GW_STATE_SETUP_SEND_GB,
-    GW_STATE_SETUP_PALLET_REQ_WAIT,
-    GW_STATE_TRANSIT_ASSOCIATE,
+    GW_SETUP_IDLE = GW_SETUP_MASK,
+    GW_SETUP_SEND_GB,
+    GW_SETUP_GB_TX_DONE_WAIT,
+    GW_SETUP_PLT_REQ_WAIT,
+    GW_SETUP_RSP_TX_DONE,
 
     GW_STATE_SEND_GW_BCN = GW_ASSOCIATE_MASK,
     GW_STATE_PALLET_DATA_WAIT,
     GW_STATE_SEND_PALLET_ACK,
     GW_STATE_SUSPEND,
-};
+}GW_StateTypedef;
 
 #define IS_GW_WITHIN_SETUP_STATE(state)		(state & GW_SETUP_MASK)
 #define IS_GW_WITHIN_ASSOCIATE_STATE(state)	(state & GW_ASSOCIATE_MASK)
@@ -31,7 +32,7 @@ typedef struct {
 } PalletEntry_Typedef;
 
 typedef struct {
-	unsigned char state; //current state of device
+	GW_StateTypedef state; //current state of device
     unsigned int t0; //the moment starting to send the beacon 
     unsigned int wakeup_tick; //the moment wakeup
     unsigned char gw_id;
@@ -48,6 +49,7 @@ extern void Gateway_Init(void);
 extern void Gateway_MainLoop(void);
 extern void Gateway_RxIrqHandler(void);
 extern void Gateway_RxTimeoutHandler(void);
+extern void Gateway_TxDoneHandle(void);
 void Gateway_SetupLoop(void);
 
 #endif /*_GATE_WAY_H_*/

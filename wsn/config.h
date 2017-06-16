@@ -34,6 +34,7 @@
 #define ZB_TIMESTAMP_OFFSET             341 //(6byte preamble + 0x95 pll settle time)in us
 #define TX_DONE_TIMEOUT					1000
 
+
 #define SETUP_SUSPNED_EARLY_WAKEUP		500
 #define WAKERUP_EARLY_TIME				150
 

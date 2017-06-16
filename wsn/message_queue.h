@@ -43,6 +43,9 @@ enum {
     NP_MSG_SETUP_PLT_BCN,
     NP_MSG_SETUP_RSP,
     NP_MSG_SETUP_RSP_TIMEOUT,
+
+    //common
+    MSG_TX_DONE,
 };
 
 typedef struct {

@@ -103,7 +103,8 @@ extern void Build_Ack(unsigned char *pBuf, unsigned char dsn);
 extern void Build_PalletSetupBeacon(unsigned char *pBuf, PalletInfo_TypeDef *pInfo);
 extern void Build_PalletSetupRsp(unsigned char *pBuf, PalletInfo_TypeDef *pInfo);
 
-extern void Build_GatewaySetupBeacon(unsigned char *pBuf, GWInfo_TypeDef *pInfo);
+extern unsigned char Build_GatewaySetupBeacon(unsigned char *pBuf, void *arg);
+//extern void Build_GatewaySetupBeacon(unsigned char *pBuf, GWInfo_TypeDef *pInfo);
 extern void Build_PalletSetupReq(unsigned char *pBuf, PalletInfo_TypeDef *pInfo);
 extern void Build_GatewaySetupRsp(unsigned char *pBuf, GWInfo_TypeDef *pInfo);
 
