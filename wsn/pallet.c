@@ -94,19 +94,19 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 {
     switch (pallet_info.state)
     {
-		case PALLET_STATE_IDLE:
+		case GPN_CONN_IDLE:
 		{
 			temp_t0 = ClockTime();
-			pallet_info.state = PALLET_STATE_GW_BCN_WAIT;
+			pallet_info.state = GPN_CONN_GW_BCN_WAIT;
 
 			RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on
 			break;
 		}
-		case PALLET_STATE_GW_BCN_WAIT:
+		case GPN_CONN_GW_BCN_WAIT:
 		{
 			if(ClockTimeExceed(temp_t0, 1200))
 			{
-				pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
+				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_GB;
 				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
 				pallet_info.t0 = pallet_info.wakeup_tick;
 			}
@@ -119,49 +119,52 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 
 				if ((pallet_info.gw_sn % PALLET_NUM) == (pallet_info.pallet_id % PALLET_NUM))
 				{
-					RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
-//					Build_PalletData(tx_buf, &pallet_info);
-					RF_TxPkt(tx_buf);
-
-					TX_INDICATE();
-					Wait_Tx_Done(3000);
-					TX_INDICATE();
-
-					temp_t0 = ClockTime();
-					pallet_info.state = PALLET_STATE_GW_ACK_WAIT;
-					RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on waiting for mesh setup beacon
-
+	            	send_len = RF_Manual_Send(Build_PalletData, (void*)&pallet_info);
+	            	TX_INDICATE();
+	            	temp_t0 = ClockTime();
+	            	pallet_info.state = GPN_CONN_PLT_DATA_TX_DONE_WAIT;
 					memset(&node_data, 0, sizeof(NodeDataWaitSend_Typdedef)*3 );
 
 				}
 				else
 				{
-					pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
+					pallet_info.state = GPN_CONN_SUSPEND_BEFORE_PB;
 					pallet_info.wakeup_tick = pallet_info.t0 + TIMESLOT_LENGTH*pallet_info.pallet_id*TickPerUs;
 				}
 				Message_Reset(msg);
 			}
 			break;
 		}
-		case PALLET_STATE_GW_ACK_WAIT:
+		case GPN_CONN_PLT_DATA_TX_DONE_WAIT:
+		{
+			if(ClockTimeExceed(temp_t0, Estimate_SendData_Time_Length(send_len)) || ((msg)&&(msg->type==MSG_TX_DONE)))
+			{
+				TX_INDICATE();
+    			pallet_info.state = GPN_CONN_GW_ACK_WAIT;
+    			temp_t0 = ClockTime();
+    			RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
+			}
+			break;
+		}
+		case GPN_CONN_GW_ACK_WAIT:
 		{
 			//todo
 			if(ClockTimeExceed(temp_t0, RX_WAIT))
 			{
-				pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
+				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_PB;
 				pallet_info.wakeup_tick = pallet_info.t0 + TIMESLOT_LENGTH*pallet_info.pallet_id*TickPerUs;
 			}
 			else if (msg && (msg->type == PALLET_MSG_TYPE_GW_ACK))
 			{
 				//RX_INDICATE();
 				GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
-				pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_PB;
+				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_PB;
 				pallet_info.wakeup_tick = pallet_info.t0 + TIMESLOT_LENGTH*pallet_info.pallet_id*TickPerUs;
 				Message_Reset(msg);
 			}
 			break;
 		}
-		case PALLET_STATE_SUSPEND_BEFORE_PB:
+		case GPN_CONN_SUSPEND_BEFORE_PB:
 		{
 			RF_SetTxRxOff();
 			GPIO_WriteBit(POWER_PIN, 0);
@@ -171,34 +174,35 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 			while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
 		#endif
 			GPIO_WriteBit(POWER_PIN, 1);
-			pallet_info.state = PALLET_STATE_SEND_PB;
+			pallet_info.state = GPN_CONN_SEND_PB;
 
 			break;
 		}
-		case PALLET_STATE_SEND_PB:
+		case GPN_CONN_SEND_PB:
 		{
-
-			RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
-			Build_PalletBeacon(tx_buf, &pallet_info);
-			TIME_INDICATE();
-			RF_TxPkt(tx_buf);
-
+			send_len = RF_Manual_Send(Build_PalletBeacon, (void*)&pallet_info);
 			TX_INDICATE();
-			Wait_Tx_Done(TX_DONE_TIMEOUT);
-			TX_INDICATE();
-
 			temp_t0 = ClockTime();
-			RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
-			pallet_info.state = PALLET_STATE_NODE_DATA_WAIT;
-
+			pallet_info.state = GPN_CONN_PB_TX_DONE_WAIT;
 			break;
 		}
-		case PALLET_STATE_NODE_DATA_WAIT:
+		case GPN_CONN_PB_TX_DONE_WAIT:
+		{
+			if(ClockTimeExceed(temp_t0, Estimate_SendData_Time_Length(send_len)) || ((msg)&&(msg->type==MSG_TX_DONE)))
+			{
+				TX_INDICATE();
+				pallet_info.state = GPN_CONN_ND_DATA_WAIT;
+				temp_t0 = ClockTime();
+				RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
+			}
+			break;
+		}
+		case GPN_CONN_ND_DATA_WAIT:
 		{
 			if(ClockTimeExceed(temp_t0, RX_WAIT))
 			{
-				pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
-				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - WAKERUP_EARLY_TIME)*TickPerUs;
+				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_GB;
+				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD)*TickPerUs;
 			}
 			else if (msg)
 			{
@@ -206,7 +210,6 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 				{
 					unsigned char node_id;
 					RX_INDICATE();
-					//GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
 					//ToDo: process received data submitted by end device
 					//save the dsn for subsequent ack
 					pallet_info.ack_dsn = msg->data[15];
@@ -214,27 +217,35 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 
 					node_data[(node_id-1)%NODE_NUM].updata = 1;
 					node_data[(node_id-1)%NODE_NUM].temperature = FRAME_ND_DATE_GET_ND_PAYLOAD(msg->data);
-					pallet_info.state = PALLET_STATE_SEND_NODE_ACK;
+					pallet_info.state = GPN_CONN_SEND_ND_ACK;
 				}
 				Message_Reset(msg);
 			}
 			break;
 		}
-		case PALLET_STATE_SEND_NODE_ACK:
+		case GPN_CONN_SEND_ND_ACK:
 		{
-			RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
-			Build_Ack(tx_buf, pallet_info.ack_dsn);
-			RF_TxPkt(tx_buf);
-
-			TX_INDICATE();
-			Wait_Tx_Done(TX_DONE_TIMEOUT);
-			TX_INDICATE();
-
-			pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
-			pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+        	send_len = RF_Manual_Send(Build_Ack, (void*)&pallet_info.ack_dsn);
+        	TX_INDICATE();
+        	temp_t0 = ClockTime();
+        	pallet_info.state = GPN_CONN_ND_ACK_TX_DONE_WAIT;
 			break;
 		}
-		case PALLET_STATE_SUSPEND_BEFORE_GB:
+		case GPN_CONN_ND_ACK_TX_DONE_WAIT:
+		{
+			if(ClockTimeExceed(temp_t0, Estimate_SendData_Time_Length(send_len)) || ((msg)&&(msg->type==MSG_TX_DONE)))
+			{
+    			TX_INDICATE();
+
+    			pallet_info.state = GPN_CONN_SUSPEND_BEFORE_GB;
+    			temp_t0 = ClockTime();
+    			RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
+    			pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD)*TickPerUs;
+			}
+
+			break;
+		}
+		case GPN_CONN_SUSPEND_BEFORE_GB:
 		{
 			RF_SetTxRxOff();
 			GPIO_WriteBit(POWER_PIN, 0);
@@ -244,7 +255,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 			while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
 	#endif
 			GPIO_WriteBit(POWER_PIN, 1);
-			pallet_info.state = PALLET_STATE_IDLE;
+			pallet_info.state = GPN_CONN_IDLE;
 			break;
 		}
 
@@ -273,7 +284,7 @@ _attribute_ram_code_ void Pallet_RxIrqHandler(void)
     else
 	{
 #if DEBUG
-    	if(pallet_info.state==PALLET_STATE_GW_BCN_WAIT)
+    	if(pallet_info.state==GPN_CONN_GW_BCN_WAIT)
     	{
     	if(dj>=8)
     		dj = 0;
@@ -387,13 +398,13 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
     {
 		case PN_SETUP_IDLE:
 		{
-//			if(pallet_info.dsn>=PLT_SETUP_BCN_NUM)
-//			{
-//				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD*2 - 300)*TickPerUs;
-//				pallet_info.t0 = pallet_info.wakeup_tick;
-//				pallet_info.state = PALLET_STATE_SUSPEND_BEFORE_GB;
-//			}
-//			else
+			if(pallet_info.dsn>=PLT_SETUP_BCN_NUM)
+			{
+				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD*2 - 300)*TickPerUs;
+				pallet_info.t0 = pallet_info.wakeup_tick;
+				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_GB;
+			}
+			else
 			{
 				temp_t0 = ClockTime();
 				RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
@@ -441,22 +452,10 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
 		}
 		case PN_SETUP_SEND_BCN:
 		{
-//	        RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
-//	        Build_PalletSetupBeacon(tx_buf, &pallet_info);
-//	        TIME_INDICATE();
-//	        RF_TxPkt(tx_buf);
 			send_len = RF_Manual_Send(Build_PalletSetupBeacon, (void*)&pallet_info);
 			TX_INDICATE();
 			temp_t0 = ClockTime();
 			pallet_info.state = PN_SETUP_SEND_BCN_TX_DONE_WAIT;
-
-//	        TX_INDICATE();
-//	        Wait_Tx_Done(TX_DONE_TIMEOUT);
-//	        TIME_INDICATE();
-//	        TX_INDICATE();
-//
-//	        RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
-//	        pallet_info.state = PN_SETUP_NODE_REQ_WAIT;
 			break;
 		}
 		case PN_SETUP_SEND_BCN_TX_DONE_WAIT:
@@ -507,21 +506,10 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
 							node_table[i].node_addr = pallet_info.node_addr;
 							node_table[i].node_id = pallet_info.node_id;
 						}
-
-//						RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
-//						Build_PalletSetupRsp(tx_buf, &pallet_info);
-//						RF_TxPkt(tx_buf);
-
 						send_len = RF_Manual_Send(Build_PalletSetupRsp, (void*)&pallet_info);
 						TX_INDICATE();
 						temp_t0 = ClockTime();
 						pallet_info.state = PN_SETUP_ND_RSP_TX_DONE;
-
-//						TX_INDICATE();
-//						Wait_Tx_Done(TX_DONE_TIMEOUT);
-//						TIME_INDICATE();
-//						TX_INDICATE();
-						//RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //resume to rx mode and continue to receive PALLET_MSG_TYPE_SETUP_REQ
 					}
 
 					Message_Reset(msg);

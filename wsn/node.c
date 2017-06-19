@@ -1,18 +1,18 @@
 #include "../common.h"
 #include "../drivers.h"
-
 #include "config.h"
 #include "frame.h"
-#include "message_queue.h"
-
 #include "node.h"
+#include "mac.h"
+#include "message_queue.h"
 
 NodeInfo_TypeDef node_info;
 static MsgQueue_Typedef msg_queue;
 NodeSetup_Infor_TypeDef ND_Setup_Infor;
 unsigned int temp_t0;
+unsigned char send_len;
 
-static volatile unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
+volatile unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
 static volatile unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
 static volatile unsigned char rx_ptr = 0;
 
@@ -40,7 +40,7 @@ void Node_Init(void)
     RF_RxBufferSet(rx_buf + rx_ptr*RX_BUF_LEN, RX_BUF_LEN, 0);
     //enable irq
     IRQ_RfIrqDisable(0xffff);
-    IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT);
+    IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT|FLD_RF_IRQ_TX);
     IRQ_EnableType(FLD_IRQ_ZB_RT_EN);
     IRQ_Enable();
     RF_SetTxRxOff();
@@ -83,30 +83,58 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 			}
 			else if(msg->type==NODE_MSG_TYPE_PALLET_BCN)
 			{
-                node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - (ZB_TIMESTAMP_OFFSET + FRAME_PLT_PB_GET_SRC_ID(msg->data)*TIMESLOT_LENGTH)*TickPerUs;  //gateway beacon time
-                node_info.gw_sn = FRAME_PLT_PB_GET_GW_SN(msg->data);
+                //node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - (ZB_TIMESTAMP_OFFSET + FRAME_PLT_PB_GET_SRC_ID(msg->data)*TIMESLOT_LENGTH)*TickPerUs;  //gateway beacon time
+				node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data)) - \
+								FRAME_PLT_PB_GET_SRC_ID(msg->data)*TIMESLOT_LENGTH*TickPerUs;
+
+				node_info.gw_sn = FRAME_PLT_PB_GET_GW_SN(msg->data);
                 node_info.plt_dsn = FRAME_GET_DSN(msg->data);
                 if ((node_info.gw_sn % NODE_NUM) == (node_info.node_id % NODE_NUM))
                 {
                     if (FRAME_PLT_PB_GET_SRC_ID(msg->data) == node_info.pallet_id)
                     {
+//                    	RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
+//                    	Build_NodeData(tx_buf, &node_info);
+//                    	TIME_INDICATE();
+//                    	RF_TxPkt(tx_buf);
 
-                    	RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
-                    	Build_NodeData(tx_buf, &node_info);
-
-                    	TIME_INDICATE();
-                    	RF_TxPkt(tx_buf);
-                    	Wait_Tx_Done(3000);
-                    	TIME_INDICATE();
-
+                    	send_len = RF_Manual_Send(Build_NodeData, (void*)&node_info);
+                    	TX_INDICATE();
                     	temp_t0 = ClockTime();
-                    	RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
-                    	node_info.state = ND_CONN_PLT_ACK_WAIT;
-                    	return;
+                    	node_info.state = ND_CONN_ND_DATA_TX_DONE_WAIT;
+
+//                    	Wait_Tx_Done(3000);
+//                    	TIME_INDICATE();
+//                    	temp_t0 = ClockTime();
+//
+//                    	temp_t0 = ClockTime();
+//                    	RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
+//                    	node_info.state = ND_CONN_PLT_ACK_WAIT;
+//                    	return;
+                    }
+                    else
+                    {
+                        node_info.state = ND_CONN_SUSPEND;
+                        node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD)*TickPerUs;
                     }
                 }
-                node_info.state = ND_CONN_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD - 500)*TickPerUs;
+                else
+                {
+                    node_info.state = ND_CONN_SUSPEND;
+                    node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD)*TickPerUs;
+                }
+
+			}
+			break;
+		}
+		case ND_CONN_ND_DATA_TX_DONE_WAIT:
+		{
+			if(ClockTimeExceed(temp_t0, Estimate_SendData_Time_Length(send_len)) || ((msg)&&(msg->type==MSG_TX_DONE)))
+			{
+				TX_INDICATE();
+				node_info.state = ND_CONN_PLT_ACK_WAIT;
+				temp_t0 = ClockTime();
+				RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
 			}
 			break;
 		}
@@ -114,13 +142,13 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 		{
 			if(ClockTimeExceed(temp_t0, RX_WAIT))
 			{
-				TIME_INDICATE();
+				//TIME_INDICATE();
 				node_info.state = ND_CONN_SUSPEND;
 				node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+NODE_NUM*MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
 			}
 			else if(msg && (msg->type==NODE_MSG_TYPE_PALLET_ACK))
 			{
-				TIME_INDICATE();
+				RX_INDICATE();
 				GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
                 node_info.state = ND_CONN_SUSPEND;
                 node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+NODE_NUM*MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
@@ -129,7 +157,6 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 		}
 		case ND_CONN_SUSPEND:
 		{
-			TIME_INDICATE();
 	    	RF_SetTxRxOff();
 
 //	        if(node_info.wakeup_tick - ClockTime() >1000*TickPerUs)
@@ -164,6 +191,11 @@ _attribute_ram_code_ void Node_RxIrqHandler(void)
     //receive a valid packet
     else
     {
+    	unsigned int tick = ClockTime();
+    	rx_packet[8] = (unsigned char)(tick & 0xff);
+    	rx_packet[9] = (unsigned char)((tick>>8) & 0xff);
+    	rx_packet[10] = (unsigned char)((tick>>16) & 0xff);
+    	rx_packet[11] = (unsigned char)((tick>>24) & 0xff);
         //if it is pallet setup beacon frame, perform a random backoff and then require to associate
         if (FRAME_IS_SETUP_PALLET_BEACON(rx_packet))
         {
@@ -221,6 +253,11 @@ _attribute_ram_code_ void Node_RxTimeoutHandler(void)
 //    	//todo need add some code to tell application
 //    }
 }
+_attribute_ram_code_ void Node_TxDoneHandle(void)
+{
+	MsgQueue_Push(&msg_queue, NULL, MSG_TX_DONE);
+}
+
 
 _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 {
@@ -245,11 +282,11 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 				{
 
 					RX_INDICATE();
-					TIME_INDICATE();
-
-					node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
+					//node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
+					node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data));
 					ND_Setup_Infor.plt_mac = FRAME_PLT_SETUP_BCN_GET_SRC_MAC(msg->data);
 					ND_Setup_Infor.plt_id = FRAME_PLT_SETU_BCN_GET_PLT_ID(msg->data);
+
 					if(node_info.is_connect==1)
 					{
 						if((ND_Setup_Infor.plt_mac==node_info.pallet_mac)&&(ND_Setup_Infor.plt_id==node_info.pallet_id))
@@ -262,19 +299,21 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 					else
 					{
 						node_info.state = ND_SETUP_BACKOFF;
-						node_info.wakeup_tick = ClockTime() +  (((Rand() % (MASTER_PERIOD - GW_PLT_TIME - ND_WAIT_BCN_MARGIN)))/BACKOFF_UNIT)*BACKOFF_UNIT*TickPerUs;
-						TIME_INDICATE();
+						node_info.wakeup_tick = ClockTime() +  \
+								(((Rand() % (MASTER_PERIOD - GW_PLT_TIME - ND_WAIT_BCN_MARGIN)))/BACKOFF_UNIT)*BACKOFF_UNIT*TickPerUs;
 					}
 
 				}
+				//note: first pallet beacon can't receive, the second can be received
 				else if(NODE_MSG_TYPE_PALLET_BCN == msg->type)
 				{
 					if(FRAME_PLT_PB_GET_SRC_ID(msg->data) == node_info.pallet_id)
 					{
 						RX_INDICATE();
-						node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - (ZB_TIMESTAMP_OFFSET + node_info.pallet_id*TIMESLOT_LENGTH)*TickPerUs;
+						//node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - (ZB_TIMESTAMP_OFFSET + node_info.pallet_id*TIMESLOT_LENGTH)*TickPerUs;
+						node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data))\
+										- node_info.pallet_id*TIMESLOT_LENGTH*TickPerUs;
 
-						GPIO_SetBit(SHOW_DEBUG);
 						node_info.state = ND_CONN_SUSPEND;
 						node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id + NODE_NUM*MASTER_PERIOD  - DEV_RX_MARGIN)*TickPerUs;
 						//pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
@@ -303,23 +342,10 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 		{
 			if (ND_Setup_Infor.retry_times < RETRY_MAX)
 			{
-				RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
-				Build_NodeSetupReq(tx_buf, &node_info);
-				RF_TxPkt(tx_buf);
-
+				send_len = RF_Manual_Send(Build_NodeSetupReq, (void*)&node_info);
 				TX_INDICATE();
-				TIME_INDICATE();
-
-
-				Wait_Tx_Done(TX_DONE_TIMEOUT);
-				TX_INDICATE();
-
-				//TIME_INDICATE();
-
 				temp_t0 = ClockTime();
-				RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL); //turn Rx on waiting for mesh setup beacon
-
-				node_info.state = ND_SETUP_RSP_WAIT;
+				node_info.state = ND_SETU_REQ_TX_DONE_WAIT;
 			}
 			else
 			{
@@ -327,24 +353,34 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 			}
 			break;
 		}
+		case ND_SETU_REQ_TX_DONE_WAIT:
+		{
+			if(ClockTimeExceed(temp_t0, Estimate_SendData_Time_Length(send_len)) || ((msg)&&(msg->type==MSG_TX_DONE)))
+			{
+				TX_INDICATE();
+				node_info.state = ND_SETUP_RSP_WAIT;
+				temp_t0 = ClockTime();
+				RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
+			}
+			break;
+		}
 		case ND_SETUP_RSP_WAIT:
 		{
 			if(ClockTimeExceed(temp_t0, RX_WAIT))
 			{
-				TIME_INDICATE();
 				node_info.pallet_mac = 0;
 				node_info.state = ND_SETUP_SUSPEND;
 				ND_Setup_Infor.retry_times++;
 				node_info.wakeup_tick =  node_info.t0 + MASTER_PERIOD*TickPerUs;
 				node_info.t0 = node_info.wakeup_tick;
-				GPIO_ResetBit(SHOW_DEBUG);
 			}
 			else if (msg)
 			{
 				if (msg->type == NP_MSG_SETUP_RSP)
 				{
 					RX_INDICATE();
-					TIME_INDICATE();
+
+					//TIME_INDICATE();
 					node_info.node_id = FRAME_GET_NODE_ID(msg->data);
 					node_info.pallet_mac = ND_Setup_Infor.plt_mac;
 					node_info.pallet_id = ND_Setup_Infor.plt_id;

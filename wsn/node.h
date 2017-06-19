@@ -11,11 +11,13 @@ typedef enum {
 	ND_SETUP_BCN_WAIT,
 	ND_SETUP_BACKOFF,
 	ND_SETUP_REQ_SEND,
+	ND_SETU_REQ_TX_DONE_WAIT,
 	ND_SETUP_RSP_WAIT,
 	ND_SETUP_SUSPEND,
 
 	ND_CONN_IDLE = ND_CONN_MASK,
 	ND_CONN_BCN_WAIT,
+	ND_CONN_ND_DATA_TX_DONE_WAIT,
 	ND_CONN_PLT_ACK_WAIT,
 	ND_CONN_SUSPEND,
 
@@ -64,5 +66,6 @@ extern void Node_SetupLoop(void);
 extern void Node_MainLoop(void);
 extern void Node_RxIrqHandler(void);
 extern void Node_RxTimeoutHandler(void);
+void Node_TxDoneHandle(void);
 
 #endif /*_NODE_H_*/
