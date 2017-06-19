@@ -104,7 +104,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 		}
 		case GPN_CONN_GW_BCN_WAIT:
 		{
-			if(ClockTimeExceed(temp_t0, 1200))
+			if(ClockTimeExceed(temp_t0, RX_WAIT))
 			{
 				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_GB;
 				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;

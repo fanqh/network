@@ -47,21 +47,6 @@ void Node_Init(void)
 
 }
 
-
-unsigned char Wait_Tx_Done(unsigned int timeout)//unit : us
-{
-	unsigned int t;
-
-	t = ClockTime();
-	while(!RF_TxFinish())
-	{
-		if(ClockTimeExceed(t, timeout))
-			return FAILURE;
-	}
-	RF_TxFinishClearFlag();
-	return SUCCESS;
-}
-
 _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 {
 	switch(node_info.state)
@@ -93,24 +78,10 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                 {
                     if (FRAME_PLT_PB_GET_SRC_ID(msg->data) == node_info.pallet_id)
                     {
-//                    	RF_TrxStateSet(RF_MODE_TX, RF_CHANNEL); //switch to tx mode
-//                    	Build_NodeData(tx_buf, &node_info);
-//                    	TIME_INDICATE();
-//                    	RF_TxPkt(tx_buf);
-
                     	send_len = RF_Manual_Send(Build_NodeData, (void*)&node_info);
                     	TX_INDICATE();
                     	temp_t0 = ClockTime();
                     	node_info.state = ND_CONN_ND_DATA_TX_DONE_WAIT;
-
-//                    	Wait_Tx_Done(3000);
-//                    	TIME_INDICATE();
-//                    	temp_t0 = ClockTime();
-//
-//                    	temp_t0 = ClockTime();
-//                    	RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
-//                    	node_info.state = ND_CONN_PLT_ACK_WAIT;
-//                    	return;
                     }
                     else
                     {

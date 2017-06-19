@@ -12,10 +12,13 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
     u16 RfIrqSrc = IRQ_RfIrqSrcGet();
 
 
-    if (IrqSrc & FLD_IRQ_GPIO_EN) {
-        if (0 == GPIO_ReadInputBit(PALLET_SETUP_TRIG_PIN)) {
+    if (IrqSrc & FLD_IRQ_GPIO_EN)
+    {
+        if (0 == GPIO_ReadInputBit(PALLET_SETUP_TRIG_PIN))
+        {
             WaitUs(10);
-            if (0 == GPIO_ReadInputBit(PALLET_SETUP_TRIG_PIN)) {
+            if (0 == GPIO_ReadInputBit(PALLET_SETUP_TRIG_PIN))
+            {
                 //while(0 == GPIO_ReadInputBit(PALLET_SETUP_TRIG_PIN));
                 PalletSetupTrig = 1;
                 GPIO_WriteBit(LED2_BLUE, !GPIO_ReadOutputBit(LED2_BLUE));
