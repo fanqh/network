@@ -256,10 +256,11 @@ _attribute_ram_code_ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
 	        
 	        send_len = RF_Manual_Send(Build_GatewaySetupBeacon, (void*)&gw_info);
 			TIME_INDICATE();
+			TX_INDICATE();
 	        temp_t0 = ClockTime();
 	        gw_info.state = GW_SETUP_GB_TX_DONE_WAIT;
 
-	        TX_INDICATE();
+
 			break;
 		}
 		case GW_SETUP_GB_TX_DONE_WAIT:

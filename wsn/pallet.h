@@ -1,5 +1,6 @@
 #ifndef _PALLET_H_
 #define _PALLET_H_
+#include "frame.h"
 
 #define NODE_DATA_LEN       16
 
@@ -22,6 +23,7 @@ typedef enum {
     GP_SETUP_BCN_WAIT,
     GP_SETUP_BACKOFF,
     GP_SETUP_REQ_SEND,
+    GP_SETUP_REQ_TX_DONE_WAIT,
     GP_SETUP_GW_RSP_WAIT,
     GP_SETUP_SUSPEND,
 
@@ -30,6 +32,7 @@ typedef enum {
     GP_SYC_SUSPNED,
     GP_SYC_ACK_WAIT,
     GP_SYC_LISTEN_GB,
+    GP_DATA_TX_DONE_WAIT,
 
     //consign state
     PALLET_STATE_IDLE = GPN_CONSIGN_STATE_MASK, //0x800
@@ -60,6 +63,7 @@ typedef struct{
 }PalletSetup_Infor_TypeDef;
 
 
+
 typedef struct {
 	PALLET_StateTypeDef state; //current state of device
 
@@ -88,6 +92,9 @@ typedef struct {
     unsigned char node_table_len;
     unsigned char is_associate;
     PalletSetup_Infor_TypeDef *p_gp_Setup_infor;
+
+    void *pData;
+    //(void*)arg;
 	//NodeDataWaitSend_Typdedef *pNodeData;
 } PalletInfo_TypeDef;
 

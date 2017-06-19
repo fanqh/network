@@ -217,13 +217,15 @@ _attribute_ram_code_ unsigned char Build_PalletBeacon(unsigned char *pBuf, void 
     return len;
 }
 
-_attribute_ram_code_ unsigned char Build_PalletData(unsigned char *pBuf, PalletInfo_TypeDef *pInfo, void *arg)
+_attribute_ram_code_ unsigned char Build_PalletData(unsigned char *pBuf, void *arg)
 {
     unsigned char *p;
     unsigned char len;
     NodeDataWaitSend_Typdedef* pnode;
+    PalletInfo_TypeDef *pInfo;
 
-    pnode = (NodeDataWaitSend_Typdedef*)arg;
+    pInfo = (PalletInfo_TypeDef*) arg;
+    pnode = (NodeDataWaitSend_Typdedef*)pInfo->pData;
     p = &pBuf[5];
     //build the 802.15.4 mac data frame header
     *p++ = 0x61; //frame ctrl

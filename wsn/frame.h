@@ -13,7 +13,6 @@ typedef struct
 }NodeDataWaitSend_Typdedef;
 
 
-
 //frame type definitions
 #define FRMAE_TYPE_GATEWAY_BEACON          0x01
 #define FRMAE_TYPE_PALLET_DATA             0x02
@@ -113,7 +112,7 @@ extern unsigned char Build_GatewaySetupBeacon(unsigned char *pBuf, void *arg);
 
 unsigned char Build_PalletSetupBeacon(unsigned char *pBuf, void *arg);
 unsigned char Build_PalletBeacon(unsigned char *pBuf, void *arg);
-unsigned char Build_PalletData(unsigned char *pBuf, PalletInfo_TypeDef *pInfo, void *arg);
+unsigned char Build_PalletData(unsigned char *pBuf, void *arg);
 unsigned char Build_PalletSetupRsp(unsigned char *pBuf, void *arg);
 unsigned char Build_PalletSetupReq(unsigned char *pBuf, void *arg);
 
