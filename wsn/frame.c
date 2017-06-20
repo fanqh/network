@@ -143,7 +143,7 @@ _attribute_ram_code_ unsigned char Build_PalletSetupBeacon(unsigned char *pBuf, 
     *p++ = pInfo->mac_addr >> 8;
     *p++ = FRMAE_TYPE_SETUP_PALLET_BEACON;
 	*p++ = pInfo->pallet_id;
-	*p++ = pInfo->gsn;
+	*p++ = pInfo->gw_sn;
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;

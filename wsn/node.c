@@ -286,7 +286,7 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 										- node_info.pallet_id*TIMESLOT_LENGTH*TickPerUs;
 
 						node_info.state = ND_CONN_SUSPEND;
-						node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id + NODE_NUM*MASTER_PERIOD  - DEV_RX_MARGIN)*TickPerUs;
+						node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id + NODE_NUM*MASTER_PERIOD)*TickPerUs;
 						//pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
 					}
 					else

@@ -75,17 +75,13 @@ typedef struct {
     unsigned int t0; //the moment starting to send the beacon 
     unsigned int wakeup_tick; //the moment wakeup
 
-    //setup with node
-    unsigned char gsn;
-
-    //unsigned int period_cnt; //the overall period count
     unsigned short mac_addr; //mac addr of the pallet
+    unsigned char pallet_id; //id of this pallet assigned by the gateway
 
-
-    unsigned short node_addr; //mac addr of current remote node
     unsigned short gw_addr; //mac addr of the gateway this pallet attaches to
     unsigned char gw_id; //id of the gateway this pallet attaches to
-    unsigned char pallet_id; //id of this pallet assigned by the gateway
+
+    unsigned short node_addr; //mac addr of current remote node
     unsigned char node_id; //assigned id for the current remote node
 
     unsigned char dsn; //sequence number of outgoing packet
@@ -93,22 +89,18 @@ typedef struct {
 
     unsigned char gw_sn;
     unsigned char gw_setup_bcn_total;
-    //unsigned char retry_times; //retry times
+
     unsigned char node_table_len;
     unsigned char is_associate;
     PalletSetup_Infor_TypeDef *p_gp_Setup_infor;
 
     void *pData;
-    //(void*)arg;
-	//NodeDataWaitSend_Typdedef *pNodeData;
+
 } PalletInfo_TypeDef;
 
 extern void Pallet_Init(void);
 extern void Pallet_MainLoop(void);
 extern void Pallet_RxIrqHandler(void);
-extern void Pallet_RxTimeoutHandler(void);
-//void Pallet_SetupLoop(void);
-//void Pallet_SetupLoop2(void);
 void Pallet_TxDoneHandle(void);
 
 #endif /*_PALLET_H_*/

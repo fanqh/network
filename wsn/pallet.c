@@ -9,23 +9,30 @@
 
 #define NODE_TABLE_MAX_LEN   6
 
-PalletInfo_TypeDef pallet_info;
-PalletSetup_Infor_TypeDef plt_setup_infor;
-static MsgQueue_Typedef msg_queue;
-
-static NodeEntry_Typedef node_table[NODE_TABLE_MAX_LEN];
-
 volatile unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
 volatile unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
 static volatile unsigned char rx_ptr = 0;
+
 volatile unsigned char PalletSetupTrig = 0;
 static unsigned int temp_t0;
 static unsigned char send_len;
 
+PalletInfo_TypeDef pallet_info;
+PalletSetup_Infor_TypeDef plt_setup_infor;
+static MsgQueue_Typedef msg_queue;
+static NodeEntry_Typedef node_table[NODE_TABLE_MAX_LEN];
+/**************temporary data struct*******************/
+typedef struct
+{
+	unsigned short pallet_mac;
+	unsigned char pallet_id;
+	unsigned char rst;
+}device_infor_t;
 
+NodeDataWaitSend_Typdedef node_data[3];
+device_infor_t device_infor;
+/****************************************************/
 
-//static int Pallet_SetupTimer_Callback(void *data);
-_attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg);
 #define DEBUG 1
 
 #if DEBUG
@@ -50,19 +57,7 @@ void debug_enqueue(unsigned char type)
 
 #endif
 
-/**************temporary data struct*******************/
-typedef struct
-{
-	unsigned short pallet_mac;
-	unsigned char pallet_id;
-	unsigned char rst;
-}device_infor_t;
-
-NodeDataWaitSend_Typdedef node_data[3];
-device_infor_t device_infor;
-/****************************************************/
-unsigned char Wait_Tx_Done(unsigned int timeout);
-
+_attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg);
 
 void Pallet_Init(void)
 {
@@ -348,48 +343,10 @@ _attribute_ram_code_ void Pallet_RxIrqHandler(void)
     }
 }
 
-_attribute_ram_code_ void Pallet_RxTimeoutHandler(void)
-{
-
-	if(pallet_info.state & PN_SETUP_STATE_MASK)
-	{
-		MsgQueue_Push(&msg_queue, NULL, PALLET_MSG_TYPE_ED_DATA_TIMEOUT);
-	}
-	else if(pallet_info.state & GP_SETUP_STATE_MASK)
-	{
-		MsgQueue_Push(&msg_queue, NULL, MSG_P_SETUP_WAIT_G_TIMEOUT);
-	}
-	else if(pallet_info.state & GP_KEEP_SYC_MASK)
-	{
-		MsgQueue_Push(&msg_queue, NULL, MSG_P_SETUP_WAIT_G_TIMEOUT);
-	}
-	else if(pallet_info.state & GP_KEEP_SYC_MASK)
-	{
-
-	}
-	else
-	{
-
-	}
-}
 
 _attribute_ram_code_ void Pallet_TxDoneHandle(void)
 {
 	MsgQueue_Push(&msg_queue, NULL, MSG_TX_DONE);
-}
-
-unsigned char Wait_Tx_Done(unsigned int timeout)//unit : us
-{
-	unsigned int t;
-
-	t = ClockTime();
-	while(!RF_TxFinish())
-	{
-		if(ClockTimeExceed(t, timeout))
-			return FAILURE;
-	}
-	RF_TxFinishClearFlag();
-	return SUCCESS;
 }
 
 _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
@@ -429,7 +386,7 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
                 	//pallet_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
                 	pallet_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data));
 
-                	pallet_info.gsn = FRAME_GET_DSN(msg->data);
+                	pallet_info.gw_sn = FRAME_GET_DSN(msg->data);
                 	pallet_info.wakeup_tick = pallet_info.t0 + GW_PLT_TIME *TickPerUs;
                 	pallet_info.state = PN_SETUP_SUSPEND_BEFORE_SEND_BCN;
                 }
@@ -558,6 +515,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
     	{
     		RF_SetTxRxOff();
     		ERROR_WARN_LOOP();
+    		break;
     	}
     	case GP_SETUP_IDLE:
     	{
@@ -594,7 +552,6 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
                     }
                     else
                     {
-                    	//plt_setup_infor.retry_times = 0;
                     	pallet_info.state = GP_SETUP_BACKOFF;
                         pallet_info.wakeup_tick = ClockTime() +  (((Rand() % (MASTER_PERIOD - ND_WAIT_BCN_MARGIN)))/BACKOFF_UNIT)*BACKOFF_UNIT*TickPerUs;
                     }
@@ -606,7 +563,6 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
                 	{
                 		GPIO_SetBit(LED3_RED);
                 		pallet_info.state = GP_SYC_SUSPNED;
-                		//pallet_info.wakeup_tick = pallet_info.t0 + TIMESLOT_LENGTH*pallet_info.pallet_id*TickPerUs;
                 		pallet_info.wakeup_tick  = pallet_info.t0 + MASTER_PERIOD*TickPerUs;
                 	}
                 }
