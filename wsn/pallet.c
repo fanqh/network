@@ -76,7 +76,7 @@ void Pallet_Init(void)
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
     RF_RxBufferSet(rx_buf, RX_BUF_LEN, 0);
     IRQ_RfIrqDisable(0xffff);
-    IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT | FLD_RF_IRQ_FIRST_TIMEOUT | FLD_RF_IRQ_TX);//
+    IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_TX);//
     IRQ_EnableType(FLD_IRQ_ZB_RT_EN);
     RF_SetTxRxOff();
 
@@ -84,6 +84,7 @@ void Pallet_Init(void)
     DebugQueue_Reset(&DebugQ);
 #endif
 }
+
 
 _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 {
@@ -152,7 +153,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 			else if (msg && (msg->type == PALLET_MSG_TYPE_GW_ACK))
 			{
 				//RX_INDICATE();
-				GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
+				IRQ_INDICATION();
 				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_PB;
 				pallet_info.wakeup_tick = pallet_info.t0 + TIMESLOT_LENGTH*pallet_info.pallet_id*TickPerUs;
 				Message_Reset(msg);
@@ -164,6 +165,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 			RF_SetTxRxOff();
 			GPIO_WriteBit(POWER_PIN, 0);
 		#ifdef SUPEND
+			//PrepareSleep();
 			PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
 		#else
 			while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
@@ -245,6 +247,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 			RF_SetTxRxOff();
 			GPIO_WriteBit(POWER_PIN, 0);
 	#ifdef SUPEND
+			//PrepareSleep();
 			PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick);
 	#else
 			while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
@@ -561,7 +564,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
                 {
                 	if((pallet_info.gw_addr == FRAME_GW_GB_GET_GW_ADDR(msg->data)) && (pallet_info.gw_id==FRAME_GW_GB_GET_GW_ID(msg->data)))
                 	{
-                		GPIO_SetBit(LED3_RED);
+                		//GPIO_SetBit(LED3_RED);
                 		pallet_info.state = GP_SYC_SUSPNED;
                 		pallet_info.wakeup_tick  = pallet_info.t0 + MASTER_PERIOD*TickPerUs;
                 	}
@@ -643,7 +646,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
 					pallet_info.pallet_id = FRAME_GW_SETUP_RSP_GET_PLT_ID(msg->data);
 					pallet_info.wakeup_tick = pallet_info.t0 + MASTER_PERIOD*TickPerUs;
 
-					GPIO_SetBit(LED1_GREEN);
+					CONN_INDICATION();
 	                Message_Reset(msg);
 				}
             }
@@ -654,7 +657,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
     		RF_SetTxRxOff();
     		GPIO_WriteBit(POWER_PIN, 0);
     #if SUPEND
-    		PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick - SETUP_SUSPNED_EARLY_WAKEUP*TickPerUs);
+    		PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick - SETUP_SUSPNED_EARLY_WAKEUP*TickPerUs);
     #else
     		while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
     #endif
@@ -701,7 +704,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 		            	send_len = RF_Manual_Send(Build_PalletData, (void*)&pallet_info);
 		            	TX_INDICATE();
 		            	temp_t0 = ClockTime();
-		            	pallet_info.state = GP_DATA_TX_DONE_WAIT;
+		            	pallet_info.state = GP_SYC_PLT_DATA_TX_DONE_WAIT;
 		            }
 		            else
 		            {
@@ -722,7 +725,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 			}
 			break;
 		}
-		case GP_DATA_TX_DONE_WAIT:
+		case GP_SYC_PLT_DATA_TX_DONE_WAIT:
 		{
 			if(ClockTimeExceed(temp_t0, Estimate_SendData_Time_Length(send_len)) || ((msg)&&(msg->type==MSG_TX_DONE)))
 			{
@@ -748,7 +751,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 					RX_INDICATE();
 					pallet_info.is_associate = 1;
 					pallet_info.state = GP_SYC_SUSPNED;
-					GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
+					ACK_REC_INDICATION();
 				}
 				Message_Reset(msg);
             }
@@ -766,7 +769,14 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 #endif
 			GPIO_WriteBit(POWER_PIN, 1);
 
-			pallet_info.state = GP_SYC_IDLE;
+			if(pallet_info.node_table_len != 0)
+			{
+				pallet_info.state = GPN_CONN_IDLE;
+			}
+			else
+			{
+				pallet_info.state = GP_SYC_IDLE;
+			}
 
 			break;
 		}

@@ -24,7 +24,6 @@ typedef struct
 }device_infor_t;
 device_infor_t device_infor;
 
-
 extern unsigned int Get_Temperature(void);
 void Node_Init(void)
 {
@@ -60,7 +59,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 		}
 		case ND_CONN_BCN_WAIT:
 		{
-			if(ClockTimeExceed(temp_t0, RX_WAIT))
+			if(ClockTimeExceed(temp_t0, PLT_BCN_WAIT_TIMEOUT))
 			{
                 node_info.state = ND_CONN_SUSPEND;
                 node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
@@ -68,6 +67,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 			}
 			else if(msg->type==NODE_MSG_TYPE_PALLET_BCN)
 			{
+				RX_INDICATE();
                 //node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - (ZB_TIMESTAMP_OFFSET + FRAME_PLT_PB_GET_SRC_ID(msg->data)*TIMESLOT_LENGTH)*TickPerUs;  //gateway beacon time
 				node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data)) - \
 								FRAME_PLT_PB_GET_SRC_ID(msg->data)*TIMESLOT_LENGTH*TickPerUs;
@@ -111,7 +111,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 		}
 		case ND_CONN_PLT_ACK_WAIT:
 		{
-			if(ClockTimeExceed(temp_t0, RX_WAIT))
+			if(ClockTimeExceed(temp_t0, PLT_ACK_WAIT_TIMEOUT))
 			{
 				//TIME_INDICATE();
 				node_info.state = ND_CONN_SUSPEND;
@@ -120,9 +120,9 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 			else if(msg && (msg->type==NODE_MSG_TYPE_PALLET_ACK))
 			{
 				RX_INDICATE();
-				GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));
+				ACK_REC_INDICATION();
                 node_info.state = ND_CONN_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+NODE_NUM*MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+NODE_NUM*MASTER_PERIOD + 200)*TickPerUs;
 			}
 			break;
 		}
@@ -130,9 +130,10 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 		{
 	    	RF_SetTxRxOff();
 
-//	        if(node_info.wakeup_tick - ClockTime() >1000*TickPerUs)
-//	        	node_info.tmp = Get_Temperature();
+	        if(node_info.wakeup_tick - ClockTime() >1000*TickPerUs)
+	        	node_info.tmp = Get_Temperature();
 	        GPIO_WriteBit(POWER_PIN, 0);
+
 	#ifdef SUPEND
 	        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
 	#else
@@ -209,21 +210,6 @@ _attribute_ram_code_ void Node_RxIrqHandler(void)
     }   
 }
 
-_attribute_ram_code_ void Node_RxTimeoutHandler(void)
-{
-//    if (NODE_STATE_PALLET_ACK_WAIT == node_info.state)
-//    {
-//        MsgQueue_Push(&msg_queue, NULL, NODE_MSG_TYPE_PALLET_ACK_TIMEOUT);
-//    }
-//    else if (NODE_STATE_SETUP_PALLET_RSP_WAIT == node_info.state)
-//    {
-//        MsgQueue_Push(&msg_queue, NULL, NP_MSG_SETUP_RSP_TIMEOUT);
-//    }
-//    else
-//    {
-//    	//todo need add some code to tell application
-//    }
-}
 _attribute_ram_code_ void Node_TxDoneHandle(void)
 {
 	MsgQueue_Push(&msg_queue, NULL, MSG_TX_DONE);
@@ -360,8 +346,8 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 					node_info.is_connect = 1;
 					node_info.wakeup_tick =  node_info.t0 + MASTER_PERIOD*TickPerUs;
 
-					GPIO_ResetBit(SHOW_DEBUG);
-					GPIO_SetBit(LED1_GREEN);
+					//GPIO_ResetBit(SHOW_DEBUG);
+					CONN_INDICATION();
 					Message_Reset(msg);
 				}
 			}

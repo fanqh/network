@@ -21,7 +21,7 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
             {
                 //while(0 == GPIO_ReadInputBit(PALLET_SETUP_TRIG_PIN));
                 PalletSetupTrig = 1;
-                GPIO_WriteBit(LED2_BLUE, !GPIO_ReadOutputBit(LED2_BLUE));
+                IRQ_INDICATION();
             }
         }
     }
@@ -33,7 +33,7 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
             if (RfIrqSrc & FLD_RF_IRQ_RX)
             {
                 Pallet_RxIrqHandler();
-                GPIO_WriteBit(LED2_BLUE, !GPIO_ReadOutputBit(LED2_BLUE));
+                IRQ_INDICATION();
             }
             if(RfIrqSrc & FLD_RF_IRQ_TX)
             {

@@ -13,7 +13,6 @@ static unsigned int temp_t0 = 0;
 static unsigned char send_len;
 static GWInfo_TypeDef gw_info;
 static MsgQueue_Typedef msg_queue;
-
 static PalletEntry_Typedef pallet_table[PALLET_TABLE_MAX_LEN];
 
 unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
@@ -60,33 +59,6 @@ void Gateway_Init(void)
     IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT | FLD_RF_IRQ_TX);
 #endif
 }
-
-#if 0
-unsigned char Wait_Tx_Done(unsigned int timeout)//unit : us
-{
-	unsigned int t;
-#if PA_MODE
-	Tx_Done_falg = 0;
-	t = ClockTime();
-	while(!Tx_Done_falg)
-	{
-		if(ClockTime() - (t + timeout*TickPerUs)<= BIT(31))
-			return FAILURE;
-	}
-	return SUCCESS;
-#else
-	t = ClockTime();
-	while(!RF_TxFinish())
-	{
-		if(ClockTime() - (t + timeout*TickPerUs)<= BIT(31))
-			return FAILURE;
-	}
-	RF_TxFinishClearFlag();
-	return SUCCESS;
-#endif
-}
-#endif
-
 _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
 {
 	switch (gw_info.state)

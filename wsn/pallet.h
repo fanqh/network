@@ -31,10 +31,10 @@ typedef enum {
 
     //keep listen gateway and suspend alternate
     GP_SYC_IDLE=GP_KEEP_SYC_MASK,  //0x400
-    GP_SYC_SUSPNED,
-    GP_SYC_ACK_WAIT,
     GP_SYC_LISTEN_GB,
-    GP_DATA_TX_DONE_WAIT,
+    GP_SYC_ACK_WAIT,
+    GP_SYC_PLT_DATA_TX_DONE_WAIT,
+    GP_SYC_SUSPNED,
 
     //consign state
     GPN_CONN_IDLE = GPN_CONSIGN_STATE_MASK, //0x800
