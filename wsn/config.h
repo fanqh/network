@@ -50,7 +50,7 @@
 #else
 	#define TIMING_SHOW_PIN            	  GPIOC_GP4
 	#define GW_SETUP_TRIG_PIN         	  GPIOD_GP2
-	#define PALLET_SETUP_TRIG_PIN     	  GPIOC_GP5
+	#define PALLET_SETUP_TRIG_PIN     	  GPIOD_GP2
 	#define POWER_PIN         		  	  GPIOE_GP0
 	#define SHOW_DEBUG         		  	  GPIOE_GP1
 	#define LED1_GREEN         		  	  GPIOC_GP3
@@ -61,12 +61,12 @@
 	#define RX_STATE_PIN				  GPIOB_GP7
 	#define TX_STATE_PIN				  GPIOB_GP5
 	#define ERROR_WARN_LOOP()			  {while(1){WaitMs(100);GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));}}
-	#define IRQ_INDICATION()			  //{GPIO_WriteBit(LED2_BLUE, !GPIO_ReadOutputBit(LED2_BLUE));}
-	#define ACK_REC_INDICATION()		  //{GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));}
-	#define CONN_INDICATION()			  //{GPIO_SetBit(LED1_GREEN);}
+	#define IRQ_INDICATION()			  {GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));}
+	#define ACK_REC_INDICATION()		  {GPIO_WriteBit(LED2_BLUE, !GPIO_ReadOutputBit(LED2_BLUE));}
+	#define CONN_INDICATION()			  {GPIO_SetBit(LED1_GREEN);}
 #endif
-#define TIME_INDICATE()			//{GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));}
-#define RX_INDICATE()			//{GPIO_WriteBit(RX_STATE_PIN, !GPIO_ReadOutputBit(RX_STATE_PIN));}
-#define TX_INDICATE()			//{GPIO_WriteBit(TX_STATE_PIN, !GPIO_ReadOutputBit(TX_STATE_PIN));}
+#define TIME_INDICATE()			{GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));}
+#define RX_INDICATE()			{GPIO_WriteBit(RX_STATE_PIN, !GPIO_ReadOutputBit(RX_STATE_PIN));}
+#define TX_INDICATE()			{GPIO_WriteBit(TX_STATE_PIN, !GPIO_ReadOutputBit(TX_STATE_PIN));}
 
 #endif

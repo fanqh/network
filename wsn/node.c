@@ -62,7 +62,8 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 			if(ClockTimeExceed(temp_t0, PLT_BCN_WAIT_TIMEOUT))
 			{
                 node_info.state = ND_CONN_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+//                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+                node_info.wakeup_tick = node_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
                 node_info.t0 = node_info.wakeup_tick;
 			}
 			else if(msg->type==NODE_MSG_TYPE_PALLET_BCN)
@@ -91,8 +92,11 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
                 }
                 else
                 {
+//                	unsigned char id
+//                	if(node_info.node_id > (node_info.gw_sn%NODE_NUM))
+
                     node_info.state = ND_CONN_SUSPEND;
-                    node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD)*TickPerUs;
+                    node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id + MASTER_PERIOD)*TickPerUs;
                 }
 
 			}
@@ -122,7 +126,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 				RX_INDICATE();
 				ACK_REC_INDICATION();
                 node_info.state = ND_CONN_SUSPEND;
-                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+NODE_NUM*MASTER_PERIOD + 200)*TickPerUs;
+                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+NODE_NUM*MASTER_PERIOD + 100)*TickPerUs;
 			}
 			break;
 		}

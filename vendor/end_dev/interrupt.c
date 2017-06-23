@@ -8,7 +8,7 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
     u32 IrqSrc = IRQ_SrcGet();
     u16 RfIrqSrc = IRQ_RfIrqSrcGet();
 
-    IRQ_INDICATION();
+    //IRQ_INDICATION();
     if (IrqSrc & FLD_IRQ_ZB_RT_EN)
     {
         if (RfIrqSrc) {

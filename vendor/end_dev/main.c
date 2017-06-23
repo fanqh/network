@@ -22,27 +22,6 @@ static void SYS_Init(void)
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
     USB_LogInit();
     USB_DpPullUpEn(1); //pull up DP pin of USB interface
-
-
-    GPIO_SetGPIOEnable(TIMING_SHOW_PIN, Bit_SET);
-    GPIO_ResetBit(TIMING_SHOW_PIN);
-    GPIO_SetOutputEnable(TIMING_SHOW_PIN, Bit_SET);
-
-    GPIO_SetGPIOEnable(LED1_GREEN, Bit_SET);
-    GPIO_ResetBit(LED1_GREEN);
-    GPIO_SetOutputEnable(LED1_GREEN, Bit_SET);
-
-//    GPIO_SetGPIOEnable(LED2_BLUE, Bit_SET);
-//    GPIO_ResetBit(LED2_BLUE);
-//    GPIO_SetOutputEnable(LED2_BLUE, Bit_SET);
-
-    GPIO_SetGPIOEnable(LED3_RED, Bit_SET);
-    GPIO_ResetBit(LED3_RED);
-    GPIO_SetOutputEnable(LED3_RED, Bit_SET);
-
-    GPIO_SetGPIOEnable(LED4_WHITE, Bit_SET);
-    GPIO_ResetBit(LED4_WHITE);
-    GPIO_SetOutputEnable(LED4_WHITE, Bit_SET);
 }
 
 unsigned int Get_Temperature(void)
@@ -146,12 +125,10 @@ void Board_Init(void)
 
 void main(void)
 {
-	static unsigned int t;
-
 	PM_WakeupInit();
     SYS_Init();
 
-    PrepareSleep();
+    //PrepareSleep();
     Board_Init();
     Node_Init();
     I2C_PinSelect(I2C_PIN_GPIOA);

@@ -103,7 +103,8 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 			if(ClockTimeExceed(temp_t0, RX_WAIT))
 			{
 				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_GB;
-				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+				//pallet_info.wakeup_tick = pallet_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+				pallet_info.wakeup_tick = pallet_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
 				pallet_info.t0 = pallet_info.wakeup_tick;
 			}
 			else if (msg && (msg->type == PALLET_MSG_TYPE_GW_BCN))
@@ -152,8 +153,8 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 			}
 			else if (msg && (msg->type == PALLET_MSG_TYPE_GW_ACK))
 			{
-				//RX_INDICATE();
-				IRQ_INDICATION();
+				RX_INDICATE();
+				ACK_REC_INDICATION();
 				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_PB;
 				pallet_info.wakeup_tick = pallet_info.t0 + TIMESLOT_LENGTH*pallet_info.pallet_id*TickPerUs;
 				Message_Reset(msg);

@@ -62,7 +62,7 @@ void Board_Init(void)
     GPIO_PullSet(PALLET_SETUP_TRIG_PIN, PULL_UP_1M);
     GPIO_SetInterrupt(PALLET_SETUP_TRIG_PIN, Bit_SET);
     IRQ_EnableType(FLD_IRQ_GPIO_EN);
-#if 0
+#if 1
 	GPIO_SetGPIOEnable(TIMING_SHOW_PIN, Bit_SET);
     GPIO_ResetBit(TIMING_SHOW_PIN);
     GPIO_SetOutputEnable(TIMING_SHOW_PIN, Bit_SET);
@@ -108,7 +108,7 @@ void main(void)
 	PM_WakeupInit();
     SYS_Init();
 
-    PrepareSleep();
+    //PrepareSleep();
     Board_Init();
     Pallet_Init();
     IRQ_Enable();
