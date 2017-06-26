@@ -33,18 +33,26 @@ typedef struct {
     unsigned char pallet_data[32];
 } PalletEntry_Typedef;
 
+typedef struct{
+	unsigned char plt_id;
+	unsigned short plt_addr;
+}GatewaySetupInfor_Typedef;
+
 typedef struct {
 	GW_StateTypedef state; //current state of device
     unsigned int t0; //the moment starting to send the beacon 
     unsigned int wakeup_tick; //the moment wakeup
     unsigned char gw_id;
-    unsigned int period_cnt; //the overall period count
+
+ //   unsigned int period_cnt; //the overall period count
     unsigned short mac_addr; //mac addr of the gateway
     unsigned short pallet_addr; //mac addr of current remote pallet
     unsigned char pallet_id; //assigned id for the current remote node
     unsigned char dsn; //sequence number of outgoing packet
     unsigned char ack_dsn; //sequence number of incoming packet
     unsigned char pallet_table_len;
+
+    GatewaySetupInfor_Typedef *pSetup_info;
 } GWInfo_TypeDef;
 
 extern void Gateway_Init(void);

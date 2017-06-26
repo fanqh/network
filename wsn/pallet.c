@@ -100,14 +100,15 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 		}
 		case GPN_CONN_GW_BCN_WAIT:
 		{
-			if(ClockTimeExceed(temp_t0, RX_WAIT))
-			{
-				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_GB;
-				//pallet_info.wakeup_tick = pallet_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
-				pallet_info.wakeup_tick = pallet_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
-				pallet_info.t0 = pallet_info.wakeup_tick;
-			}
-			else if (msg && (msg->type == PALLET_MSG_TYPE_GW_BCN))
+//			if(ClockTimeExceed(temp_t0, RX_WAIT))
+//			{
+//				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_GB;
+//				//pallet_info.wakeup_tick = pallet_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+//				pallet_info.wakeup_tick = pallet_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+//				pallet_info.t0 = pallet_info.wakeup_tick;
+//			}
+//			else
+				if (msg && (msg->type == PALLET_MSG_TYPE_GW_BCN))
 			{
 				RX_INDICATE();
 				//pallet_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
@@ -531,10 +532,10 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
     	case GP_SETUP_BCN_WAIT:
     	{
         	now = ClockTime();
-        	if(now - (temp_t0 + TIMESLOT_LENGTH*PALLET_NUM*5*TickPerUs)<BIT(31))//长时间没有收到包，reset RF baseband
-        	{//reset RF baseband state
-        		pallet_info.state = GP_SETUP_IDLE;
-        	}
+//        	if(now - (temp_t0 + TIMESLOT_LENGTH*PALLET_NUM*5*TickPerUs)<BIT(31))//长时间没有收到包，reset RF baseband
+//        	{//reset RF baseband state
+//        		pallet_info.state = GP_SETUP_IDLE;
+//        	}
             if (msg)
             {
                 if (msg->type == PG_MSG_SETUP_GW_BCN)

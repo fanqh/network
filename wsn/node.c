@@ -59,14 +59,15 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 		}
 		case ND_CONN_BCN_WAIT:
 		{
-			if(ClockTimeExceed(temp_t0, PLT_BCN_WAIT_TIMEOUT))
-			{
-                node_info.state = ND_CONN_SUSPEND;
-//                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
-                node_info.wakeup_tick = node_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
-                node_info.t0 = node_info.wakeup_tick;
-			}
-			else if(msg->type==NODE_MSG_TYPE_PALLET_BCN)
+//			if(ClockTimeExceed(temp_t0, PLT_BCN_WAIT_TIMEOUT))
+//			{
+//                node_info.state = ND_CONN_SUSPEND;
+////                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+//                node_info.wakeup_tick = node_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+//                node_info.t0 = node_info.wakeup_tick;
+//			}
+//			else
+				if(msg->type==NODE_MSG_TYPE_PALLET_BCN)
 			{
 				RX_INDICATE();
                 //node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - (ZB_TIMESTAMP_OFFSET + FRAME_PLT_PB_GET_SRC_ID(msg->data)*TIMESLOT_LENGTH)*TickPerUs;  //gateway beacon time

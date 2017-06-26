@@ -10,96 +10,101 @@
 #include "mac_data.h"
 
 #if 0
-void* sys_memmove(void* dest, const void* src, size_t n)
+void Init_DataBase(Conn_List_Typedef *pDataBase)
 {
-    char*     d  = (char*) dest;
-    const char*  s = (const char*) src;
-
-    if (s>d)
-    {
-         // start at beginning of s
-         while (n--)
-            *d++ = *s++;
-    }
-    else if (s<d)
-    {
-        // start at end of s
-        d = d+n-1;
-        s = s+n-1;
-
-        while (n--)
-           *d-- = *s--;
-    }
-    return dest;
+	memset((void*)&pDataBase, 0, sizeof(Conn_List_Typedef));
 }
-#define DEVICE_NUM	128
-
-typedef struct
+/*
+ * @return '0': have not mach addr '0-256' id of the match addr device
+ *
+ */
+unsigned char Find_Dev(Conn_List_Typedef *pDb, unsigned short addr)
 {
-	unsigned short addr;
-	unsigned char id;
-	unsigned char rst;
-}Conn_Device_Typedef;
+	unsigned int i, j;
+	unsigned char id, count;
 
-typedef struct
-{
-	Conn_Device_Typedef Device_List[DEVICE_NUM];
-	unsigned char num;
-}DateBaseInfo_Typedef;
+	if(pDb->num == 0)
+		return 0;
 
-DateBaseInfo_Typedef database;
-
-void Init_DataBase(DateBaseInfo_Typedef *pDataBase)
-{
-	memset((void*)&pDataBase, 0, sizeof(DateBaseInfo_Typedef));
-}
-
-unsigned char BinaryFind_Device(DateBaseInfo_Typedef *pDataBase, unsigned short addr)
-{
-	unsigned char low, high, mid;
-	Conn_Device_Typedef device_info;
-
-	if((pDataBase==NULL) || (pDataBase->num==0))
-		return 0xff;
-
-	low = 0;
-	high = pDataBase->num - 1;
-
-	while(low<=high)
+	count = pDb->num;
+	for(i=0; i<MAP_BYTES_MAX; i++)
 	{
-		mid = (low+high)/2;
-		if(pDataBase->Device_List[mid].addr<addr)
+		if(pDb->mapping[i] != 0)
 		{
-			low = mid + 1;
-		}
-		else if(pDataBase->Device_List[mid].addr>addr)
-		{
-			high = mid -1;
-		}
-		else
-		{
-			return mid;
+			for(j=0; j<8; j++)
+			{
+				if((pDb->mapping[i]&(1<<j)) != 0)
+				{
+					count --;
+					id = i*8 + j+1;
+					if(pDb->conn_device[id].addr == addr)
+						return id;
+					if(count==0)
+						return 0;
+				}
+			}
 		}
 	}
-	return 0xff;
+	return 0;
 }
-unsigned char Insert_Device(DateBaseInfo_Typedef *pDataBase, Conn_Device_Typedef device)
+/*
+ * @return '0' full, can't malloc free id '1-256' : id of malloc
+ */
+unsigned char Malloc_ID(Conn_List_Typedef *pDb)
 {
-}
-unsigned char Delete_Device(DateBaseInfo_Typedef *pDataBase, Conn_Device_Typedef device)
-{
-}
+	unsigned int i, j;
 
-unsigned char Find_Free_ID(void)
-{
-	static unsigned int Mapping_Index[(DEVICE_NUM + sizeof(unsigned int) - 1)/sizeof(unsigned int)];
-	unsigned i,j;
-
-	for(i=0; i< (DEVICE_NUM + sizeof(unsigned int) - 1)/sizeof(unsigned int); i++)
+	for(i=0; i<MAP_BYTES_MAX; i++)
 	{
-
+		for(j=0; j<8; j++)
+		{
+			if((pDb->mapping[i]&(1<<j)) == 0)
+			{
+				return i*8 + j+1;
+			}
+		}
 	}
+	return 0;
 }
+
+void Add_ID_List(Conn_List_Typedef *pDb, unsigned id, unsigned short addr)
+{
+	unsigned char i, j;
+
+	i = (id - 1)/32;
+	j = (id - 1)%32;
+
+	pDb->conn_device[id].addr = addr;
+	pDb->conn_device[id].id = id;
+
+	pDb->mapping[i] |= (1<<j);
+	pDb->num ++;
+}
+
+void Delete_ID_List(Conn_List_Typedef *pDb, unsigned id)
+{
+	unsigned char i, j;
+
+	i = (id - 1)/32;
+	j = (id - 1)%32;
+
+	pDb->conn_device[id].id = 0;
+	pDb->conn_device[id].addr = 0;
+
+	pDb->mapping[i] &= ~(1<<j);
+	pDb->num --;
+}
+
+unsigned char Is_ID_Active(Conn_List_Typedef *pDb, unsigned id)
+{
+	unsigned char i, j;
+
+	i = (id - 1)/32;
+	j = (id - 1)%32;
+
+	return ((pDb->mapping[i]&(1<<j))?1:0);
+}
+
 #endif
 
 

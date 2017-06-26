@@ -21,6 +21,8 @@ local.properties
 *lst
 *.mk
 SI/
+drivers/
+drivers/
 
 
 # External tool builders

@@ -11,16 +11,24 @@
 #include "../common.h"
 #include "../drivers.h"
 
-//typedef struct {
-//    unsigned short addr;
-//    unsigned char id;
-//} PalletEntry_Typedef;
-//
-//
-//typedef struct {
-//	unsigned int
-//	unsigned char plt_num;
-//	PalletEntry_Typedef conn_plt[CONN_PLT_NUM_MAX];
-//}Conn_List_Typedef;
+#define DEV_MAX_NUM		256
+#define MAP_BYTES_MAX	(DEV_MAX_NUM+7)/32
+
+typedef struct {
+	unsigned char id;
+    unsigned short addr;
+} DeviceEntry_Typedef;
+typedef struct {
+	unsigned char num;
+	unsigned int mapping[MAP_BYTES_MAX];
+	DeviceEntry_Typedef conn_device[DEV_MAX_NUM];
+}Conn_List_Typedef;
+
+void Init_DataBase(Conn_List_Typedef *pDataBase);
+unsigned char Find_Dev(Conn_List_Typedef *pDb, unsigned short addr);
+unsigned char Malloc_ID(Conn_List_Typedef *pDb);
+void Add_ID_List(Conn_List_Typedef *pDb, unsigned id, unsigned short addr);
+void Delete_ID_List(Conn_List_Typedef *pDb, unsigned id);
+unsigned char Is_ID_Active(Conn_List_Typedef *pDb, unsigned id);
 
 #endif /* MAC_DATA_H_ */
