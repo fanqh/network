@@ -35,6 +35,7 @@ typedef struct {
 
 typedef struct{
 	unsigned char plt_id;
+	unsigned char rsd;
 	unsigned short plt_addr;
 }GatewaySetupInfor_Typedef;
 

@@ -79,8 +79,9 @@ void main(void)
     // LogMsg("gateway start...\n", NULL, 0);
     while (1)
     {
-#if 1
+
 		test ++;
+#if 1
 		Gateway_MainLoop();
 #endif
     }

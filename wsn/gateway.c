@@ -6,8 +6,18 @@
 #include "gateway.h"
 #include "../interface/pc_interface.h"
 #include "mac.h"
+#include "mac_data.h"
 
 #define PALLET_TABLE_MAX_LEN 3
+
+typedef struct
+{
+	unsigned char flag;
+	unsigned char dsn;
+	unsigned char pallet_id;
+	NodeDataWaitSend_Typdedef ndata[3];
+
+}WaitForUpload_Typedef;
 
 static unsigned int temp_t0 = 0;
 static unsigned char send_len;
@@ -20,15 +30,12 @@ unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
 static volatile unsigned char rx_ptr = 0;
 extern volatile unsigned char GatewaySetupTrig;
 
+GatewaySetupInfor_Typedef gw_setup_infor;
+Conn_List_Typedef gw_conn_list;
+unsigned char id1;
 
-typedef struct
-{
-	unsigned char flag;
-	unsigned char dsn;
-	unsigned char pallet_id;
-	NodeDataWaitSend_Typdedef ndata[3];
 
-}WaitForUpload_Typedef;
+
 
 WaitForUpload_Typedef DataToSend;
 extern volatile unsigned char Tx_Done_falg;
@@ -47,6 +54,8 @@ void Gateway_Init(void)
     //gw_info.dsn = gw_info.mac_addr & 0xff;
     gw_info.state = GW_STATE_RF_OFF;
 	gw_info.gw_id = Rand()%255;
+	gw_info.pSetup_info = &gw_setup_infor;
+	Init_DataBase(&gw_conn_list);
 
     RF_SetTxRxOff();
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
@@ -197,7 +206,7 @@ _attribute_ram_code_ void Gateway_TxDoneHandle(void)
 	MsgQueue_Push(&msg_queue, NULL, MSG_TX_DONE);
 }
 
-_attribute_ram_code_ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
+ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
 {
 	switch (gw_info.state)
 	{
@@ -255,11 +264,28 @@ _attribute_ram_code_ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
 	    	}
 	        if (msg)
 	        {
-	        	int i = 0;
 	            if (msg->type == GW_MSG_TYPE_SETUP_REQ)
 	            {
 	            	RX_INDICATE();
-	                gw_info.pallet_addr = FRAME_GET_SRC_ADDR(msg->data);
+	            	gw_setup_infor.plt_addr = FRAME_GET_SRC_ADDR(msg->data);
+	            	gw_setup_infor.plt_id = Find_Dev(&gw_conn_list, gw_setup_infor.plt_addr);
+	            	if(gw_setup_infor.plt_id == 0)
+	            	{
+	            		id1 =gw_setup_infor.plt_id = Malloc_ID(&gw_conn_list);
+	            		if(gw_setup_infor.plt_id !=0 )
+	            		{
+	            			Add_ID_List(&gw_conn_list, gw_setup_infor.plt_id, gw_setup_infor.plt_addr);
+	            		}
+	            		else
+	            		{
+	            			//todo 设备容量已满
+	            		}
+	            	}
+	            	else
+	            	{
+
+	            	}
+#if 0
 	                //todo need to optimize and have bug here
 	                for (i = 0; i < gw_info.pallet_table_len; i++)
 	                {
@@ -282,7 +308,7 @@ _attribute_ram_code_ void Run_Gateway_Setup_Statemachine(Msg_TypeDef *msg)
 	                    pallet_table[i].pallet_node_num = FRAME_GET_PALLET_NODE_NUM(msg->data);
 	                }
 
-
+#endif
 	    	        send_len = RF_Manual_Send(Build_GatewaySetupRsp, (void*)&gw_info);
 	    	        temp_t0 = ClockTime();
 	    	        gw_info.state = GW_SETUP_RSP_TX_DONE;

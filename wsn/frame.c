@@ -95,7 +95,7 @@ _attribute_ram_code_ unsigned char Build_GatewaySetupRsp(unsigned char *pBuf, vo
     *p++ = pInfo->mac_addr & 0xff; //source address
     *p++ = pInfo->mac_addr >> 8;
     *p++ = FRMAE_TYPE_SETUP_GW_RSP;
-    *p++ = pInfo->pallet_id;
+    *p++ = pInfo->pSetup_info->plt_id;
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;

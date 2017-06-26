@@ -9,7 +9,7 @@
 #include "message_queue.h"
 #include "mac_data.h"
 
-#if 0
+#if 1
 void Init_DataBase(Conn_List_Typedef *pDataBase)
 {
 	memset((void*)&pDataBase, 0, sizeof(Conn_List_Typedef));

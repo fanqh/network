@@ -11,8 +11,8 @@
 #include "../common.h"
 #include "../drivers.h"
 
-#define DEV_MAX_NUM		256
-#define MAP_BYTES_MAX	(DEV_MAX_NUM+7)/32
+#define DEV_MAX_NUM		16
+#define MAP_BYTES_MAX	(DEV_MAX_NUM+31)/32
 
 typedef struct {
 	unsigned char id;
