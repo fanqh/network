@@ -69,7 +69,7 @@ typedef struct
 
 //pallet setup
 #define FRAME_GET_NODE_ID(p)               					 ( p[23] )
-//#define FRAME_GET_PALLET_NODE_NUM(p)       					 ( p[23] )
+#define FRAME_GET_PALLET_NODE_NUM(p)       					 ( p[23] )
 
 
 

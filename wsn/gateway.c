@@ -214,7 +214,7 @@ _attribute_ram_code_ void Gateway_TxDoneHandle(void)
 		{
 	    	if(gw_info.dsn>=GW_SETUP_BCN_NUM)
 	    	{
-	        	if(gw_info.pallet_table_len!=0)
+	        	if(gw_conn_list.num!=0)
 	        	{
 	        		GPIO_SetBit(LED_GREEN);
 	        		GPIO_ResetBit(LED_RED);
@@ -266,6 +266,8 @@ _attribute_ram_code_ void Gateway_TxDoneHandle(void)
 	        {
 	            if (msg->type == GW_MSG_TYPE_SETUP_REQ)
 	            {
+	            	int i;
+
 	            	RX_INDICATE();
 	            	gw_setup_infor.plt_addr = FRAME_GET_SRC_ADDR(msg->data);
 	            	gw_setup_infor.plt_id = Find_Dev(&gw_conn_list, gw_setup_infor.plt_addr);
@@ -275,6 +277,9 @@ _attribute_ram_code_ void Gateway_TxDoneHandle(void)
 	            		if(gw_setup_infor.plt_id !=0 )
 	            		{
 	            			Add_ID_List(&gw_conn_list, gw_setup_infor.plt_id, gw_setup_infor.plt_addr);
+
+	            			gw_info.pallet_addr = gw_setup_infor.plt_addr;
+	            			gw_info.pallet_id = gw_setup_infor.plt_id;
 	            		}
 	            		else
 	            		{
@@ -286,6 +291,7 @@ _attribute_ram_code_ void Gateway_TxDoneHandle(void)
 
 	            	}
 #if 0
+	            	gw_info.pallet_addr = FRAME_GET_SRC_ADDR(msg->data);
 	                //todo need to optimize and have bug here
 	                for (i = 0; i < gw_info.pallet_table_len; i++)
 	                {
