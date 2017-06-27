@@ -104,8 +104,7 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 				pallet_info.wakeup_tick = pallet_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
 				pallet_info.t0 = pallet_info.wakeup_tick;
 			}
-			else
-				if (msg && (msg->type == PALLET_MSG_TYPE_GW_BCN))
+			else if (msg && (msg->type == PALLET_MSG_TYPE_GW_BCN))
 			{
 				RX_INDICATE();
 				//pallet_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
