@@ -5,8 +5,6 @@
 
 
 extern volatile unsigned char GatewaySetupTrig;
-volatile unsigned char Tx_Done_falg = 0;
-
 unsigned char sta[32];
 
 _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)

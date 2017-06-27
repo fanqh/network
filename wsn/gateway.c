@@ -8,8 +8,6 @@
 #include "mac.h"
 #include "mac_data.h"
 
-#define PALLET_TABLE_MAX_LEN 3
-
 typedef struct
 {
 	unsigned char flag;
@@ -23,7 +21,6 @@ static unsigned int temp_t0 = 0;
 static unsigned char send_len;
 static GWInfo_TypeDef gw_info;
 static MsgQueue_Typedef msg_queue;
-static PalletEntry_Typedef pallet_table[PALLET_TABLE_MAX_LEN];
 
 unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
 unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
@@ -32,14 +29,8 @@ extern volatile unsigned char GatewaySetupTrig;
 
 GatewaySetupInfor_Typedef gw_setup_infor;
 Conn_List_Typedef gw_conn_list;
-unsigned char id1;
-
-
-
 
 WaitForUpload_Typedef DataToSend;
-extern volatile unsigned char Tx_Done_falg;
-
 
 void Gateway_Init(void)
 {
@@ -51,14 +42,14 @@ void Gateway_Init(void)
 		addr = Rand();
 
     gw_info.mac_addr = addr;
-    //gw_info.dsn = gw_info.mac_addr & 0xff;
     gw_info.state = GW_STATE_RF_OFF;
 	gw_info.gw_id = Rand()%255;
 	gw_info.pSetup_info = &gw_setup_infor;
 	Init_DataBase(&gw_conn_list);
-
     RF_SetTxRxOff();
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
+
+
     RF_RxBufferSet(rx_buf + rx_ptr*RX_BUF_LEN, RX_BUF_LEN, 0);
     //enable irq
     IRQ_EnableType(FLD_IRQ_ZB_RT_EN);
@@ -68,7 +59,7 @@ void Gateway_Init(void)
     IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT | FLD_RF_IRQ_TX);
 #endif
 }
-_attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
+void Run_Gateway_Statemachine(Msg_TypeDef *msg)
 {
 	switch (gw_info.state)
 	{
@@ -266,20 +257,15 @@ _attribute_ram_code_ void Gateway_TxDoneHandle(void)
 	        {
 	            if (msg->type == GW_MSG_TYPE_SETUP_REQ)
 	            {
-	            	int i;
-
 	            	RX_INDICATE();
 	            	gw_setup_infor.plt_addr = FRAME_GET_SRC_ADDR(msg->data);
 	            	gw_setup_infor.plt_id = Find_Dev(&gw_conn_list, gw_setup_infor.plt_addr);
 	            	if(gw_setup_infor.plt_id == 0)
 	            	{
-	            		id1 =gw_setup_infor.plt_id = Malloc_ID(&gw_conn_list);
+	            		gw_setup_infor.plt_id = Malloc_ID(&gw_conn_list);
 	            		if(gw_setup_infor.plt_id !=0 )
 	            		{
 	            			Add_ID_List(&gw_conn_list, gw_setup_infor.plt_id, gw_setup_infor.plt_addr);
-
-	            			gw_info.pallet_addr = gw_setup_infor.plt_addr;
-	            			gw_info.pallet_id = gw_setup_infor.plt_id;
 	            		}
 	            		else
 	            		{
@@ -288,7 +274,7 @@ _attribute_ram_code_ void Gateway_TxDoneHandle(void)
 	            	}
 	            	else
 	            	{
-
+	            		//todo 此设备已分配ID
 	            	}
 #if 0
 	            	gw_info.pallet_addr = FRAME_GET_SRC_ADDR(msg->data);

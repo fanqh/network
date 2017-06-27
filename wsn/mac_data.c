@@ -10,9 +10,17 @@
 #include "mac_data.h"
 
 #if 1
-void Init_DataBase(Conn_List_Typedef *pDataBase)
+
+void Init_DataBase(Conn_List_Typedef *pDB)
 {
-	memset((void*)&pDataBase, 0, sizeof(Conn_List_Typedef));
+#if 1
+	memset((void*)pDB, 0, sizeof(Conn_List_Typedef));
+#else
+
+	//pDB->num = 0;
+	//memset(pDB->mapping,0, MAP_BYTES_MAX*4);
+	//memset(pDB->conn_device,0, sizeof(DeviceEntry_Typedef));
+#endif
 }
 /*
  * @return '0': have not mach addr '0-256' id of the match addr device

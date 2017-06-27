@@ -6,6 +6,7 @@
 #include "pallet.h"
 #include "../debug/debug_queue.h"
 #include "mac.h"
+#include "mac_data.h"
 
 #define NODE_TABLE_MAX_LEN   6
 
@@ -18,19 +19,14 @@ static unsigned int temp_t0;
 static unsigned char send_len;
 
 PalletInfo_TypeDef pallet_info;
-PalletSetup_Infor_TypeDef plt_setup_infor;
+PLTSetupInfor_TypeDef plt_setup_infor;
+Conn_List_Typedef plt_conn_list;
+
 static MsgQueue_Typedef msg_queue;
-static NodeEntry_Typedef node_table[NODE_TABLE_MAX_LEN];
+//static NodeEntry_Typedef node_table[NODE_TABLE_MAX_LEN];
 /**************temporary data struct*******************/
-typedef struct
-{
-	unsigned short pallet_mac;
-	unsigned char pallet_id;
-	unsigned char rst;
-}device_infor_t;
 
 NodeDataWaitSend_Typdedef node_data[3];
-device_infor_t device_infor;
 /****************************************************/
 
 #define DEBUG 1
@@ -73,6 +69,7 @@ void Pallet_Init(void)
     pallet_info.p_gp_Setup_infor = &plt_setup_infor;
     pallet_info.pData = (void*)&node_data;
 
+    Init_DataBase(&plt_conn_list);
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
     RF_RxBufferSet(rx_buf, RX_BUF_LEN, 0);
     IRQ_RfIrqDisable(0xffff);
@@ -100,14 +97,14 @@ _attribute_ram_code_ void Run_Pallet_Statemachine(Msg_TypeDef *msg)
 		}
 		case GPN_CONN_GW_BCN_WAIT:
 		{
-//			if(ClockTimeExceed(temp_t0, RX_WAIT))
-//			{
-//				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_GB;
-//				//pallet_info.wakeup_tick = pallet_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
-//				pallet_info.wakeup_tick = pallet_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
-//				pallet_info.t0 = pallet_info.wakeup_tick;
-//			}
-//			else
+			if(ClockTimeExceed(temp_t0, RX_WAIT))
+			{
+				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_GB;
+				//pallet_info.wakeup_tick = pallet_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+				pallet_info.wakeup_tick = pallet_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+				pallet_info.t0 = pallet_info.wakeup_tick;
+			}
+			else
 				if (msg && (msg->type == PALLET_MSG_TYPE_GW_BCN))
 			{
 				RX_INDICATE();
@@ -445,11 +442,31 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
 
 	            	if(dest_mac == pallet_info.mac_addr)
 	            	{
-	            		unsigned int i;
 	            		RX_INDICATE();
 						//send pallet setup response
 
-						pallet_info.node_addr = FRAME_GET_SRC_ADDR(msg->data);
+						//pallet_info.node_addr = FRAME_GET_SRC_ADDR(msg->data);
+	            		plt_setup_infor.node_addr = FRAME_GET_SRC_ADDR(msg->data);
+	            		plt_setup_infor.node_id = Find_Dev(&plt_conn_list, plt_setup_infor.node_addr);
+
+	            		if(plt_setup_infor.node_id==0)
+	            		{
+	            			//alloce id
+	            			plt_setup_infor.node_id = Malloc_ID(&plt_conn_list);
+	            			if(plt_setup_infor.node_id!=0)
+	            			{
+	            				Add_ID_List(&plt_conn_list, plt_setup_infor.node_id, plt_setup_infor.node_addr);
+	            			}
+	            			else
+	            			{
+	            				//todo full
+	            			}
+	            		}
+	            		else
+	            		{
+
+	            		}
+#if 0
 						//check whether the node has been added in to the node table
 						for (i = 0; i < pallet_info.node_table_len; i++)
 						{
@@ -468,6 +485,7 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
 							node_table[i].node_addr = pallet_info.node_addr;
 							node_table[i].node_id = pallet_info.node_id;
 						}
+#endif
 						send_len = RF_Manual_Send(Build_PalletSetupRsp, (void*)&pallet_info);
 						TX_INDICATE();
 						temp_t0 = ClockTime();
@@ -771,7 +789,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 #endif
 			GPIO_WriteBit(POWER_PIN, 1);
 
-			if(pallet_info.node_table_len != 0)
+			if(plt_conn_list.num != 0)
 			{
 				pallet_info.state = GPN_CONN_IDLE;
 			}

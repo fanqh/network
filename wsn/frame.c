@@ -89,8 +89,8 @@ _attribute_ram_code_ unsigned char Build_GatewaySetupRsp(unsigned char *pBuf, vo
     *p++ = ++(pInfo->dsn); //dsn
     *p++ = 0xaa; //dest PANID
     *p++ = 0xbb;
-    *p++ = pInfo->pallet_addr & 0xff; //dest address
-    *p++ = pInfo->pallet_addr >> 8;
+    *p++ = pInfo->pSetup_info->plt_addr & 0xff; //dest address
+    *p++ = pInfo->pSetup_info->plt_addr >> 8;
 
     *p++ = pInfo->mac_addr & 0xff; //source address
     *p++ = pInfo->mac_addr >> 8;
@@ -325,12 +325,14 @@ _attribute_ram_code_ unsigned char Build_PalletSetupRsp(unsigned char *pBuf, voi
     *p++ = ++(pInfo->dsn); //dsn
     *p++ = 0xaa; //dest PANID
     *p++ = 0xbb;
-    *p++ = pInfo->node_addr & 0xff; //dest address
-    *p++ = pInfo->node_addr >> 8;
+    *p++ = pInfo->p_gp_Setup_infor->node_addr & 0xff; //dest address
+    *p++ = pInfo->p_gp_Setup_infor->node_addr  >> 8;
+
     *p++ = pInfo->mac_addr & 0xff; //source address
     *p++ = pInfo->mac_addr >> 8;
+
     *p++ = FRMAE_TYPE_SETUP_PALLET_RSP;
-    *p++ = pInfo->node_id;
+    *p++ = pInfo->p_gp_Setup_infor->node_id;
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;
@@ -363,7 +365,7 @@ _attribute_ram_code_ unsigned char Build_PalletSetupReq(unsigned char *pBuf, voi
     *p++ = pInfo->mac_addr & 0xff; //src address
     *p++ = pInfo->mac_addr >> 8;
     *p++ = FRMAE_TYPE_SETUP_PALLET_REQ;
-    *p++ = pInfo->node_table_len;
+    //*p++ = pInfo->node_table_len;
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;
