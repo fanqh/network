@@ -86,7 +86,7 @@ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
 		}
 	case GW_CONN_PLT_DATA_WAIT:
     {
-    	if(ClockTimeExceed(temp_t0, 2000))
+    	if(ClockTimeExceed(temp_t0, 3000))
     	{
     		gw_info.state = GW_CONN_SUSPEND;
     		gw_info.wakeup_tick = gw_info.t0 + (MASTER_PERIOD - RF_TX_WAIT)*TickPerUs;

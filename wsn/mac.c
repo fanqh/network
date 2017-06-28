@@ -20,8 +20,8 @@ unsigned short Get_MAC_Addr(void)
 
 unsigned int Estimate_SendT_From_RecT(unsigned int rec_time, unsigned char rec_size)
 {
-	return rec_time- (0x95 + 32*(rec_size+6))*TickPerUs;
-	//return rec_time- 0x95*TickPerUs - 32*(3);
+//	return rec_time- (0x95 + 32*(rec_size+6))*TickPerUs;
+	return rec_time - (0x95 + 34*4)*TickPerUs;
 }
 unsigned int Estimate_SendData_Time_Length(unsigned char s_size)
 {

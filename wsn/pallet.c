@@ -287,11 +287,11 @@ _attribute_ram_code_ void Pallet_RxIrqHandler(void)
     	memcpy(pack[dj++], rx_packet, 32);
     	}
 #endif
-    	unsigned int tick = ClockTime();
-    	rx_packet[8] = (unsigned char)(tick & 0xff);
-    	rx_packet[9] = (unsigned char)((tick>>8) & 0xff);
-    	rx_packet[10] = (unsigned char)((tick>>16) & 0xff);
-    	rx_packet[11] = (unsigned char)((tick>>24) & 0xff);
+//    	unsigned int tick = ClockTime();
+//    	rx_packet[8] = (unsigned char)(tick & 0xff);
+//    	rx_packet[9] = (unsigned char)((tick>>8) & 0xff);
+//    	rx_packet[10] = (unsigned char)((tick>>16) & 0xff);
+//    	rx_packet[11] = (unsigned char)((tick>>24) & 0xff);
 
         //if it is coor ACK frame, check it and then go to suspend immediately
         if (FRAME_IS_ACK_TYPE(rx_packet) && (rx_packet[15] == pallet_info.dsn))

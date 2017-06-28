@@ -33,7 +33,7 @@
 #define RF_TX_WAIT                      15 //in us
 #define DEV_RX_MARGIN                   20 //in us
 #define RX_WAIT                         (1600) //in us
-#define SETUP_SUSPNED_EARLY_WAKEUP		500
+#define SETUP_SUSPNED_EARLY_WAKEUP		0
 #define PLT_BCN_WAIT_TIMEOUT			1500   //(11+6)*32+150 = 693
 #define PLT_ACK_WAIT_TIMEOUT			600
 
