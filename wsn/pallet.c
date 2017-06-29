@@ -654,7 +654,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
             {
 				//need match mac
 
-				//if((plt_setup_infor.gw_mac==FRAME_GW_SETUP_RSP_GET_GW_SRC_ADDR(msg->data)) && (pallet_info.mac_addr == FRAME_GW_SETUP_RSP_GET_PLT_ADDR(msg->data)))
+				if((plt_setup_infor.gw_mac==FRAME_GW_SETUP_RSP_GET_GW_SRC_ADDR(msg->data)) && (pallet_info.mac_addr == FRAME_GW_SETUP_RSP_GET_PLT_ADDR(msg->data)))
 				{
 					RX_INDICATE();
 
@@ -703,7 +703,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 		{
 			if(ClockTimeExceed(temp_t0, RX_WAIT))
 			{
-				TIME_INDICATE();
+				RX_INDICATE();
 				pallet_info.state = GP_SYC_SUSPNED;
 				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
 				pallet_info.t0 = pallet_info.wakeup_tick;
@@ -788,11 +788,11 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 #endif
 			GPIO_WriteBit(POWER_PIN, 1);
 
-			if(plt_conn_list.num != 0)
-			{
-				pallet_info.state = GPN_CONN_IDLE;
-			}
-			else
+//			if(plt_conn_list.num != 0)
+//			{
+//				pallet_info.state = GPN_CONN_IDLE;
+//			}
+//			else
 			{
 				pallet_info.state = GP_SYC_IDLE;
 			}
@@ -804,7 +804,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 	}
 }
 
-void Pallet_MainLoop(void)
+_attribute_ram_code_ void Pallet_MainLoop(void)
 {
     Msg_TypeDef *pMsg = NULL;
 

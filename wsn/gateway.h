@@ -13,6 +13,7 @@ typedef enum {
     GW_SETUP_GB_TX_DONE_WAIT,
     GW_SETUP_PLT_REQ_WAIT,
     GW_SETUP_RSP_TX_DONE,
+    GW_SETUP_SUSPEND,
 
     GW_CONN_SEND_GW_BCN = GW_ASSOCIATE_MASK,
     GW_CONN_GB_TX_DONE,
@@ -35,7 +36,7 @@ typedef struct {
 
 typedef struct{
 	unsigned char plt_id;
-	unsigned char rsd;
+	unsigned char setup_num;
 	unsigned short plt_addr;
 }GatewaySetupInfor_Typedef;
 

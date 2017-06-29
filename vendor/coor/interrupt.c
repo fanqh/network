@@ -5,8 +5,14 @@
 
 
 extern volatile unsigned char GatewaySetupTrig;
-unsigned char sta[32];
 
+typedef struct
+{
+	unsigned not_first;
+	unsigned int pre_timestamp;
+}key_TypeDef;
+
+key_TypeDef current_key, key;
 _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
 {
     u32 IrqSrc = IRQ_SrcGet();
@@ -20,9 +26,20 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
             WaitUs(10);
             if (0 == GPIO_ReadInputBit(SW1_PIN))
             {
-                //while(0 == GPIO_ReadInputBit(SW1_PIN));
-                GPIO_WriteBit(LED_RED, !GPIO_ReadOutputBit(LED_RED));
-                GatewaySetupTrig = 1;
+            	if(key.not_first !=0)
+            	{
+					if(ClockTime() - (key.pre_timestamp+300000*TickPerUs) <=BIT(31))
+					{
+						GatewaySetupTrig = 1;
+						GPIO_WriteBit(LED_RED, !GPIO_ReadOutputBit(LED_RED));
+					}
+            	}
+            	else
+            	{
+            		GatewaySetupTrig = 1;
+            		key.not_first = 1;
+            	}
+                key.pre_timestamp = ClockTime();
             }
         } 
     }

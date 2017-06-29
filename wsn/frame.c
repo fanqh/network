@@ -358,12 +358,15 @@ _attribute_ram_code_ unsigned char Build_PalletSetupReq(unsigned char *pBuf, voi
     *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
     *p++ = 0x98; //frame ctrl hig: short dst addr and src addr
     *p++ = ++(pInfo->dsn); //dsn
-    *p++ = 0xaa; //dest PANID
-    *p++ = 0xbb;
-    *p++ = pInfo->gw_addr & 0xff; //dest address
-    *p++ = pInfo->gw_addr >> 8;
+    
+    *p++ = pInfo->p_gp_Setup_infor->gw_id; //dest PANID
+    *p++ = 0;
+    *p++ = pInfo->p_gp_Setup_infor->gw_mac & 0xff; //dest address
+    *p++ = pInfo->p_gp_Setup_infor->gw_mac >> 8;
+
     *p++ = pInfo->mac_addr & 0xff; //src address
     *p++ = pInfo->mac_addr >> 8;
+
     *p++ = FRMAE_TYPE_SETUP_PALLET_REQ;
     //*p++ = pInfo->node_table_len;
     len = p - (&pBuf[5]);

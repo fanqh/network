@@ -46,6 +46,7 @@
 	#define TIMING_SHOW_PIN           	  GPIOC_GP3
 	#define RX_STATE_PIN				  GPIOB_GP7
 	#define TX_STATE_PIN				  GPIOB_GP5
+	#define TEST_PIN					  GPIOC_GP2
 	#define ERROR_WARN_LOOP()		{while(1){WaitMs(100);GPIO_WriteBit(LED_RED, !GPIO_ReadOutputBit(LED_RED));}}
 #else
 	#define TIMING_SHOW_PIN            	  GPIOC_GP4
@@ -68,5 +69,6 @@
 #define TIME_INDICATE()			{GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));}
 #define RX_INDICATE()			{GPIO_WriteBit(RX_STATE_PIN, !GPIO_ReadOutputBit(RX_STATE_PIN));}
 #define TX_INDICATE()			{GPIO_WriteBit(TX_STATE_PIN, !GPIO_ReadOutputBit(TX_STATE_PIN));}
+#define TOGGLE_TEST_PIN()		{GPIO_WriteBit(TEST_PIN, !GPIO_ReadOutputBit(TEST_PIN));}
 
 #endif
