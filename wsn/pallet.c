@@ -327,8 +327,8 @@ _attribute_ram_code_ void Pallet_RxIrqHandler(void)
         //if it is gateway setup response frame, check whether the dst addr matches the local addr
         else if (FRAME_IS_SETUP_GW_RSP(rx_packet))
         {
-            unsigned short dst_addr = FRAME_GET_DST_ADDR(rx_packet);
-            if (dst_addr == pallet_info.mac_addr)
+            //unsigned short dst_addr = FRAME_GET_DST_ADDR(rx_packet);
+            if (FRAME_GET_DST_ADDR(rx_packet) == pallet_info.mac_addr)
             {
                 MsgQueue_Push(&msg_queue, rx_packet, PG_MSG_SETUP_GW_RSP);
             }

@@ -87,6 +87,7 @@ _attribute_ram_code_ unsigned char Build_GatewaySetupRsp(unsigned char *pBuf, vo
     *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
     *p++ = 0x98; //frame ctrl hig: short dst addr and src addr
     *p++ = ++(pInfo->dsn); //dsn
+    
     *p++ = 0xaa; //dest PANID
     *p++ = 0xbb;
     *p++ = pInfo->pSetup_info->plt_addr & 0xff; //dest address
