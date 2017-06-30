@@ -5,6 +5,13 @@
 
 
 extern volatile unsigned char PalletSetupTrig;
+typedef struct
+{
+	unsigned not_first;
+	unsigned int pre_timestamp;
+}key_TypeDef;
+
+key_TypeDef key;
 
 _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
 {
@@ -19,9 +26,20 @@ _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
             WaitUs(10);
             if (0 == GPIO_ReadInputBit(PALLET_SETUP_TRIG_PIN))
             {
-                //while(0 == GPIO_ReadInputBit(PALLET_SETUP_TRIG_PIN));
-                PalletSetupTrig = 1;
-                //IRQ_INDICATION();
+
+            	if(key.not_first !=0)
+            	{
+            		if(ClockTime() - (key.pre_timestamp+300000*TickPerUs) <=BIT(31))
+					{
+            			PalletSetupTrig = 1;
+					}
+            	}
+            	else
+            	{
+            		PalletSetupTrig = 1;
+            		key.not_first = 1;
+            	}
+                key.pre_timestamp = ClockTime();
             }
         }
     }

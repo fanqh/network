@@ -32,16 +32,13 @@ typedef struct
 #define FRAME_GET_TIMESTAMP(p)             		( p[8] | (p[9]<<8) | (p[10]<<16) | (p[11]<<24) )
 #define FRAME_GET_DEST_ID(p)					( p[16] | (p[17]<<8) )
 #define FRAME_GET_DEST_ADDR(p)					( p[18] | (p[19]<<8) )
+#define FRAME_GET_SRC_ADDR(p)              		( p[20] | (p[21]<<8) )
+
 /****************************gateway frame***************************************************/
 //GateWay Beacon
-#define FRAME_GET_PERIOD_CNT(p)            		( p[23] | (p[24]<<8) | (p[25]<<16) | (p[26]<<24) )
-#define FRAME_GET_PALLET_ID(p)             		( p[27] )
-#define FRAME_GET_DST_ADDR(p)              		( p[18] | (p[19]<<8) )
-#define FRAME_GET_SRC_ADDR(p)              		( p[20] | (p[21]<<8) )
-#define FRAME_GET_INCOME_DSN(p)            		( p[15] )
-//gateway beacon
+//#define FRAME_GET_DST_ADDR(p)              		( p[18] | (p[19]<<8) )
 #define FRAME_GW_GB_GET_GW_ID(p)		   		( p[23] )
-#define FRAME_GW_GB_GET_GW_ADDR(p)		   		( p[20] | (p[21]<<8) )
+//#define FRAME_GW_GB_GET_GW_ADDR(p)		   		( p[20] | (p[21]<<8) )
 //gateway setup
 #define FRAME_GW_SETUP_GB_SRC_ID(p)				(p[23])
 //gateway setup response
@@ -76,7 +73,7 @@ typedef struct
 
 
 
-#define FRAME_IS_GATEWAY_BEACON(p)         (( p[22] == FRMAE_TYPE_GATEWAY_BEACON)&&(p[16]==0xaa)&&(p[17]==0xbb) )
+#define FRAME_IS_GATEWAY_BEACON(p)         (( p[22] == FRMAE_TYPE_GATEWAY_BEACON)&&(p[16]==0xff)&&(p[17]==0xff) )
 #define FRAME_IS_PALLET_DATA(p)            ( (p[22] == FRMAE_TYPE_PALLET_DATA)&&(p[16]==0xaa)&&(p[17]==0xbb))
 #define FRAME_IS_ACK_TYPE(p)               ( p[13] == 0x02)
 #define FRAME_IS_NODE_DATA(p)              ( (p[22] == FRMAE_TYPE_NODE_DATA)&&(p[16]==0xaa)&&(p[17]==0xbb))

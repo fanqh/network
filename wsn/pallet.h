@@ -67,7 +67,8 @@ typedef struct{
 
 	unsigned char node_id;
 	unsigned short node_addr;
-    unsigned char retry_times; //retry times
+	unsigned char plt_send_setup_num;
+//    unsigned char retry_times; //retry times
 }PLTSetupInfor_TypeDef;
 
 

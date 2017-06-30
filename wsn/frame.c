@@ -15,8 +15,8 @@ _attribute_ram_code_ unsigned char Build_GatewayBeacon(unsigned char *pBuf, void
     *p++ = 0x41; //frame ctrl
     *p++ = 0x98;
     *p++ = ++(pInfo->dsn); //dsn
-    *p++ = 0xaa; //dest PANID 
-    *p++ = 0xbb;
+    *p++ = 0xff; //dest PANID 
+    *p++ = 0xff;
     *p++ = 0xff; //dest address
     *p++ = 0xff;
 
@@ -90,7 +90,7 @@ _attribute_ram_code_ unsigned char Build_GatewaySetupRsp(unsigned char *pBuf, vo
     
     *p++ = 0xaa; //dest PANID
     *p++ = 0xbb;
-    *p++ = pInfo->pSetup_info->plt_addr & 0xff; //dest address
+    *p++ = pInfo->pSetup_info->plt_addr & 0xff; //dest address 18
     *p++ = pInfo->pSetup_info->plt_addr >> 8;
 
     *p++ = pInfo->mac_addr & 0xff; //source address
@@ -324,8 +324,8 @@ _attribute_ram_code_ unsigned char Build_PalletSetupRsp(unsigned char *pBuf, voi
     *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
     *p++ = 0x98; //frame ctrl hig: short dst addr and src addr
     *p++ = ++(pInfo->dsn); //dsn
-    *p++ = 0xaa; //dest PANID
-    *p++ = 0xbb;
+    *p++ = 0xff; //dest PANID
+    *p++ = 0xff;
     *p++ = pInfo->p_gp_Setup_infor->node_addr & 0xff; //dest address
     *p++ = pInfo->p_gp_Setup_infor->node_addr  >> 8;
 

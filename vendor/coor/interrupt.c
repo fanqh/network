@@ -12,7 +12,7 @@ typedef struct
 	unsigned int pre_timestamp;
 }key_TypeDef;
 
-key_TypeDef current_key, key;
+key_TypeDef key;
 _attribute_ram_code_ __attribute__((optimize("-Os"))) void irq_handler(void)
 {
     u32 IrqSrc = IRQ_SrcGet();
