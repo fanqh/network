@@ -366,28 +366,10 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
     {
 		case PN_SETUP_IDLE:
 		{
-			if(pallet_info.dsn >= plt_setup_infor.plt_send_setup_num)
-			{
-//				pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD*2 - 300)*TickPerUs;
-//				pallet_info.t0 = pallet_info.wakeup_tick;
-//				pallet_info.state = GPN_CONN_SUSPEND_BEFORE_GB;
+			temp_t0 = ClockTime();
+			RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
 
-				temp_t0 = ClockTime();
-				RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
-				pallet_info.state = GPN_CONN_GW_BCN_WAIT;
-				TOGGLE_TEST_PIN();
-
-//				temp_t0 = ClockTime();
-//				pallet_info.state = GPN_CONN_GW_BCN_WAIT;
-//				RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
-//				TOGGLE_TEST_PIN();
-			}
-			else
-			{
-				temp_t0 = ClockTime();
-				RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
-				pallet_info.state = PN_SETUP_GW_BCN_WAIT;
-			}
+			pallet_info.state = PN_SETUP_GW_BCN_WAIT;
 			break;
 		}
 		case PN_SETUP_GW_BCN_WAIT:
@@ -459,7 +441,22 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
 		{
 			if(ClockTime() - (pallet_info.t0 + MASTER_PERIOD *TickPerUs)<BIT(31))
 			{
-				pallet_info.state = PN_SETUP_IDLE;
+				if(pallet_info.dsn >= plt_setup_infor.plt_send_setup_num)
+				{
+					TOGGLE_TEST_PIN();
+					if(plt_conn_list.num!=0)
+					{
+						pallet_info.state = GPN_CONN_IDLE;
+					}
+					else
+					{
+						pallet_info.state = GP_SYC_IDLE;
+					}
+				}
+				else
+				{
+					pallet_info.state = PN_SETUP_IDLE;
+				}
 			}
 			else
 			{
@@ -545,6 +542,7 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
 #endif
 			GPIO_WriteBit(POWER_PIN, 1);
 			pallet_info.state = PN_SETUP_IDLE;
+
 			break;
 		}
 		default:
@@ -809,15 +807,7 @@ _attribute_ram_code_  void Pallet_Keep_Syc_With_GW(Msg_TypeDef *msg)
 			while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
 #endif
 			GPIO_WriteBit(POWER_PIN, 1);
-
-//			if(plt_conn_list.num != 0)
-//			{
-//				pallet_info.state = GPN_CONN_IDLE;
-//			}
-//			else
-			{
-				pallet_info.state = GP_SYC_IDLE;
-			}
+			pallet_info.state = GP_SYC_IDLE;
 
 			break;
 		}
@@ -842,17 +832,16 @@ _attribute_ram_code_ void Pallet_MainLoop(void)
     	pallet_info.t0 = pallet_info.wakeup_tick;
 
     	pallet_info.state = PN_SETUP_SUSPEND;
-    	//GPIO_WriteBit(TEST_PIN, !GPIO_ReadOutputBit(TEST_PIN));
     	TOGGLE_TEST_PIN();
 
-//    	if(plt_conn_list.num==0)
-//    	{
+    	if(plt_conn_list.num==0)
+    	{
     		plt_setup_infor.plt_send_setup_num = PLT_SETUP_BCN_NUM;
-//    	}
-//    	else
-//    	{
-//    		plt_setup_infor.plt_send_setup_num = 1;
-//    	}
+    	}
+    	else
+    	{
+    		plt_setup_infor.plt_send_setup_num = 1;
+    	}
     }
 
     pMsg = MsgQueue_Pop(&msg_queue);
