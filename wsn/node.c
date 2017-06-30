@@ -62,43 +62,40 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 //			if(ClockTimeExceed(temp_t0, PLT_BCN_WAIT_TIMEOUT))
 //			{
 //                node_info.state = ND_CONN_SUSPEND;
-////                node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
 //                node_info.wakeup_tick = node_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
 //                node_info.t0 = node_info.wakeup_tick;
 //			}
-//			else
-				if(msg->type==NODE_MSG_TYPE_PALLET_BCN)
+//			else if(msg)
 			{
-				RX_INDICATE();
-                //node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - (ZB_TIMESTAMP_OFFSET + FRAME_PLT_PB_GET_SRC_ID(msg->data)*TIMESLOT_LENGTH)*TickPerUs;  //gateway beacon time
-				node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data)) - \
-								FRAME_PLT_PB_GET_SRC_ID(msg->data)*TIMESLOT_LENGTH*TickPerUs;
+				if(msg->type==NODE_MSG_TYPE_PALLET_BCN)
+				{
+					RX_INDICATE();
+					node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data)) - \
+									FRAME_PLT_PB_GET_SRC_ID(msg->data)*TIMESLOT_LENGTH*TickPerUs;
 
-				node_info.gw_sn = FRAME_PLT_PB_GET_GW_SN(msg->data);
-                node_info.plt_dsn = FRAME_GET_DSN(msg->data);
-                if ((node_info.gw_sn % NODE_NUM) == (node_info.node_id % NODE_NUM))
-                {
-                    if (FRAME_PLT_PB_GET_SRC_ID(msg->data) == node_info.pallet_id)
-                    {
-                    	send_len = RF_Manual_Send(Build_NodeData, (void*)&node_info);
-                    	TX_INDICATE();
-                    	temp_t0 = ClockTime();
-                    	node_info.state = ND_CONN_ND_DATA_TX_DONE_WAIT;
-                    }
-                    else
-                    {
-                        node_info.state = ND_CONN_SUSPEND;
-                        node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD)*TickPerUs;
-                    }
-                }
-                else
-                {
-//                	unsigned char id
-//                	if(node_info.node_id > (node_info.gw_sn%NODE_NUM))
-
-                    node_info.state = ND_CONN_SUSPEND;
-                    node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id + MASTER_PERIOD)*TickPerUs;
-                }
+					node_info.gw_sn = FRAME_PLT_PB_GET_GW_SN(msg->data);
+					node_info.plt_dsn = FRAME_GET_DSN(msg->data);
+					if ((node_info.gw_sn % NODE_NUM) == (node_info.node_id % NODE_NUM))
+					{
+						if (FRAME_PLT_PB_GET_SRC_ID(msg->data) == node_info.pallet_id)
+						{
+							send_len = RF_Manual_Send(Build_NodeData, (void*)&node_info);
+							TX_INDICATE();
+							temp_t0 = ClockTime();
+							node_info.state = ND_CONN_ND_DATA_TX_DONE_WAIT;
+						}
+						else
+						{
+							node_info.state = ND_CONN_SUSPEND;
+							node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id+MASTER_PERIOD)*TickPerUs;
+						}
+					}
+					else
+					{
+						node_info.state = ND_CONN_SUSPEND;
+						node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id + MASTER_PERIOD)*TickPerUs;
+					}
+				}
 
 			}
 			break;
@@ -242,10 +239,10 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 				}
 				else if(NP_MSG_SETUP_PLT_BCN == msg->type)
 				{
-
 					RX_INDICATE();
 					//node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
-					node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data));
+					node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data))\
+							- GW_PLT_TIME*TickPerUs;
 					ND_Setup_Infor.plt_mac = FRAME_PLT_SETUP_BCN_GET_SRC_MAC(msg->data);
 					ND_Setup_Infor.plt_id = FRAME_PLT_SETU_BCN_GET_PLT_ID(msg->data);
 

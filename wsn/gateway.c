@@ -90,7 +90,6 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
     	if(ClockTimeExceed(gw_info.t0, 2000))
     	{
     		gw_info.state = GW_CONN_SUSPEND;
-    		//gw_info.wakeup_tick = gw_info.t0 + (MASTER_PERIOD)*TickPerUs;
     	}
     	else if (msg)
     	{

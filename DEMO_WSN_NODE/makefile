@@ -39,7 +39,7 @@ all: SensorMesh_20170418.elf secondary-outputs
 SensorMesh_20170418.elf: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: TC32 C Linker'
-	tc32-elf-ld  -T ../boot.link -o"SensorMesh_20170418.elf" $(OBJS) $(USER_OBJS) $(LIBS)
+	tc32-elf-ld --gc-section -T ../boot.link -o"SensorMesh_20170418.elf" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
