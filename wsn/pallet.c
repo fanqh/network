@@ -610,12 +610,9 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
                 }
                 else if((msg->type == PALLET_MSG_TYPE_GW_BCN) && (conn_falg==1))
                 {
-                	//if((pallet_info.gw_addr == FRAME_GET_SRC_ADDR(msg->data)) && (pallet_info.gw_id==FRAME_GW_GB_GET_GW_ID(msg->data)))
-                	{
-                		//GPIO_SetBit(LED3_RED);
-                		pallet_info.state = GP_SYC_SUSPNED;
-                		pallet_info.wakeup_tick  = pallet_info.t0 + MASTER_PERIOD*TickPerUs;
-                	}
+					//GPIO_SetBit(LED3_RED);
+					pallet_info.state = GP_SYC_SUSPNED;
+					pallet_info.wakeup_tick  = pallet_info.t0 + MASTER_PERIOD*TickPerUs;
                 }
                 Message_Reset(msg);
             }
