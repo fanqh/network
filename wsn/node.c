@@ -137,7 +137,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 	        GPIO_WriteBit(POWER_PIN, 0);
 
 	#ifdef SUPEND
-	        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick - 500*TickPerUs);
+	        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
 	#else
 	        while((unsigned int)(ClockTime() - node_info.wakeup_tick) > BIT(30));
 	#endif
@@ -165,11 +165,11 @@ _attribute_ram_code_ void Node_RxIrqHandler(void)
     //receive a valid packet
     else
     {
-    	unsigned int tick = ClockTime();
-    	rx_packet[8] = (unsigned char)(tick & 0xff);
-    	rx_packet[9] = (unsigned char)((tick>>8) & 0xff);
-    	rx_packet[10] = (unsigned char)((tick>>16) & 0xff);
-    	rx_packet[11] = (unsigned char)((tick>>24) & 0xff);
+//    	unsigned int tick = ClockTime();
+//    	rx_packet[8] = (unsigned char)(tick & 0xff);
+//    	rx_packet[9] = (unsigned char)((tick>>8) & 0xff);
+//    	rx_packet[10] = (unsigned char)((tick>>16) & 0xff);
+//    	rx_packet[11] = (unsigned char)((tick>>24) & 0xff);
         //if it is pallet setup beacon frame, perform a random backoff and then require to associate
         if (FRAME_IS_SETUP_PALLET_BEACON(rx_packet))
         {
