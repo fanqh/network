@@ -611,6 +611,7 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
                 else if((msg->type == PALLET_MSG_TYPE_GW_BCN) && (conn_falg==1))
                 {
 					//GPIO_SetBit(LED3_RED);
+                	//CONN_INDICATION();
 					pallet_info.state = GP_SYC_SUSPNED;
 					pallet_info.wakeup_tick  = pallet_info.t0 + MASTER_PERIOD*TickPerUs;
                 }
@@ -696,11 +697,12 @@ _attribute_ram_code_  void Pallet_Setup_With_Gatway(Msg_TypeDef *msg)
     		RF_SetTxRxOff();
     		GPIO_WriteBit(POWER_PIN, 0);
     #if SUPEND
-    		PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick - SETUP_SUSPNED_EARLY_WAKEUP*TickPerUs);
+    		PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, pallet_info.wakeup_tick );
     #else
     		while((unsigned int)(ClockTime() - pallet_info.wakeup_tick) > BIT(30));
     #endif
     		GPIO_WriteBit(POWER_PIN, 1);
+    		while(1);
     		pallet_info.state = GP_SETUP_IDLE;
     		break;
     	}
