@@ -323,6 +323,8 @@ _attribute_ram_code_ void Pallet_RxIrqHandler(void)
         {
         	if((FRAME_GET_SRC_ADDR(rx_packet)==pallet_info.gw_addr) && (FRAME_GW_GB_GET_GW_ID(rx_packet)==pallet_info.gw_id))
         		MsgQueue_Push(&msg_queue, rx_packet, PALLET_MSG_TYPE_GW_BCN);
+			else
+				MsgQueue_Push(&msg_queue, rx_packet, PALLET_MSG_TYPE_INVALID_DATA);	
         }
         //if it is end device data frame, send ack immediately
         else if (FRAME_IS_NODE_DATA(rx_packet))
@@ -528,6 +530,7 @@ _attribute_ram_code_ void Run_Pallet_Setup_With_Node(Msg_TypeDef *msg)
 			{
 				TX_INDICATE();
 				pallet_info.state = PN_SETUP_ND_REQ_WAIT;
+				RF_TrxStateSet(RF_MODE_RX, RF_CHANNEL);
 			}
 			break;
 		}

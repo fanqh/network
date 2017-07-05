@@ -36,6 +36,7 @@ typedef enum {
 typedef struct{
     unsigned short plt_mac; //id of the pallet this node attaches to
     unsigned char plt_id; //id of the pallet this node attaches to
+    unsigned char gw_id;
     unsigned char retry_times;
 }NodeSetup_Infor_TypeDef;
 
@@ -45,11 +46,11 @@ typedef struct {
     unsigned int wakeup_tick; //the moment wakeup
 
 	unsigned char gw_sn;
-    //unsigned int period_cnt; //the overall period count
     unsigned short mac_addr; //mac address of this node
 
     unsigned short pallet_mac; //id of the pallet this node attaches to
     unsigned char pallet_id; //id of the pallet this node attaches to
+    unsigned char gw_id;
 
     unsigned char node_id; //pallet-assigned id for this node
     volatile unsigned char dsn; //sequence number of outgoing packet

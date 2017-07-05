@@ -55,7 +55,7 @@ typedef struct
 #define FRAME_PLT_SETUP_RSP_SRC_ADDR(p)				( p[20] | (p[21]<<8) )
 
 //pallet beacon
-#define FRAME_PLT_PB_GET_SRC_ID(p)		(p[20])
+#define FRAME_PLT_PB_GET_SRC_ID(p)		(p[24])
 #define FRAME_PLT_PB_GET_GW_SN(p)		(p[23])
 // pallet data
 #define FRAME_GET_PAYLOAD_PALLET_ID(p)           (p[20])
@@ -77,7 +77,7 @@ typedef struct
 #define FRAME_IS_PALLET_DATA(p)            ( (p[22] == FRMAE_TYPE_PALLET_DATA)&&(p[16]==0xaa)&&(p[17]==0xbb))
 #define FRAME_IS_ACK_TYPE(p)               ( p[13] == 0x02)
 #define FRAME_IS_NODE_DATA(p)              ( (p[22] == FRMAE_TYPE_NODE_DATA)&&(p[16]==0xaa)&&(p[17]==0xbb))
-#define FRAME_IS_PALLET_BEACON(p)          ( (p[22] == FRMAE_TYPE_PALLET_BEACON)&&(p[16]==0xaa)&&(p[17]==0xbb))
+#define FRAME_IS_PALLET_BEACON(p)          ( p[22] == FRMAE_TYPE_PALLET_BEACON)
 #define FRAME_IS_LENGTH_OK(p)              ( p[0] == p[12]+13)
 #define FRAME_IS_CRC_OK(p)                 ((p[p[0]+3] & 0x51) == 0x10)
 #define FRAME_GET_LENGTH(p)				   (p[12])

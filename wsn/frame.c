@@ -198,16 +198,19 @@ _attribute_ram_code_ unsigned char Build_PalletBeacon(unsigned char *pBuf, void 
     *p++ = 0x41; //frame ctrl
     *p++ = 0x98;
     *p++ = ++(pInfo->dsn); //dsn
-    *p++ = 0xaa; //dest PANID
-    *p++ = 0xbb;
+    
+    *p++ = pInfo->gw_id & 0xff; //dest PANID
+    *p++ = 0;
     *p++ = 0xff; //dest address
     *p++ = 0xff;
 
-    *p++ = pInfo->pallet_id & 0xff; //src address
-    *p++ = 0;
+    *p++ = pInfo->mac_addr & 0xff; //src address
+    *p++ = (pInfo->mac_addr>>8) & 0xff;
 
     *p++ = FRMAE_TYPE_PALLET_BEACON;
     *p++ = pInfo->gw_sn;
+    *p++ = pInfo->pallet_id;
+
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;
@@ -324,8 +327,8 @@ _attribute_ram_code_ unsigned char Build_PalletSetupRsp(unsigned char *pBuf, voi
     *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
     *p++ = 0x98; //frame ctrl hig: short dst addr and src addr
     *p++ = ++(pInfo->dsn); //dsn
-    *p++ = 0xff; //dest PANID
-    *p++ = 0xff;
+    *p++ = pInfo->gw_id; //dest PANID
+    *p++ = 0;
     *p++ = pInfo->p_gp_Setup_infor->node_addr & 0xff; //dest address
     *p++ = pInfo->p_gp_Setup_infor->node_addr  >> 8;
 

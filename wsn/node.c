@@ -203,7 +203,10 @@ _attribute_ram_code_ void Node_RxIrqHandler(void)
         //if it is pallet BCN frame, do sync 
         else if (FRAME_IS_PALLET_BEACON(rx_packet))
         {
-            MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_PALLET_BCN);
+        	if((FRAME_GET_SRC_ADDR(rx_packet) == node_info.pallet_mac) && (FRAME_PLT_PB_GET_SRC_ID(rx_packet)==node_info.pallet_id))
+        		MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_PALLET_BCN);
+        	else
+        		MsgQueue_Push(&msg_queue, rx_packet, NODE_MSG_TYPE_INVALID_DATA);
         }
         else
         {
@@ -240,11 +243,10 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 				else if(NP_MSG_SETUP_PLT_BCN == msg->type)
 				{
 					RX_INDICATE();
-					//node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
 					node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data));
-							//- GW_PLT_TIME*TickPerUs;
 					ND_Setup_Infor.plt_mac = FRAME_PLT_SETUP_BCN_GET_SRC_MAC(msg->data);
 					ND_Setup_Infor.plt_id = FRAME_PLT_SETU_BCN_GET_PLT_ID(msg->data);
+					ND_Setup_Infor.gw_id = FRAME_GET_DEST_ID(msg->data);
 
 					if(node_info.is_connect==1)
 					{
@@ -344,6 +346,7 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 					node_info.node_id = FRAME_GET_NODE_ID(msg->data);
 					node_info.pallet_mac = ND_Setup_Infor.plt_mac;
 					node_info.pallet_id = ND_Setup_Infor.plt_id;
+					node_info.gw_id = ND_Setup_Infor.gw_id;
 
 //					node_info.state = ND_SETUP_SUSPEND;
 					node_info.state = ND_SETUP_IDLE;
