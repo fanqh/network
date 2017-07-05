@@ -59,13 +59,13 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 		}
 		case ND_CONN_BCN_WAIT:
 		{
-//			if(ClockTimeExceed(temp_t0, PLT_BCN_WAIT_TIMEOUT))
-//			{
-//                node_info.state = ND_CONN_SUSPEND;
-//                node_info.wakeup_tick = node_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
-//                node_info.t0 = node_info.wakeup_tick;
-//			}
-//			else if(msg)
+			if(ClockTimeExceed(temp_t0, PLT_BCN_WAIT_TIMEOUT))
+			{
+                node_info.state = ND_CONN_SUSPEND;
+                node_info.wakeup_tick = node_info.wakeup_tick + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
+                node_info.t0 = node_info.wakeup_tick;
+			}
+			else if(msg)
 			{
 				if(msg->type==NODE_MSG_TYPE_PALLET_BCN)
 				{
@@ -137,7 +137,7 @@ _attribute_ram_code_ void Run_NodeStatemachine(Msg_TypeDef *msg)
 	        GPIO_WriteBit(POWER_PIN, 0);
 
 	#ifdef SUPEND
-	        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick);
+	        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, node_info.wakeup_tick - 500*TickPerUs);
 	#else
 	        while((unsigned int)(ClockTime() - node_info.wakeup_tick) > BIT(30));
 	#endif
@@ -250,8 +250,8 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 					{
 						if((ND_Setup_Infor.plt_mac==node_info.pallet_mac)&&(ND_Setup_Infor.plt_id==node_info.pallet_id))
 						{
-							node_info.state = ND_SETUP_SUSPEND;
-							node_info.wakeup_tick  = node_info.t0 + MASTER_PERIOD*TickPerUs;
+							node_info.state = ND_SETUP_IDLE;
+//							node_info.wakeup_tick  = node_info.t0 + MASTER_PERIOD*TickPerUs;
 							break;
 						}
 					}
@@ -270,11 +270,12 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 					{
 						RX_INDICATE();
 						//node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - (ZB_TIMESTAMP_OFFSET + node_info.pallet_id*TIMESLOT_LENGTH)*TickPerUs;
-						node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data))\
-										- node_info.pallet_id*TIMESLOT_LENGTH*TickPerUs;
+//						node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data))
+//										- node_info.pallet_id*TIMESLOT_LENGTH*TickPerUs;
+						node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data));
 
 						node_info.state = ND_CONN_SUSPEND;
-						node_info.wakeup_tick = node_info.t0 + (TIMESLOT_LENGTH*node_info.pallet_id + NODE_NUM*MASTER_PERIOD)*TickPerUs;
+						node_info.wakeup_tick = node_info.t0 + MASTER_PERIOD*TickPerUs;  //没找到原因这里为什么会需要提前400us
 						//pallet_info.wakeup_tick = pallet_info.t0 + (MASTER_PERIOD - DEV_RX_MARGIN)*TickPerUs;
 					}
 					else
@@ -344,9 +345,10 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 					node_info.pallet_mac = ND_Setup_Infor.plt_mac;
 					node_info.pallet_id = ND_Setup_Infor.plt_id;
 
-					node_info.state = ND_SETUP_SUSPEND;
+//					node_info.state = ND_SETUP_SUSPEND;
+					node_info.state = ND_SETUP_IDLE;
 					node_info.is_connect = 1;
-					node_info.wakeup_tick =  node_info.t0 + MASTER_PERIOD*TickPerUs;
+//					node_info.wakeup_tick =  node_info.t0 + MASTER_PERIOD*TickPerUs;
 
 					//GPIO_ResetBit(SHOW_DEBUG);
 					CONN_INDICATION();
@@ -374,7 +376,7 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
     }
 }
 
-void Node_MainLoop(void)
+_attribute_ram_code_ void Node_MainLoop(void)
 {
     Msg_TypeDef* pMsg = NULL;
     //pop a message from the message queue

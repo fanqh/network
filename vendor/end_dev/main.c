@@ -24,7 +24,7 @@ static void SYS_Init(void)
     USB_DpPullUpEn(1); //pull up DP pin of USB interface
 }
 
-unsigned int Get_Temperature(void)
+_attribute_ram_code_ unsigned int Get_Temperature(void)
 {
 	unsigned int temperature;
 	unsigned short tmp, tt, a1;
