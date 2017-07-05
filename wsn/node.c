@@ -241,8 +241,8 @@ _attribute_ram_code_ void Run_Node_Setup_Statemachine(Msg_TypeDef *msg)
 				{
 					RX_INDICATE();
 					//node_info.t0 = FRAME_GET_TIMESTAMP(msg->data) - ZB_TIMESTAMP_OFFSET*TickPerUs;
-					node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data))\
-							- GW_PLT_TIME*TickPerUs;
+					node_info.t0 = Estimate_SendT_From_RecT(FRAME_GET_TIMESTAMP(msg->data), FRAME_GET_LENGTH(msg->data));
+							//- GW_PLT_TIME*TickPerUs;
 					ND_Setup_Infor.plt_mac = FRAME_PLT_SETUP_BCN_GET_SRC_MAC(msg->data);
 					ND_Setup_Infor.plt_id = FRAME_PLT_SETU_BCN_GET_PLT_ID(msg->data);
 
