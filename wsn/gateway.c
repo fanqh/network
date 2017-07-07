@@ -13,22 +13,26 @@ typedef struct
 	unsigned char flag;
 	unsigned char dsn;
 	unsigned char pallet_id;
-	NodeDataWaitSend_Typdedef ndata[3];
+	unsigned int temperature;
 
 }WaitForUpload_Typedef;
 
 static unsigned int temp_t0 = 0;
 static unsigned char send_len;
-static GWInfo_TypeDef gw_info;
+
 static MsgQueue_Typedef msg_queue;
 
+
+static GWInfo_TypeDef gw_info;
+static Conn_List_Typedef gw_conn_list;
+static GatewaySetupInfor_Typedef gw_setup_infor;
+//static Rec_Infor_Typedef rec_infor;
+
+static volatile unsigned char rx_ptr = 0;
 unsigned char tx_buf[TX_BUF_LEN] __attribute__ ((aligned (4))) = {};
 unsigned char rx_buf[RX_BUF_LEN*RX_BUF_NUM] __attribute__ ((aligned (4))) = {};
-static volatile unsigned char rx_ptr = 0;
 extern volatile unsigned char GatewaySetupTrig;
 
-GatewaySetupInfor_Typedef gw_setup_infor;
-Conn_List_Typedef gw_conn_list;
 
 WaitForUpload_Typedef DataToSend;
 
@@ -45,11 +49,11 @@ void Gateway_Init(void)
     gw_info.state = GW_STATE_RF_OFF;
 	gw_info.gw_id = Rand()%255;
 	gw_info.pSetup_info = &gw_setup_infor;
+	gw_info.pConn_list = &gw_conn_list;
+
 	Init_DataBase(&gw_conn_list);
     RF_SetTxRxOff();
     RF_Init(RF_OSC_12M, RF_MODE_ZIGBEE_250K);
-
-
     RF_RxBufferSet(rx_buf + rx_ptr*RX_BUF_LEN, RX_BUF_LEN, 0);
     //enable irq
     IRQ_EnableType(FLD_IRQ_ZB_RT_EN);
@@ -59,6 +63,13 @@ void Gateway_Init(void)
     IRQ_RfIrqEnable(FLD_RF_IRQ_RX | FLD_RF_IRQ_RX_TIMEOUT | FLD_RF_IRQ_TX);
 #endif
 }
+
+//_attribute_ram_code_ Refresh_Lost_ID_List(void)
+//{
+//	unsigned char i;
+//
+//	for(i=0; i< gw_conn_list.num; i++)
+//}
 _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
 {
 	switch (gw_info.state)
@@ -87,29 +98,42 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
 		}
 	case GW_CONN_PLT_DATA_WAIT:
     {
-    	if(ClockTimeExceed(gw_info.t0, 2000))
-    	{
-    		gw_info.state = GW_CONN_SUSPEND;
-    	}
-    	else if (msg)
+		if(ClockTime() - (gw_info.wakeup_tick -TIMESLOT_LENGTH*5*TickPerUs) <= BIT(31))
+		{
+			gw_info.state = GW_CONN_SUSPEND;
+		}
+		if (msg)
     	{
             if (msg->type == GW_MSG_TYPE_PALLET_DATA)
             {
             	RX_INDICATE();
                 //ToDo: process received data submitted by pallet
                 gw_info.ack_dsn = FRAME_GET_DSN(msg->data);
+//                id = FRAME_GET_PAYLOAD_PALLET_ID(msg->data);
+//                if(Is_ID_Active(&gw_conn_list.mapping, id)!=0)
+//                {
+//                	if(id ==Find_Next_ID(current_id))
+//                	{
+//                		gw_conn_list.conn_device[id].loss_count=0;
+//                	}
+//                	else
+//                	{
+//                		gw_conn_list.conn_device[id].loss_count++;
+//                	}
+//                	current = id;
+//                }
+
                 DataToSend.flag = 1;
                 DataToSend.dsn = gw_info.ack_dsn;
                 DataToSend.pallet_id = FRAME_GET_PAYLOAD_PALLET_ID(msg->data);
-                //gw_info.wakeup_tick = gw_info.t0 + (MASTER_PERIOD)*TickPerUs;
-
-                memcpy(DataToSend.ndata, FRAME_GET_Point_PAYLOAD_TMP(msg->data), sizeof(NodeDataWaitSend_Typdedef)*3);
-                gw_info.state = GW_CONN_SEND_PLT_DATA_ACK;
+                memcpy((unsigned char*) (&DataToSend.temperature), FRAME_GET_Point_PAYLOAD_TMP(msg->data), 4);
+                ResuBuf_Write((unsigned char*)&DataToSend, sizeof(WaitForUpload_Typedef));
             }
             Message_Reset(msg);
         }
     	break;
     }
+#if 0
 	case GW_CONN_SEND_PLT_DATA_ACK:
     {
     	send_len = RF_Manual_Send(Build_Ack, &gw_info.ack_dsn);
@@ -127,25 +151,28 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
 		}
 		break;
 	}
+#endif
 	case GW_CONN_SUSPEND:
     {
+    	RF_SetTxRxOff();
 
-    	if(DataToSend.flag != 0)
+    	if(gw_info.dsn %10==0)
     	{
-    		ResuBuf_Write((unsigned char*)&DataToSend, sizeof(WaitForUpload_Typedef));
-    		DataToSend.flag = 0;
+    		GatewaySetupTrig = 1;
     	}
-//#if SUPEND
-//        PM_LowPwrEnter(SUSPEND_MODE, WAKEUP_SRC_TIMER, gw_info.wakeup_tick);
-//        gw_info.state = GW_CONN_SEND_GW_BCN;
-//#else
-    	 RF_SetTxRxOff();
-//         while((unsigned int)(ClockTime() - gw_info.wakeup_tick) > BIT(30));
-    	 if((unsigned int)(ClockTime() - gw_info.wakeup_tick) <= BIT(31))
-    		 gw_info.state = GW_CONN_SEND_GW_BCN;
+    	else
+    	{
+//			if(DataToSend.flag != 0)
+//			{
+//				ResuBuf_Write((unsigned char*)&DataToSend, sizeof(WaitForUpload_Typedef));
+//				DataToSend.flag = 0;
+//			}
+			 if((unsigned int)(ClockTime() - gw_info.wakeup_tick) <= BIT(31))
+				 gw_info.state = GW_CONN_SEND_GW_BCN;
+    	}
     	 break;
-//#endif
     }
+
 	default:
 		break;
 	}
@@ -205,7 +232,7 @@ _attribute_ram_code_ void Gateway_TxDoneHandle(void)
 	{
 		case GW_SETUP_IDLE:
 		{
-	    	if(gw_info.dsn>=gw_setup_infor.setup_num)
+	    	if(gw_info.setup_dsn>=gw_setup_infor.setup_num)
 	    	{
 	        	if(gw_conn_list.num!=0)
 	        	{
@@ -234,8 +261,6 @@ _attribute_ram_code_ void Gateway_TxDoneHandle(void)
 	        gw_info.t0 = temp_t0;
 	        gw_info.wakeup_tick = gw_info.t0 + MASTER_PERIOD*TickPerUs;
 	        gw_info.state = GW_SETUP_GB_TX_DONE_WAIT;
-
-
 			break;
 		}
 		case GW_SETUP_GB_TX_DONE_WAIT:
@@ -320,7 +345,7 @@ _attribute_ram_code_ void Gateway_MainLoop(void)
     //run state machine
     if(GatewaySetupTrig==1)
     {
-    	gw_info.dsn = 0;
+    	gw_info.setup_dsn = 0;
     	GatewaySetupTrig = 0;
 		GPIO_ResetBit(LED_GREEN);
 		TOGGLE_TEST_PIN();

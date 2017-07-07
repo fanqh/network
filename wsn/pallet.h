@@ -68,7 +68,6 @@ typedef struct{
 	unsigned char node_id;
 	unsigned short node_addr;
 	unsigned char plt_send_setup_num;
-//    unsigned char retry_times; //retry times
 }PLTSetupInfor_TypeDef;
 
 
@@ -85,16 +84,12 @@ typedef struct {
     unsigned short gw_addr; //mac addr of the gateway this pallet attaches to
     unsigned char gw_id; //id of the gateway this pallet attaches to
 
-    //unsigned short node_addr; //mac addr of current remote node
-    //unsigned char node_id; //assigned id for the current remote node
-
     unsigned char dsn; //sequence number of outgoing packet
     unsigned char ack_dsn; //sequence number of incoming packet
 
     unsigned char gw_sn;
-//    unsigned char gw_setup_bcn_total;
 
-//    unsigned char node_table_len;
+    unsigned short loss_count;
     unsigned char is_associate;
     PLTSetupInfor_TypeDef *p_gp_Setup_infor;
 

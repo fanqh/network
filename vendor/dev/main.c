@@ -56,12 +56,14 @@ static void PrepareSleep(void)
 }
 void Board_Init(void)
 {
+#if 0
     //config the setup trig GPIO pin
     GPIO_SetGPIOEnable(PALLET_SETUP_TRIG_PIN, Bit_SET);    //set as gpio
     GPIO_SetInputEnable(PALLET_SETUP_TRIG_PIN, Bit_SET);   //enable input
     GPIO_PullSet(PALLET_SETUP_TRIG_PIN, PULL_UP_1M);
     GPIO_SetInterrupt(PALLET_SETUP_TRIG_PIN, Bit_SET);
     IRQ_EnableType(FLD_IRQ_GPIO_EN);
+#endif
 #if 1
 	GPIO_SetGPIOEnable(TIMING_SHOW_PIN, Bit_SET);
     GPIO_ResetBit(TIMING_SHOW_PIN);

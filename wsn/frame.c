@@ -51,7 +51,7 @@ _attribute_ram_code_ unsigned char Build_GatewaySetupBeacon(unsigned char *pBuf,
     //build the 802.15.4 mac data frame header
     *p++ = 0x41; //frame ctrl low: data frame type, PAN ID compression, no ack req
     *p++ = 0x98; //frame ctrl hig: short dst addr and src addr
-    *p++ = ++(pInfo->dsn); //dsn
+    *p++ = ++(pInfo->setup_dsn); //dsn
     *p++ = 0xff; //dest PANID
     *p++ = 0xff;
 
@@ -247,12 +247,11 @@ _attribute_ram_code_ unsigned char Build_PalletData(unsigned char *pBuf, void *a
     *p++ = FRMAE_TYPE_PALLET_DATA;
     *p++ = pInfo->gw_sn; ///add one line
 
-	*p++ = pnode[0].updata;
-    *p++ = (pnode[0].temperature) & 0xff;
-    *p++ = (pnode[0].temperature >> 8) & 0xff;
-    *p++ = (pnode[0].temperature >> 16) & 0xff;
-    *p++ = (pnode[0].temperature >> 24) & 0xff;
-
+    *p++ = (pnode->temperature) & 0xff;
+    *p++ = (pnode->temperature >> 8) & 0xff;
+    *p++ = (pnode->temperature >> 16) & 0xff;
+    *p++ = (pnode->temperature >> 24) & 0xff;
+#if 0
     *p++ = pnode[1].updata;
     *p++ = (pnode[1].temperature) & 0xff;
     *p++ = (pnode[1].temperature >> 8) & 0xff;
@@ -264,7 +263,7 @@ _attribute_ram_code_ unsigned char Build_PalletData(unsigned char *pBuf, void *a
     *p++ = (pnode[2].temperature >> 8) & 0xff;
     *p++ = (pnode[2].temperature >> 16) & 0xff;
     *p++ = (pnode[2].temperature >> 24) & 0xff;
-
+#endif
     len = p - (&pBuf[5]);
     pBuf[0] = len + 1;
     pBuf[1] = 0;

@@ -1,6 +1,8 @@
 #ifndef _GATE_WAY_H_
 #define _GATE_WAY_H_
 
+#include "mac_data.h"
+
 #define CONN_PLT_NUM_MAX       32
 
 //states of the gateway state machine
@@ -40,17 +42,20 @@ typedef struct{
 	unsigned short plt_addr;
 }GatewaySetupInfor_Typedef;
 
+
+
 typedef struct {
 	GW_StateTypedef state; //current state of device
     unsigned int t0; //the moment starting to send the beacon 
     unsigned int wakeup_tick; //the moment wakeup
     unsigned char gw_id;
-
     unsigned short mac_addr; //mac addr of the gateway
     unsigned char dsn; //sequence number of outgoing packet
     unsigned char ack_dsn; //sequence number of incoming packet
+    unsigned char setup_dsn;
 
     GatewaySetupInfor_Typedef *pSetup_info;
+    Conn_List_Typedef *pConn_list;
 } GWInfo_TypeDef;
 
 extern void Gateway_Init(void);

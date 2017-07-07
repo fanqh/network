@@ -14,13 +14,13 @@
 
 
 
-#define TIMESLOT_LENGTH        5000 //the duration(in us) of each timeslot   GB + G/Pn
+#define TIMESLOT_LENGTH        10000 //the duration(in us) of each timeslot   GB + G/Pn
 #define PALLET_NUM             6 //the number of pallets attached to each gateway
 #define NODE_NUM               3 //the number of end devices attached to each pallet
-#define MASTER_PERIOD		   (TIMESLOT_LENGTH*256)
+#define MASTER_PERIOD		   (TIMESLOT_LENGTH*128)
 #define BACKOFF_UNIT           1000 //unit: us
 #define RETRY_MAX              1000 //maximum times of retry to setup with gateway request
-#define GW_SETUP_BCN_NUM	   10//200
+#define GW_SETUP_BCN_NUM	   3//200
 #define PLT_SETUP_BCN_NUM	   10
 //pallet setup with node
 #define GW_PLT_TIME				5000 // GB + 1 communication opportunity with pallet 1ms +4ms
@@ -32,7 +32,7 @@
  */
 #define RF_TX_WAIT                      15 //in us
 #define DEV_RX_MARGIN                   20 //in us
-#define RX_WAIT                         (1600) //in us
+#define RX_WAIT                         (1600+2000) //in us
 #define SETUP_SUSPNED_EARLY_WAKEUP		0
 #define PLT_BCN_WAIT_TIMEOUT			1500   //(11+6)*32+150 = 693
 #define PLT_ACK_WAIT_TIMEOUT			600
@@ -65,6 +65,7 @@
 	#define IRQ_INDICATION()			  {GPIO_WriteBit(LED3_RED, !GPIO_ReadOutputBit(LED3_RED));}
 	#define ACK_REC_INDICATION()		  {GPIO_WriteBit(LED2_BLUE, !GPIO_ReadOutputBit(LED2_BLUE));}
 	#define CONN_INDICATION()			  {GPIO_SetBit(LED1_GREEN);}
+	#define DISCONN_INDICATION()		  {GPIO_ResetBit(LED1_GREEN);}
 #endif
 #define TIME_INDICATE()			{GPIO_WriteBit(TIMING_SHOW_PIN, !GPIO_ReadOutputBit(TIMING_SHOW_PIN));}
 #define RX_INDICATE()			{GPIO_WriteBit(RX_STATE_PIN, !GPIO_ReadOutputBit(RX_STATE_PIN));}
