@@ -108,7 +108,8 @@ _attribute_ram_code_ void Run_Gateway_Statemachine(Msg_TypeDef *msg)
             {
             	RX_INDICATE();
                 //ToDo: process received data submitted by pallet
-                gw_info.ack_dsn = FRAME_GET_DSN(msg->data);
+                //gw_info.ack_dsn = FRAME_GET_DSN(msg->data);
+            	  gw_info.ack_dsn = FRAME_PLT_DATA_ACK_SN(msg->data);
 //                id = FRAME_GET_PAYLOAD_PALLET_ID(msg->data);
 //                if(Is_ID_Active(&gw_conn_list.mapping, id)!=0)
 //                {

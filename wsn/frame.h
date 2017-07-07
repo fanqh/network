@@ -38,7 +38,6 @@ typedef struct
 //GateWay Beacon
 //#define FRAME_GET_DST_ADDR(p)              		( p[18] | (p[19]<<8) )
 #define FRAME_GW_GB_GET_GW_ID(p)		   		( p[23] )
-//#define FRAME_GW_GB_GET_GW_ADDR(p)		   		( p[20] | (p[21]<<8) )
 //gateway setup
 #define FRAME_GW_SETUP_GB_SRC_ID(p)				(p[23])
 //gateway setup response
@@ -60,6 +59,7 @@ typedef struct
 // pallet data
 #define FRAME_GET_PAYLOAD_PALLET_ID(p)           (p[20])
 #define FRAME_GET_Point_PAYLOAD_TMP(p)           (p+24)
+#define FRAME_PLT_DATA_ACK_SN(p)				 (p[23])
 /****************************************************************************************/
 
 
